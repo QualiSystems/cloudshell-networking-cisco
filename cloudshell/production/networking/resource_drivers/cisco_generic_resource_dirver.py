@@ -4,28 +4,28 @@ import json
 #Do not remove!
 import cisco.networking
 from qualipy.common.libs.driver_builder_wrapper import BaseResourceDriver, DriverFunction
-from qualipy.common.libs.hardware_platform_detector import * #cloudshell.networking.cisco.handler_detector.hardware_platform_detector import HardwarePlatformDetector
+from cloudshell.networking.cisco.handler_detector.hardware_platform_detector import HardwarePlatformDetector
 from qualipy.common.libs.handler_factory import HandlerFactory
 
 
 class cisco_generic_resource_driver(BaseResourceDriver,):
-    REQUIRED_RESORCE_ATTRIBUTES = {"resource": ["ResourceAddress", "User", "Password", "Enable Password", "Console Server IP Address",
-                                                "Console User", "Console Password", "Console Port", "Connection Type",
-                                                "SNMP Version", "SNMP Read Community", "SNMP V3 User", "SNMP V3 Password",
-                                                "SNMP V3 Private Key"]}
-
+	
+	REQUIRED_RESORCE_ATTRIBUTES = {"resource": ["ResourceAddress", "User", "Password", "Enable Password", "Console Server IP Address",
+                                                  "Console User", "Console Password", "Console Port", "Connection Type",
+                                                  "SNMP Version", "SNMP Read Community", "SNMP V3 User", "SNMP V3 Password",
+                                                  "SNMP V3 Private Key"]}
     @staticmethod
     def create_snmp_helper(host, json_object_resource, logger):
 
         snmp_helper = None
         if 'SNMP V3 User' in json_object_resource.keys():
-            snmp_helper = hardware_platform_detector(host,
-                                                   json_object_resource['SNMP V3 User'],
-                                                   json_object_resource['SNMP V3 Password'],
-                                                   json_object_resource['SNMP Read Community'],
-                                                   json_object_resource['SNMP Version'],
-                                                   json_object_resource['SNMP V3 Private Key'],
-                                                   logger)
+            snmp_helper = HardwarePlatformDetector(host,
+                                            json_object_resource['SNMP V3 User'],
+                                            json_object_resource['SNMP V3 Password'],
+                                            json_object_resource['SNMP Read Community'],
+                                            json_object_resource['SNMP Version'],
+                                            json_object_resource['SNMP V3 Private Key'],
+                                            logger)
         return snmp_helper
 
     def __detect_hardware_platform(self, snmp_handler):
@@ -238,7 +238,7 @@ class cisco_generic_resource_driver(BaseResourceDriver,):
                                                            additional_info=additional_info, remove=True)
         return self._resource_handler.normalize_output(result_str)
 
-    @DriverFunction(alias='Send Config Command', category='Hidden Commands', extraMatrixRows=REQUIRED_RESORCE_ATTRIBUTES)
+    @DriverFunction(alias='Send Config Command', category='Hidden Commands', extraMatrixRows=REQUIRED_RESORCE_ATTRIBUTES
     def SendConfigCommand(self, matrixJSON, command):
         self.__check_for_attributes_changes(matrixJSON)
         result_str = self._resource_handler.sendConfigCommand(cmd=command)
