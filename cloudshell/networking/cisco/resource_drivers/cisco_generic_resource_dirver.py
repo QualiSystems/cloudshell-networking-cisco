@@ -3,6 +3,10 @@ __author__ = 'CoYe'
 import json
 
 from qualipy.common.libs.driver_builder_wrapper import BaseResourceDriver, DriverFunction
+<<<<<<< HEAD
+=======
+from cloudshell.networking.platform_detector.hardware_platform_detector import HardwarePlatformDetector
+>>>>>>> parent of e6a3bf7... Added pkgutil
 from qualipy.common.libs.handler_factory import HandlerFactory
 
 from cloudshell.networking.platform_detector.hardware_platform_detector import HardwarePlatformDetector
@@ -19,6 +23,7 @@ class cisco_generic_resource_driver(BaseResourceDriver,):
 
         snmp_helper = None
         if 'SNMP V3 User' in json_object_resource.keys():
+<<<<<<< HEAD
             snmp_helper = HardwarePlatformDetector(ip=host,
                                                    user=json_object_resource['SNMP V3 User'],
                                                    password=json_object_resource['SNMP V3 Password'],
@@ -26,6 +31,15 @@ class cisco_generic_resource_driver(BaseResourceDriver,):
                                                    version=json_object_resource['SNMP Version'],
                                                    private_key=json_object_resource['SNMP V3 Private Key'],
                                                    logger=logger)
+=======
+            snmp_helper = HardwarePlatformDetector(host,
+                                                   json_object_resource['SNMP V3 User'],
+                                                   json_object_resource['SNMP V3 Password'],
+                                                   json_object_resource['SNMP Read Community'],
+                                                   json_object_resource['SNMP Version'],
+                                                   json_object_resource['SNMP V3 Private Key'],
+                                                   logger)
+>>>>>>> parent of e6a3bf7... Added pkgutil
         return snmp_helper
 
     def __detect_hardware_platform(self, snmp_handler):

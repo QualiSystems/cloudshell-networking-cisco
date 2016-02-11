@@ -3,6 +3,11 @@ __author__ = 'coye'
 import re
 from collections import OrderedDict
 
+<<<<<<< HEAD
+=======
+from collections import OrderedDict
+from cloudshell.networking.cisco.cisco_autoload.resource import Resource
+>>>>>>> parent of e6a3bf7... Added pkgutil
 from qualipy.common.libs.resource_drivers_map import RESOURCE_DRIVERS_MAP
 
 from cloudshell.networking.cisco.cisco_autoload.resource import Resource
@@ -12,6 +17,10 @@ class CiscoGenericSNMPAutoload(object):
     def __init__(self, snmp_handler, logger):
         self.snmp = snmp_handler
         self._logger = logger
+<<<<<<< HEAD
+=======
+
+>>>>>>> parent of e6a3bf7... Added pkgutil
         self._load_snmp_tables()
         self.resource = None
 
@@ -317,7 +326,11 @@ class CiscoGenericSNMPAutoload(object):
         mapping = OrderedDict()
         entAliasMappingTable = self.snmp.walk(('ENTITY-MIB', 'entAliasMappingTable'))
         if entAliasMappingTable:
+<<<<<<< HEAD
             for port in self.entity_table.filter_by_column('Class', "'port'"):
+=======
+            for port in self.entPhysicalTable.filter_by_column('Class', "'port'"):
+>>>>>>> parent of e6a3bf7... Added pkgutil
                 entAliasMappingIdentifier = entAliasMappingTable[port]['entAliasMappingIdentifier']
                 mapping[port] = int(entAliasMappingIdentifier.split('.')[-1])
         else:
@@ -333,11 +346,19 @@ class CiscoGenericSNMPAutoload(object):
         """
 
         mapping = OrderedDict()
+<<<<<<< HEAD
         for port in self.entity_table.filter_by_column('Class', "'port'").values():
             entPhysicalDescr = port['entPhysicalDescr']
             module_index, port_index = re.findall('\d+', entPhysicalDescr)
             ifTable_re = '.*' + module_index + '/' + port_index
             for interface in self.if_table.values():
+=======
+        for port in self.entPhysicalTable.filter_by_column('Class', "'port'").values():
+            entPhysicalDescr = port['entPhysicalDescr']
+            module_index, port_index = re.findall('\d+', entPhysicalDescr)
+            ifTable_re = '.*' + module_index + '/' + port_index
+            for interface in self.ifTable.values():
+>>>>>>> parent of e6a3bf7... Added pkgutil
                 if re.search(ifTable_re, interface['ifDescr']):
                     mapping[int(port['suffix'])] = int(interface['suffix'])
                     continue
