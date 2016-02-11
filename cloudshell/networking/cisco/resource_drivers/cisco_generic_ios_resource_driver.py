@@ -1,8 +1,9 @@
 __author__ = 'CoYe'
 
 from qualipy.common.libs.driver_builder_wrapper import DriverFunction
+
 from cloudshell.networking.cisco.resource_drivers.cisco_generic_resource_dirver import cisco_generic_resource_driver
-#from cloudshell.networking.cisco.resource_drivers.cisco_generic_resource_dirver import cisco_generic_resource_driver
+
 
 class cisco_generic_ios_resource_driver(cisco_generic_resource_driver):
     @DriverFunction(extraMatrixRows={"resource": ["ResourceAddress", "User", "Password", "Enable Password", "Console Server IP Address",
