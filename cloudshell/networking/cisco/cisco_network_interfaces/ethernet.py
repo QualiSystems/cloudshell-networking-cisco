@@ -1,8 +1,8 @@
 __author__ = 'wise__000'
 
 from qualipy.common.libs.utils import *
-from qualipy.common.libs.parameters_service.command_template import *
-from CiscoInterface import CiscoInterface
+from cloudshell.networking.cisco.cisco_network_interfaces.cisco_interface \
+    import CiscoInterface, ParametersService, CommandTemplate
 
 class Ethernet(CiscoInterface):
     COMMANDS_TEMPLATE = {
@@ -39,6 +39,6 @@ class Ethernet(CiscoInterface):
         for command, value in kwargs.items():
             if command in Ethernet.COMMANDS_TEMPLATE:
                 command_template = Ethernet.COMMANDS_TEMPLATE[command]
-                prepared_commands.append(ParametersService.getValidateList(command_template, value))
+                prepared_commands.append(ParametersService.get_validate_list(command_template, value))
 
         return prepared_commands

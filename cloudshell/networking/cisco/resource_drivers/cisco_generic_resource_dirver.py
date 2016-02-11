@@ -3,8 +3,9 @@ __author__ = 'CoYe'
 import json
 
 from qualipy.common.libs.driver_builder_wrapper import BaseResourceDriver, DriverFunction
-from cloudshell.networking.platform_detector.hardware_platform_detector import HardwarePlatformDetector
 from qualipy.common.libs.handler_factory import HandlerFactory
+
+from cloudshell.networking.platform_detector.hardware_platform_detector import HardwarePlatformDetector
 
 
 class cisco_generic_resource_driver(BaseResourceDriver,):
@@ -18,13 +19,13 @@ class cisco_generic_resource_driver(BaseResourceDriver,):
 
         snmp_helper = None
         if 'SNMP V3 User' in json_object_resource.keys():
-            snmp_helper = HardwarePlatformDetector(host,
-                                                   json_object_resource['SNMP V3 User'],
-                                                   json_object_resource['SNMP V3 Password'],
-                                                   json_object_resource['SNMP Read Community'],
-                                                   json_object_resource['SNMP Version'],
-                                                   json_object_resource['SNMP V3 Private Key'],
-                                                   logger)
+            snmp_helper = HardwarePlatformDetector(ip=host,
+                                                   user=json_object_resource['SNMP V3 User'],
+                                                   password=json_object_resource['SNMP V3 Password'],
+                                                   community=json_object_resource['SNMP Read Community'],
+                                                   version=json_object_resource['SNMP Version'],
+                                                   private_key=json_object_resource['SNMP V3 Private Key'],
+                                                   logger=logger)
         return snmp_helper
 
     def __detect_hardware_platform(self, snmp_handler):
@@ -106,7 +107,7 @@ class cisco_generic_resource_driver(BaseResourceDriver,):
 
     @DriverFunction(extraMatrixRows=REQUIRED_RESORCE_ATTRIBUTES)
     def Init(self, matrixJSON):
-
+        detected_platform_name = None
         json_object = json.loads(matrixJSON)
         self._json_matrix = json_object
         self.resource_name = 'generic_resource'

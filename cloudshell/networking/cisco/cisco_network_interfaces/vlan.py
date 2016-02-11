@@ -1,9 +1,10 @@
 __author__ = 'g8y3e'
 
-from qualipy.common.libs.utils import validateIP
-from level_2 import *
+from qualipy.common.libs.utils import *
+from cloudshell.networking.cisco.cisco_network_interfaces.cisco_interface \
+    import CiscoInterface, ParametersService, CommandTemplate
 
-class Vlan(Level2):
+class Vlan(CiscoInterface):
     COMMANDS_TEMPLATE = {
         'ip_address': CommandTemplate('ip address {0} {1}', [validateIP, validateIP],
                                       ['Wrong ip address!', 'Wrong ip mask!']),
@@ -21,12 +22,12 @@ class Vlan(Level2):
     }
 
     def get_commands_list(self, **kwargs):
-        prepared_commands = Level2.get_commands_list(self, **kwargs)
+        prepared_commands = CiscoInterface.get_commands_list(self, **kwargs)
 
         for command, value in kwargs.items():
             if command in Vlan.COMMANDS_TEMPLATE:
                 command_template = Vlan.COMMANDS_TEMPLATE[command]
-                prepared_commands.append(ParametersService.getValidateList(command_template, value))
+                prepared_commands.append(ParametersService.get_validate_list(command_template, value))
 
         return prepared_commands
 

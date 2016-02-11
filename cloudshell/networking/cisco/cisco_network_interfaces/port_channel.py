@@ -1,7 +1,8 @@
 __author__ = 'g8y3e'
 
-from qualipy.common.libs.utils import validateIP
-from level_2 import *
+from qualipy.common.libs.utils import *
+from cloudshell.networking.cisco.cisco_network_interfaces.cisco_interface \
+    import CiscoInterface, ParametersService, CommandTemplate
 
 class PortChannel(CiscoInterface):
     COMMANDS_TEMPLATE = {
@@ -28,7 +29,7 @@ class PortChannel(CiscoInterface):
                 if 'allow_trunk_vlan' in command:
                     prepared_commands.append('switchport')
 
-                prepared_commands.append(ParametersService.getValidateList(command_tamplate, value))
+                prepared_commands.append(ParametersService.get_validate_list(command_tamplate, value))
 
         return prepared_commands
 
