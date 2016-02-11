@@ -1,7 +1,7 @@
 __author__ = 'g8y3e'
 
 from qualipy.common.libs.connection_manager import expected_actions
-from cloudshell.snmp.quali_snmp import QualiSnmp, QualiMibTable
+from qualipy.common.snmp.quali_snmp import QualiSnmp, QualiMibTable
 
 def transaction(retry_count=5):
     def retry_wrapper(function_ptr):

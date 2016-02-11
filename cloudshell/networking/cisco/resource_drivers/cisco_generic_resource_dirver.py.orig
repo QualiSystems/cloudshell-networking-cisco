@@ -1,12 +1,17 @@
 __author__ = 'CoYe'
 
 import json
-
+#Do not remove!
+import cisco.networking
 from qualipy.common.libs.driver_builder_wrapper import BaseResourceDriver, DriverFunction
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 from cloudshell.networking.platform_detector.hardware_platform_detector import HardwarePlatformDetector
 >>>>>>> parent of e6a3bf7... Added pkgutil
+=======
+from qualipy.common.libs.hardware_platform_detector import * #cloudshell.networking.cisco.handler_detector.hardware_platform_detector import HardwarePlatformDetector
+>>>>>>> e6a3bf7b4fe2152bb07068a9d8d45e7651966352
 from qualipy.common.libs.handler_factory import HandlerFactory
 
 from cloudshell.networking.platform_detector.hardware_platform_detector import HardwarePlatformDetector
@@ -24,6 +29,7 @@ class cisco_generic_resource_driver(BaseResourceDriver,):
         snmp_helper = None
         if 'SNMP V3 User' in json_object_resource.keys():
 <<<<<<< HEAD
+<<<<<<< HEAD
             snmp_helper = HardwarePlatformDetector(ip=host,
                                                    user=json_object_resource['SNMP V3 User'],
                                                    password=json_object_resource['SNMP V3 Password'],
@@ -33,6 +39,9 @@ class cisco_generic_resource_driver(BaseResourceDriver,):
                                                    logger=logger)
 =======
             snmp_helper = HardwarePlatformDetector(host,
+=======
+            snmp_helper = hardware_platform_detector(host,
+>>>>>>> e6a3bf7b4fe2152bb07068a9d8d45e7651966352
                                                    json_object_resource['SNMP V3 User'],
                                                    json_object_resource['SNMP V3 Password'],
                                                    json_object_resource['SNMP Read Community'],

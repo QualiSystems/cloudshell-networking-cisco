@@ -2,7 +2,6 @@ __author__ = 'CoYe'
 
 from qualipy.common.libs.driver_builder_wrapper import DriverFunction
 from cloudshell.networking.cisco.resource_drivers.cisco_generic_resource_dirver import cisco_generic_resource_driver
-#from cloudshell.networking.cisco.resource_drivers.cisco_generic_resource_dirver import cisco_generic_resource_driver
 
 class cisco_generic_ios_resource_driver(cisco_generic_resource_driver):
     @DriverFunction(extraMatrixRows={"resource": ["ResourceAddress", "User", "Password", "Enable Password", "Console Server IP Address",
@@ -21,7 +20,7 @@ if __name__ == '__main__':
                     "ResourceAddress": "192.168.42.235",
                     "User": "root",
                     "Password": "Password1",
-                    "CLI Connection Type": "ssh",
+                    "CLI Connection Type": "telnet",
                     "Console User": "",
                     "Console Password": "",
                     "Console Server IP Address": "",
@@ -50,7 +49,7 @@ if __name__ == '__main__':
     #"CLI Connection Type": "ssh ",
 
     resource_driver = cisco_generic_ios_resource_driver('77', data_json)
-    print resource_driver.GetInventory(data_json)
+    #print resource_driver.GetInventory(data_json)
 
     #import sys; sys.exit()
     print resource_driver.SendCommand(data_json, 'sh ver')
