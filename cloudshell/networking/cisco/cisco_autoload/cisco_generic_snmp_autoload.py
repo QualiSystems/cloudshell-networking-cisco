@@ -1,13 +1,17 @@
 __author__ = 'coye'
 
 import re
+import os
 from collections import OrderedDict
-from qualipy.common.libs.resource_drivers_map import RESOURCE_DRIVERS_MAP
+
 from cloudshell.networking.cisco.cisco_autoload.resource import Resource
+from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
 class CiscoGenericSNMPAutoload(object):
     def __init__(self, snmp_handler, logger):
         self.snmp = snmp_handler
+        path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'mibs'))
+        self.snmp.update_mib_sources(path)
         self._logger = logger
         self._load_snmp_tables()
         self.resource = None
@@ -33,7 +37,7 @@ class CiscoGenericSNMPAutoload(object):
         self.port_channel_ports = self.snmp.get_table('IEEE8023-LAG-MIB', 'dot3adAggPortAttachedAggID')
 
         self._logger.info('MIB Tables loaded successfully')
-        self.port_mapping = self.snmp.get_mapping()
+        self.port_mapping = self.get_mapping()
 
     def discover(self):
         """
@@ -261,7 +265,7 @@ class CiscoGenericSNMPAutoload(object):
             result['os_version'] = match_version.groupdict()['software_version'].replace(',', '')
             result['firmware'] = match_version.groupdict()['firmware']
 
-        result.update(self._get_device_name_and_vendor())
+        result.update(self._get_device_model_and_vendor())
 
         self._logger.info('Finished Loading Switch Attributes')
         return result
@@ -278,20 +282,27 @@ class CiscoGenericSNMPAutoload(object):
                                                       self.lldp_remote_table[key]['lldpRemPortDesc'])
         return result
 
-    def _get_device_name_and_vendor(self):
+    def _get_device_model_and_vendor(self):
         result = {'vendor': 'Cisco', 'model': ''}
         match_name = re.search(r'^SNMPv2-SMI::enterprises\.(?P<vendor>\d+)(\.\d)+\.(?P<model>\d+$)',
                                self.snmp_mib[0]['sysObjectID'])
         if match_name is None:
-
             match_name = re.search(r'1\.3\.6\.1\.4\.1\.(?P<vendor>\d+)(\.\d)+\.(?P<model>\d+$)',
                                    self.snmp_mib[0]['sysObjectID'])
+            if match_name is None:
+
+                match_name = re.search(r'^(?P<vendor>\w+)-SMI::ciscoProducts\.(?P<model>\d+)$',
+                               self.snmp_mib[0]['sysObjectID'])
+
         if match_name:
-            vendor = match_name.groupdict()['vendor']
+            vendor = match_name.groupdict()['vendor'].capitalize()
             model = match_name.groupdict()['model']
-            if vendor and vendor in RESOURCE_DRIVERS_MAP:
-                if model in RESOURCE_DRIVERS_MAP[vendor]:
-                    result['model'] = RESOURCE_DRIVERS_MAP[vendor][model].lower().replace('_', '').capitalize()
+            if vendor and vendor in CISCO_RESOURCE_DRIVERS_MAP:
+                if model in CISCO_RESOURCE_DRIVERS_MAP[vendor]:
+                    result['model'] = CISCO_RESOURCE_DRIVERS_MAP[vendor][model].lower().replace('_', '').capitalize()
+            elif vendor.upper() == result['vendor'].upper():
+                if model in CISCO_RESOURCE_DRIVERS_MAP['9']:
+                    result['model'] = CISCO_RESOURCE_DRIVERS_MAP['9'][model].lower().replace('_', '').capitalize()
             if not result['model'] or result['model'] == '':
                     self.snmp.load_mib('CISCO-PRODUCTS-MIB')
                     match_name = re.search(r'^(?P<vendor>\S+)-P\S*\s*::(?P<model>\S+$)',

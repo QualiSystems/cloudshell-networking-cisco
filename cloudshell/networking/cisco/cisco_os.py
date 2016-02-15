@@ -1,7 +1,6 @@
 __author__ = 'g8y3e'
 
-from qualipy.common.libs.connection_manager import expected_actions
-
+from cloudshell.cli import expected_actions
 from cloudshell.snmp.quali_snmp import QualiSnmp
 
 
