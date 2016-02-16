@@ -4,23 +4,6 @@ from cloudshell.cli import expected_actions
 from cloudshell.snmp.quali_snmp import QualiSnmp
 
 
-def transaction(retry_count=5):
-    def retry_wrapper(function_ptr):
-        def transaction_decorator(*args, **kwargs):
-            retry = 0
-            while retry < retry_count:
-                try:
-                    retry += 1
-                    function_ptr(*args, **kwargs)
-                except Exception as e:
-                    if e.message.lower().find('Session reconnected successfully') != -1:
-                        continue
-                    else:
-                        raise e
-                break
-        return transaction_decorator
-    return retry_wrapper
-
 class CiscoOS():
     EXPECTED_MAP = {'Username: *$|Login: *$': expected_actions.send_username,
                     'closed by remote host': expected_actions.do_reconnect,
