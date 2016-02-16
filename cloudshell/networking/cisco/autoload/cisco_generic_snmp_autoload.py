@@ -4,7 +4,7 @@ import re
 import os
 from collections import OrderedDict
 
-from cloudshell.networking.cisco.cisco_autoload.resource import Resource
+from cloudshell.networking.cisco.autoload.resource import Resource
 from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
 class CiscoGenericSNMPAutoload(object):

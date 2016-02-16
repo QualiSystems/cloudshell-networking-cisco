@@ -1,7 +1,7 @@
 __author__ = 'g8y3e'
 
 from qualipy.common.libs.utils import *
-from cloudshell.networking.cisco.cisco_network_interfaces.cisco_interface \
+from cloudshell.networking.cisco.command_templates.cisco_interface \
     import CiscoInterface, ParametersService, CommandTemplate
 
 class Vlan(CiscoInterface):
