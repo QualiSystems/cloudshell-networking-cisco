@@ -79,7 +79,6 @@ class CiscoOS():
         if not self._snmp_handler:
             if '3' in version:
                 if user != '' and password != '' and private_key != '':
-                    #userName=user, authKey=password, privKey=private_key, authProtocol=usmHMACSHAAuthProtocol, privProtocol=usmDESPrivProtocol
                     v3_user = {'userName': user, 'authKey': password, 'privKey': private_key}
                 else:
                     self._logger.error('User or password or private key parameter is empty')

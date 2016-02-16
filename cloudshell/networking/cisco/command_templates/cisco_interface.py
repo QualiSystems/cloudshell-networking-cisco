@@ -19,7 +19,7 @@ class CiscoInterface(InterfaceBase):
     def get_commands_list(self, **kwargs):
         prepared_commands = []
 
-        if not 'configure_interface' in kwargs:
+        if 'configure_interface' not in kwargs:
             raise Exception('Need to set configure_interface parameter!')
 
         command_template = CiscoInterface.COMMANDS_TEMPLATE['configure_interface']

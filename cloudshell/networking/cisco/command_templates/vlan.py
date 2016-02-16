@@ -1,6 +1,6 @@
 __author__ = 'g8y3e'
 
-from qualipy.common.libs.utils import *
+from cloudshell.networking.utils import *
 from cloudshell.networking.cisco.command_templates.cisco_interface \
     import CiscoInterface, ParametersService, CommandTemplate
 
