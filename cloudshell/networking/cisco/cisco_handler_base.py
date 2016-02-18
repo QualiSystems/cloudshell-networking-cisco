@@ -5,7 +5,8 @@ import time
 import ipcalc
 from cloudshell.api.cloudshell_api import CloudShellAPISession
 
-from cloudshell.networking.networking_handler_base import NetworkingHandlerBase
+from cloudshell.networking.networking_handler_interface import NetworkingHandlerInterface
+from cloudshell.shell.core.handler_base import HandlerBase
 from cloudshell.networking.utils import *
 from cloudshell.networking.cisco.command_templates.ethernet import Ethernet
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
@@ -13,7 +14,7 @@ from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoF
 from cloudshell.cli import expected_actions
 
 
-class CiscoHandlerBase(NetworkingHandlerBase):
+class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
     DEFAULT_PROMPT = '.*> *$'
     ENABLE_PROMPT = '.*# *$'
     CONFIG_MODE_PROMPT = '\(config.*\)# *$'
@@ -23,7 +24,7 @@ class CiscoHandlerBase(NetworkingHandlerBase):
     NEWLINE = '<QS_LF>'
 
     def __init__(self, connection_manager, logger):
-        NetworkingHandlerBase.__init__(self, connection_manager, logger)
+        HandlerBase.__init__(self, connection_manager, logger)
         self.supported_os = []
         self._prompt = "{0}|{1}|{2}".format(self.DEFAULT_PROMPT, self.ENABLE_PROMPT, self.CONFIG_MODE_PROMPT)
         self._snmp_handler = None
