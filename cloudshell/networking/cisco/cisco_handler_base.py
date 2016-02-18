@@ -351,59 +351,79 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                 return result
         return result
 
-    def configure_vlan(self, vlan_range, port_list, switchport_type, additional_info, remove=False):
+    def add_vlan(self, vlan_range, port_list, port_mode, additional_info):
         """
-        Sends snmp get command
+        Add vlan to port
         :param vlan_range: range of vlans to be added, if empty, and switchport_type = trunk,
         trunk mode will be assigned
         :param port_list: List of interfaces Resource Full Address
-        :param switchport_type: type of adding vlan ('trunk' or 'access')
+        :param port_mode: type of adding vlan ('trunk' or 'access')
         :param additional_info: contains QNQ or CTag parameter
-        :param remove: remove or add flag
         :return: success message
         :rtype: string
         """
-        self._logger.info('Vlan Configuration Started')
-        if len(port_list) < 1:
-            raise Exception('Port list is empty')
-        if vlan_range == '' and switchport_type == 'access':
-            raise Exception('Switchport type is Access, but vlan id/range is empty')
-        if (',' in vlan_range or '-' in vlan_range) and switchport_type == 'access':
-            raise Exception('Only one vlan could be assigned to the interface in Access mode')
+        self.validate_vlan_parameters(vlan_range, port_list, port_mode)
         for port in port_list.split('|'):
-            port_resource_map = self.cloud_shell_api().GetResourceDetails(self.attributes_dict['ResourceName'])
-            temp_port_name = self._get_resource_full_name(port, port_resource_map)
-            if '/' not in temp_port_name:
-                self._logger.error('Interface was not found')
-                raise Exception('Interface was not found')
-            port_name = temp_port_name.split('/')[-1].replace('-', '/')
-            self._logger.info('Vlan {0} will be assigned to or removed from interface {1}'.format(vlan_range,
-                                                                                                  port_name))
-
+            port_name = self.get_port_name(port)
+            self._logger.info('Vlan {0} will be assigned to interface {1}'.format(vlan_range, port_name))
             params_map = dict()
-
             params_map['configure_interface'] = port_name
-            if not remove:
-                if 'trunk' in switchport_type and vlan_range == '':
-                    params_map['switchport_mode_trunk'] = []
-                elif 'trunk' in switchport_type and vlan_range != '':
-                    params_map['trunk_allow_vlan'] = [vlan_range]
-                elif 'access' in switchport_type and vlan_range != '':
-                    params_map['access_allow_vlan'] = [vlan_range]
-
-                if 'qnq' in additional_info.lower():
-                    if not self._is_interface_support_qnq(port_name):
-                        raise Exception('interface does not support QnQ')
-                    if 'switchport_mode_trunk' in params_map:
-                        raise Exception('interface cannot have trunk and dot1q-tunneling modes in the same time')
-                    params_map['qnq'] = ''
+            if 'trunk' in port_mode and vlan_range == '':
+                params_map['switchport_mode_trunk'] = []
+            elif 'trunk' in port_mode and vlan_range != '':
+                params_map['trunk_allow_vlan'] = [vlan_range]
+            elif 'access' in port_mode and vlan_range != '':
+                params_map['access_allow_vlan'] = [vlan_range]
+            if 'qnq' in additional_info.lower():
+                if not self._is_interface_support_qnq(port_name):
+                    raise Exception('interface does not support QnQ')
+                if 'switchport_mode_trunk' in params_map:
+                    raise Exception('interface cannot have trunk and dot1q-tunneling modes in the same time')
+                params_map['qnq'] = ''
 
             self.configure_vlan_interface_ethernet(**params_map)
             self._exit_configuration_mode()
-            if remove:
-                self._logger.info('All vlans and switchport mode were removed from the interface {0}'.format(port_name))
             self._logger.info('Vlan {0} was assigned to the interface {1}'.format(vlan_range, port_name))
         return 'Vlan Configuration Completed'
+
+    def remove_vlan(self, vlan_range, port_list, port_mode, additional_info):
+        """
+        Remove vlan from port
+        :param vlan_range: range of vlans to be added, if empty, and switchport_type = trunk,
+        trunk mode will be assigned
+        :param port_list: List of interfaces Resource Full Address
+        :param port_mode: type of adding vlan ('trunk' or 'access')
+        :param additional_info: contains QNQ or CTag parameter
+        :return: success message
+        :rtype: string
+        """
+        self.validate_vlan_parameters(vlan_range, port_list, port_mode)
+        for port in port_list.split('|'):
+            port_name = self.get_port_name(port)
+            self._logger.info('Vlan {0} will be removed from interface {1}'.format(vlan_range, port_name))
+            params_map = dict()
+            params_map['configure_interface'] = port_name
+            self.configure_vlan_interface_ethernet(**params_map)
+            self._exit_configuration_mode()
+            self._logger.info('All vlans and switchport mode were removed from the interface {0}'.format(port_name))
+        return 'Vlan Configuration Completed'
+
+    def validate_vlan_parameters(self, vlan_range, port_list, port_mode):
+        self._logger.info('Vlan Configuration Started')
+        if len(port_list) < 1:
+            raise Exception('Port list is empty')
+        if vlan_range == '' and port_mode == 'access':
+            raise Exception('Switchport type is Access, but vlan id/range is empty')
+        if (',' in vlan_range or '-' in vlan_range) and port_mode == 'access':
+            raise Exception('Only one vlan could be assigned to the interface in Access mode')
+
+    def get_port_name(self, port):
+        port_resource_map = self.cloud_shell_api().GetResourceDetails(self.attributes_dict['ResourceName'])
+        temp_port_name = self._get_resource_full_name(port, port_resource_map)
+        if '/' not in temp_port_name:
+            self._logger.error('Interface was not found')
+            raise Exception('Interface was not found')
+        return temp_port_name.split('/')[-1].replace('-', '/')
 
     def configure_vlan_interface_ethernet(self, **kwargs):
         """

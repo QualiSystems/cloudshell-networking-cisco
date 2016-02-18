@@ -42,7 +42,7 @@ class CiscoGenericSNMPAutoload(object):
     def discover(self):
         """
         Loads device structure - chassis, modules, submodules, ports. And attributes for them
-        :return: formatted string to
+        :return: formatted string
         """
         self.port_relative_address = []
         self.resource = Resource()
