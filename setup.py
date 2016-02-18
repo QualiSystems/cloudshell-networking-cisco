@@ -19,7 +19,7 @@ setup(
     install_requires=required,
     tests_require=required_for_tests,
     version=version_from_file,
-    description='CloudShell Networking Cisco Specific package',
+    description='CloudShell Networking Cisco Specific Package',
     include_package_data = True
 )
 
