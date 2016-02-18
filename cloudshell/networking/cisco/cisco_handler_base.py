@@ -24,7 +24,7 @@ class CiscoHandlerBase(NetworkingHandlerBase):
 
     def __init__(self, connection_manager, logger):
         NetworkingHandlerBase.__init__(self, connection_manager, logger)
-        self.supported_os = ['IOS', 'IOS-XE', 'CATOS']
+        self.supported_os = []
         self._prompt = "{0}|{1}|{2}".format(self.DEFAULT_PROMPT, self.ENABLE_PROMPT, self.CONFIG_MODE_PROMPT)
         self._snmp_handler = None
         self._cloud_shell_api = None
@@ -64,7 +64,7 @@ class CiscoHandlerBase(NetworkingHandlerBase):
     def _set_terminal_length(self, length):
         return self._send_command('terminal length {0}'.format(length))
 
-    def _show_ommand(self, data):
+    def _show_command(self, data):
         return self._send_command('show {0}'.format(data))
 
     def _enter_configuration_mode(self):
@@ -413,7 +413,7 @@ class CiscoHandlerBase(NetworkingHandlerBase):
         """
         interface_ethernet = Ethernet()
         commands_list = interface_ethernet.get_commands_list(**kwargs)
-        current_config = self._send_command('show  running-config interface {0}'.format(kwargs['configure_interface']))
+        current_config = self._show_command('running-config interface {0}'.format(kwargs['configure_interface']))
 
         for line in current_config.splitlines():
             if re.search('^\s*switchport', line):
