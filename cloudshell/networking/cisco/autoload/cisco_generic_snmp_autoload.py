@@ -100,7 +100,8 @@ class CiscoGenericSNMPAutoload(object):
     def _get_module_attributes(self):
         self._logger.info('Start loading Modules')
         for module in self.module_list:
-            if 'MODULE' not in self.entity_table[module]['entPhysicalName'].upper():
+            if 'MODULE' not in self.entity_table[module]['entPhysicalName'].upper() or \
+                            'SLOT' not in self.entity_table[module]['entPhysicalName'].upper():
                 continue
             module_id = str(self.module_list.index(module))
             relative_id = self._get_relative_path(module) + '/' + module_id
