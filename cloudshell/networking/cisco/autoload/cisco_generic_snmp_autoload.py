@@ -4,6 +4,11 @@ import re
 import os
 from collections import OrderedDict
 
+
+from cloudshell.shell.core.driver_context import AutoLoadResource
+from cloudshell.shell.core.driver_context import AutoLoadAttribute
+from cloudshell.shell.core.driver_context import AutoLoadDetails
+
 from cloudshell.networking.cisco.autoload.resource import Resource
 from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
@@ -45,34 +50,37 @@ class CiscoGenericSNMPAutoload(object):
         :return: formatted string
         """
         self.port_relative_address = []
-        self.resource = Resource()
+
         device_id = self.entity_table.filter_by_column('ParentRelPos', '-1').keys()[0]
         port_list = self.entity_table.filter_by_column('Class', "'port'").sort_by_column('ParentRelPos').keys()
         self.module_list = self.entity_table.filter_by_column('Class', "'module'").sort_by_column('ParentRelPos').keys()
         power_port_list = self.entity_table.filter_by_column('Class', "'powerSupply'").sort_by_column('ParentRelPos').keys()
         self.chassis_list = self.entity_table.filter_by_column('Class', "'chassis'").sort_by_column('ParentRelPos').keys()
-        info_data = {'attributes': self._get_device_details(device_id),
-                     'relative_path': ''}
-        self.resource.addChild('', '/', info_data)
+
+        self.resources = list()
+        self.attributes = list()
+
+        self._get_device_details(device_id)
         self._get_chassis_attributes(self.chassis_list)
         self._get_ports_attributes(port_list)
         self._get_module_attributes()
+
         self._get_power_ports(power_port_list)
 
         self._get_port_channels()
 
-        resource_to_str = self.resource.toString()
-        self._logger.info('*******************************************')
-        self._logger.info('Resource details:')
+        #resource_to_str = self.resource.toString()
+        #self._logger.info('*******************************************')
+        #self._logger.info('Resource details:')
+#
+        #for table in resource_to_str.split('$'):
+        #    self._logger.info('------------------------------')
+        #    for line in table.split('|'):
+        #        self._logger.info(line.replace('^', '\t\t'))
+#
+        #self._logger.info('*******************************************')
 
-        for table in resource_to_str.split('$'):
-            self._logger.info('------------------------------')
-            for line in table.split('|'):
-                self._logger.info(line.replace('^', '\t\t'))
-
-        self._logger.info('*******************************************')
-
-        return resource_to_str
+        return AutoLoadDetails(self.resources, self.attributes)
 
     def _get_chassis_attributes(self, chassis_list):
         '''Get Chassis element attributes
@@ -93,7 +101,9 @@ class CiscoGenericSNMPAutoload(object):
                          'attributes': chassis_details_map,
                          'model': 'Generic Chassis',
                          'relative_path': relative_path}
-            self.resource.addChild(relative_path, '/', info_data)
+            self._add_resources_data(info_data)
+            self._add_attributes_data(relative_path, chassis_details_map)
+            #self.resource.addChild(relative_path, '/', info_data)
             self._logger.info('Added ' + self.entity_table[chassis]['entPhysicalDescr'] + ' Module')
         self._logger.info('Finished Loading Modules')
 
@@ -121,7 +131,9 @@ class CiscoGenericSNMPAutoload(object):
                          'attributes': module_details_map,
                          'model': model,
                          'relative_path': relative_id}
-            self.resource.addChild(relative_id, '/', info_data)
+            self._add_resources_data(info_data)
+            self._add_attributes_data(relative_id, module_details_map)
+            #self.resource.addChild(relative_id, '/', info_data)
             self._logger.info('Added ' + self.entity_table[module]['entPhysicalDescr'] + ' Module')
         self._logger.info('Finished Loading Modules')
 
@@ -138,7 +150,10 @@ class CiscoGenericSNMPAutoload(object):
                          'attributes': chassis_details_map,
                          'model': 'Generic Power Port',
                          'relative_path': relative_path}
-            self.resource.addChild(relative_path, '/', info_data)
+
+            self._add_resources_data(info_data)
+            self._add_attributes_data(relative_path, chassis_details_map)
+            #self.resource.addChild(relative_path, '/', info_data)
             self._logger.info('Added ' + module_name.strip(' \t\n\r') + ' Power Port')
         self._logger.info('Finished Loading Power Ports')
 
@@ -161,7 +176,10 @@ class CiscoGenericSNMPAutoload(object):
                          'name': 'PC{0}'.format(interface_name),
                          'relative_path': interface_id,
                          'attributes': attribute_map}
-            self.resource.addChild(interface_id, '/', info_data)
+            self._add_resources_data(info_data)
+            self._add_attributes_data(interface_id, attribute_map)
+
+            #self.resource.addChild(interface_id, '/', info_data)
             self._logger.info('Added ' + interface_model + ' Port Channel')
         self._logger.info('Finished Loading Port Channels')
 
@@ -205,7 +223,11 @@ class CiscoGenericSNMPAutoload(object):
                          'name': '{0}'.format(datamodel_interface_name),
                          'relative_path': interface_id,
                          'attributes': attribute_map}
-            self.resource.addChild(interface_id, '/', info_data)
+
+            self._add_resources_data(info_data)
+            self._add_attributes_data(interface_id, attribute_map)
+
+            #self.resource.addChild(interface_id, '/', info_data)
             self.port_relative_address.append(relative_id)
             self._logger.info('Added ' + interface_name + ' Port')
         self._logger.info('Finished Loading Ports')
@@ -248,6 +270,16 @@ class CiscoGenericSNMPAutoload(object):
                     interface_details['duplex'] = 'Half'
         return interface_details
 
+    def _add_attributes_data(self, relative_path, dict_data=None):
+        for key, value in dict_data.items():
+            self.attributes.append(AutoLoadAttribute(relative_path, key, value))
+
+    def _add_resources_data(self, dict_data=None):
+        if 'model' not in dict_data or 'name' not in dict_data or \
+                        'realtive_path' not in dict_data:
+            raise Exception('Cisco Generic SNMP Autoload', 'Resources details not found!')
+        self.resources.append(AutoLoadResource(dict_data['model'], dict_data['name'], dict_data['relative_path']))
+
     def _get_device_details(self, index):
         self._logger.info('Start loading Switch Attributes')
         result = {'vendor': 'Cisco',
@@ -268,7 +300,8 @@ class CiscoGenericSNMPAutoload(object):
         result.update(self._get_device_model_and_vendor())
 
         self._logger.info('Finished Loading Switch Attributes')
-        return result
+
+        self._add_attributes_data('', result)
 
     def _get_adjacent(self, interface_id):
         result = ''
