@@ -482,7 +482,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
         system_description = self.snmp_handler.get(('SNMPv2-MIB', 'sysDescr'))['sysDescr']
         match_str = re.sub('[\n\r]+', ' ', system_description.upper())
-        res = re.search(' (IOS|IOS-XE|CAT[ -]?OS) ', match_str)
+        res = re.search('\s+(IOS|IOS-XE|CAT[ -]?OS|NX[ -]?OS)\s*', match_str)
         if res:
             version = res.group(0).strip(' \s\r\n')
         if version and version in self.supported_os:
