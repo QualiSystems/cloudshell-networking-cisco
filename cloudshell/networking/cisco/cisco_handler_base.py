@@ -631,7 +631,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
     def _get_time_stamp(self):
         return time.strftime("%d%m%Y-%H%M%S", time.gmtime())
 
-    def restore_configuration(self, source_file, clear_config='override'):
+    def restore_configuration(self, source_file, configuration_type, clear_config='override'):
         """Restore configuration on device from provided configuration file
         Restore configuration from local file system or ftp/tftp server into 'running-config' or 'startup-config'.
         :param source_file: relative path to the file on the remote host tftp://server/sourcefile
