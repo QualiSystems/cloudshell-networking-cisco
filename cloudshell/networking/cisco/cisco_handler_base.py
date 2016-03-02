@@ -211,30 +211,33 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         copy_command_str = 'copy ' + source_filesystem + destination_filesystem
 
         is_downloaded = (False, '')
+        expected_string = '\?|.*: \[.*\]|.*: *$|' + self._prompt
         while (not is_downloaded[0]) and (retries > 0):
             retries -= 1
 
-            output = self._send_command(copy_command_str, expected_str='\?')
+            output = self._send_command(copy_command_str, expected_str=expected_string)
 
             while re.search(self._prompt, output) is None:
                 if re.search('source filename', output.lower()):
-                    output = self._send_command(kwargs['source_filename'], expected_str='\?')
-                elif re.search('remote host', output.lower()):
+                    output = self._send_command(kwargs['source_filename'], expected_str=expected_string)
+                elif re.search('remote host', output.lower()) or re.search('hostname for the tftp', output.lower()):
                     if 'remote_host' not in kwargs or len(kwargs['remote_host']) == 0:
                         raise Exception('Cisco IOS', 'Copy method: remote host not set!')
 
                     if not validateIP(kwargs['remote_host']):
                         raise Exception('Cisco IOS', 'Copy method: remote host ip is not valid!')
 
-                    output = self._send_command(kwargs['remote_host'], expected_str='\?')
+                    output = self._send_command(kwargs['remote_host'], expected_str=expected_string)
                 elif re.search('destination filename', output.lower()):
                     destination_filename = ''
                     if 'destination_filename' in kwargs:
                         destination_filename = kwargs['destination_filename']
 
-                    output = self._send_command(destination_filename, expected_str=self._prompt,
+                    output = self._send_command(destination_filename.replace(' ', '_'), expected_str=expected_string,
                                                 expected_map={'\[confirm\]|\?': expected_actions.send_empty_string},
                                                 timeout=timeout)
+                elif re.search('vrf', output.lower()):
+                    output = self._send_command("", expected_str=expected_string)
 
             is_downloaded = self._check_download_from_tftp(output)
 
