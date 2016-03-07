@@ -642,11 +642,14 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
         extracted_data = source_file.split('://')
         source_filesystem = extracted_data[0]
-        match_data = re.search('startup-config|running-config', extracted_data[1])
+        match_data = re.search('startup-config|running-config', configuration_type)
         if not match_data:
-            raise Exception('Cisco IOS', "Destination filename must be 'startup-config' or 'running-config'!")
-        else:
-            destination_filename = match_data.group()
+            match_data = re.search('startup-config|running-config', extracted_data[1])
+            if not match_data:
+                raise Exception('Cisco IOS', "Configuration type is empty and destination filename is not " +
+                                             "'startup-config' or 'running-config'!")
+        destination_filename = match_data.group()
+
         remote_host_match = re.search('^(?P<host>\S+)/', extracted_data[1])
         if not remote_host_match or not remote_host_match.groupdict()['host']:
             raise Exception('Cisco IOS', "Cannot find hostname!")
