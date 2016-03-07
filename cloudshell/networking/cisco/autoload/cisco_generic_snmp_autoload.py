@@ -344,7 +344,7 @@ class CiscoGenericSNMPAutoload(object):
         for port in self.entity_table.filter_by_column('Class', "'port'").values():
             entPhysicalDescr = port['entPhysicalDescr']
             module_index, port_index = re.findall('\d+', entPhysicalDescr)
-            ifTable_re = '.*' + module_index + '/' + port_index
+            ifTable_re = '^.*' + module_index + '/' + port_index + '$'
             for interface in self.if_table.values():
                 if re.search(ifTable_re, interface['ifDescr']):
                     mapping[int(port['suffix'])] = int(interface['suffix'])
