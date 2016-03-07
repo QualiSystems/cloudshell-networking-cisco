@@ -644,10 +644,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         source_filesystem = extracted_data[0]
         match_data = re.search('startup-config|running-config', configuration_type)
         if not match_data:
-            match_data = re.search('startup-config|running-config', extracted_data[1])
-            if not match_data:
-                raise Exception('Cisco IOS', "Configuration type is empty and destination filename is not " +
-                                             "'startup-config' or 'running-config'!")
+            raise Exception('Cisco IOS', "Configuration type is empty")
         destination_filename = match_data.group()
 
         remote_host_match = re.search('^(?P<host>\S+)/', extracted_data[1])
