@@ -590,7 +590,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         """Backup 'startup-config' or 'running-config' from device to provided file_system [ftp|tftp]
         Also possible to backup config to localhost
 
-        :param custom_destination_host:  tftp/ftp server where file be saved
+        :param destination_host:  tftp/ftp server where file be saved
         :param source_filename: what file to backup
         :return: status message / exception
         """
