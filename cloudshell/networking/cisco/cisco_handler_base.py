@@ -586,7 +586,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             raise Exception(e.message)
         return result
 
-    def backup_configuration(self, custom_destination_host, source_filename):
+    def backup_configuration(self, destination_host, source_filename):
         """Backup 'startup-config' or 'running-config' from device to provided file_system [ftp|tftp]
         Also possible to backup config to localhost
 
@@ -599,7 +599,6 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         destination_filename = '{0}-{1}-{2}'.format(system_name, source_filename, self._get_time_stamp())
         self._logger.info('destination filename is {0}'.format(destination_filename))
 
-        destination_host = custom_destination_host
         if '//' not in destination_host:
             destination_host = self._get_resource_attribute(self.attributes_dict['ResourceFullName'],
                                                             'Backup Location')
