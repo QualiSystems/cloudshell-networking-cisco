@@ -10,5 +10,3 @@ CISCO_RESOURCE_DRIVERS_MAP = \
         '359': 'CATALYST_2950',
         '615': 'CATALYST_3650'
         }
-
-

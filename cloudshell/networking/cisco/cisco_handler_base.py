@@ -211,30 +211,33 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         copy_command_str = 'copy ' + source_filesystem + destination_filesystem
 
         is_downloaded = (False, '')
+        expected_string = '\?|.*: \[.*\]|.*: *$|' + self._prompt
         while (not is_downloaded[0]) and (retries > 0):
             retries -= 1
 
-            output = self._send_command(copy_command_str, expected_str='\?')
+            output = self._send_command(copy_command_str, expected_str=expected_string)
 
             while re.search(self._prompt, output) is None:
                 if re.search('source filename', output.lower()):
-                    output = self._send_command(kwargs['source_filename'], expected_str='\?')
-                elif re.search('remote host', output.lower()):
+                    output = self._send_command(kwargs['source_filename'], expected_str=expected_string)
+                elif re.search('remote host', output.lower()) or re.search('hostname for the tftp', output.lower()):
                     if 'remote_host' not in kwargs or len(kwargs['remote_host']) == 0:
                         raise Exception('Cisco IOS', 'Copy method: remote host not set!')
 
                     if not validateIP(kwargs['remote_host']):
                         raise Exception('Cisco IOS', 'Copy method: remote host ip is not valid!')
 
-                    output = self._send_command(kwargs['remote_host'], expected_str='\?')
+                    output = self._send_command(kwargs['remote_host'], expected_str=expected_string)
                 elif re.search('destination filename', output.lower()):
                     destination_filename = ''
                     if 'destination_filename' in kwargs:
                         destination_filename = kwargs['destination_filename']
 
-                    output = self._send_command(destination_filename, expected_str=self._prompt,
+                    output = self._send_command(destination_filename.replace(' ', '_'), expected_str=expected_string,
                                                 expected_map={'\[confirm\]|\?': expected_actions.send_empty_string},
                                                 timeout=timeout)
+                elif re.search('vrf', output.lower()):
+                    output = self._send_command("", expected_str=expected_string)
 
             is_downloaded = self._check_download_from_tftp(output)
 
@@ -628,7 +631,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
     def _get_time_stamp(self):
         return time.strftime("%d%m%Y-%H%M%S", time.gmtime())
 
-    def restore_configuration(self, source_file, clear_config='override'):
+    def restore_configuration(self, source_file, configuration_type, clear_config='override'):
         """Restore configuration on device from provided configuration file
         Restore configuration from local file system or ftp/tftp server into 'running-config' or 'startup-config'.
         :param source_file: relative path to the file on the remote host tftp://server/sourcefile
@@ -639,11 +642,11 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
         extracted_data = source_file.split('://')
         source_filesystem = extracted_data[0]
-        match_data = re.search('startup-config|running-config', extracted_data[1])
+        match_data = re.search('startup-config|running-config', configuration_type)
         if not match_data:
-            raise Exception('Cisco IOS', "Destination filename must be 'startup-config' or 'running-config'!")
-        else:
-            destination_filename = match_data.group()
+            raise Exception('Cisco IOS', "Configuration type is empty")
+        destination_filename = match_data.group()
+
         remote_host_match = re.search('^(?P<host>\S+)/', extracted_data[1])
         if not remote_host_match or not remote_host_match.groupdict()['host']:
             raise Exception('Cisco IOS', "Cannot find hostname!")
