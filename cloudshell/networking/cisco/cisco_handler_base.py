@@ -3,7 +3,6 @@ __author__ = 'g8y3e'
 import time
 
 import ipcalc
-from cloudshell.api.cloudshell_api import CloudShellAPISession
 
 from cloudshell.networking.networking_handler_interface import NetworkingHandlerInterface
 from cloudshell.shell.core.handler_base import HandlerBase
@@ -28,7 +27,6 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         self.supported_os = []
         self._prompt = "{0}|{1}|{2}".format(self.DEFAULT_PROMPT, self.ENABLE_PROMPT, self.CONFIG_MODE_PROMPT)
         self._snmp_handler = None
-        self._cloud_shell_api = None
 
     @property
     def snmp_handler(self):
@@ -262,17 +260,6 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                 error_str = error_str[:error_str.find('\n')]
                 raise Exception('Cisco IOS', 'Configure replace error: ' + error_str)
 
-    def cloud_shell_api(self):
-        if not self._cloud_shell_api:
-            hostname = socket.gethostname()
-            testshell_ip = socket.gethostbyname(hostname)
-            testshell_user = self.reservation_dict['AdminUsername']
-            testshell_password = self.reservation_dict['AdminPassword']
-            testshell_domain = self.reservation_dict['Domain']
-            self._cloud_shell_api = CloudShellAPISession(testshell_ip, testshell_user, testshell_password,
-                                                         testshell_domain)
-        return self._cloud_shell_api
-
     def reload(self, sleep_timeout=60, retry_count=5):
         output = self._send_command('reload', expected_str='\[yes/no\]:|[confirm]')
 
@@ -421,7 +408,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             raise Exception('Only one vlan could be assigned to the interface in Access mode')
 
     def get_port_name(self, port):
-        port_resource_map = self.cloud_shell_api().GetResourceDetails(self.attributes_dict['ResourceName'])
+        port_resource_map = self.cloud_shell_api.GetResourceDetails(self.attributes_dict['ResourceName'])
         temp_port_name = self._get_resource_full_name(port, port_resource_map)
         if '/' not in temp_port_name:
             self._logger.error('Interface was not found')
@@ -581,7 +568,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
     def _get_resource_attribute(self, resource_full_path, attribute_name):
         try:
-            result = self.cloud_shell_api.GetAttributeValue(resource_full_path, attribute_name).Value
+            result = self.cloud_shell_api().GetAttributeValue(resource_full_path, attribute_name).Value
         except Exception as e:
             raise Exception(e.message)
         return result
@@ -630,7 +617,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
     def _get_time_stamp(self):
         return time.strftime("%d%m%Y-%H%M%S", time.gmtime())
 
-    def restore_configuration(self, source_file, configuration_type, clear_config='override'):
+    def restore_configuration(self, source_file, config_type, clear_config='override'):
         """Restore configuration on device from provided configuration file
         Restore configuration from local file system or ftp/tftp server into 'running-config' or 'startup-config'.
         :param source_file: relative path to the file on the remote host tftp://server/sourcefile
@@ -641,7 +628,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
         extracted_data = source_file.split('://')
         source_filesystem = extracted_data[0]
-        match_data = re.search('startup-config|running-config', configuration_type)
+        match_data = re.search('startup-config|running-config', config_type)
         if not match_data:
             raise Exception('Cisco IOS', "Configuration type is empty")
         destination_filename = match_data.group()
