@@ -655,9 +655,11 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
             if not (remote_host == 'localhost'):
                 source_filename = source_file
-
-            self.configure('replace', source_filename=source_filename, timeout=600)
-            is_uploaded = (True, '')
+            if 'NXOS' not in self.supported_os:
+                self.configure('replace', source_filename=source_filename, timeout=600)
+                is_uploaded = (True, '')
+            else:
+                raise Exception('Overwrite running-config is not supported for NXOS device')
         else:
             is_uploaded = self.copy(source_filesystem=source_filesystem, remote_host=remote_host,
                                     source_filename=source_filename, destination_filename=destination_filename,
