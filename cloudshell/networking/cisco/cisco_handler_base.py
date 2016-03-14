@@ -51,7 +51,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                                         expected_map={'[Pp]assword': expected_actions.send_default_password})
 
         if re.search('> *$', output):
-            raise Exception('Cisco IOSX', "Can't set enable mode!")
+            raise Exception('Cisco OS', "Can't set enable mode!")
 
         self._set_terminal_length(0)
         self._send_command('terminal no exec prompt timestamp')
@@ -183,15 +183,15 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
     def copy(self, source_filesystem='', destination_filesystem='', timeout=30, retries=5, **kwargs):
         if len(source_filesystem) != 0 and not self._is_valid_copy_filesystem(source_filesystem):
-            raise Exception('Cisco IOS', 'Copy method: source filesystem \"' + source_filesystem
+            raise Exception('Cisco OS', 'Copy method: source filesystem \"' + source_filesystem
                             + '\" is incorrect!')
 
         if len(destination_filesystem) != 0 and not self._is_valid_copy_filesystem(destination_filesystem):
-            raise Exception('Cisco IOS', 'Copy method: destination filesystem \"' + destination_filesystem
+            raise Exception('Cisco OS', 'Copy method: destination filesystem \"' + destination_filesystem
                             + '\" is incorrect!')
 
         if 'source_filename' not in kwargs or len(kwargs['source_filename']) == 0:
-            raise Exception('Cisco IOS', 'Copy method: source filename not set!')
+            raise Exception('Cisco OS', 'Copy method: source filename not set!')
 
         if source_filesystem != '':
             source_filesystem += ': '
@@ -220,10 +220,10 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                     output = self._send_command(kwargs['source_filename'], expected_str=expected_string)
                 elif re.search('remote host', output.lower()) or re.search('hostname for the tftp', output.lower()):
                     if 'remote_host' not in kwargs or len(kwargs['remote_host']) == 0:
-                        raise Exception('Cisco IOS', 'Copy method: remote host not set!')
+                        raise Exception('Cisco OS', 'Copy method: remote host not set!')
 
                     if not validateIP(kwargs['remote_host']):
-                        raise Exception('Cisco IOS', 'Copy method: remote host ip is not valid!')
+                        raise Exception('Cisco OS', 'Copy method: remote host ip is not valid!')
 
                     output = self._send_command(kwargs['remote_host'], expected_str=expected_string)
                 elif re.search('destination filename', output.lower()):
@@ -245,7 +245,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         command = 'configure '
         if type == 'replace':
             if 'source_filename' not in kwargs:
-                raise Exception('Cisco IOS', "Config replace method doesn't have  source filename!")
+                raise Exception('Cisco OS', "Config replace method doesn't have  source filename!")
             command += 'replace ' + kwargs['source_filename']
 
             expected_map = {
@@ -258,7 +258,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             if match_error is not None:
                 error_str = output[match_error.end() + 1:]
                 error_str = error_str[:error_str.find('\n')]
-                raise Exception('Cisco IOS', 'Configure replace error: ' + error_str)
+                raise Exception('Cisco OS', 'Configure replace error: ' + error_str)
 
     def reload(self, sleep_timeout=60, retry_count=5):
         output = self._send_command('reload', expected_str='\[yes/no\]:|[confirm]')
@@ -515,13 +515,13 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
         firmware_obj = CiscoFirmwareData(file_path)
         if firmware_obj.get_name() is None:
-            raise Exception('Cisco IOS', "Invalid firmware name!\n \
+            raise Exception('Cisco OS', "Invalid firmware name!\n \
                             Firmware file must have: title, extension.\n \
                             Example: isr4400-universalk9.03.10.00.S.153-3.S-ext.SPA.bin\n\n \
                             Current path: " + file_path)
 
             # if not validateIP(remote_host):
-            #     raise Exception('Cisco IOS', "Not valid remote host IP address!")
+            #     raise Exception('Cisco OS', "Not valid remote host IP address!")
         free_memory_size = self._get_free_memory_size('bootflash')
 
         #if size_of_firmware > free_memory_size:
@@ -531,7 +531,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                                   source_filename=file_path, timeout=600, retries=2)
 
         if not is_downloaded[0]:
-            raise Exception('Cisco IOS', "Failed to download firmware from " + remote_host +
+            raise Exception('Cisco OS', "Failed to download firmware from " + remote_host +
                             file_path + "!\n" + is_downloaded[1])
 
         self._send_command('configure terminal', expected_str='(config)#')
@@ -553,7 +553,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             is_boot_firmware = output.find(firmware_full_name) != -1
 
         if not is_boot_firmware:
-            raise Exception('Cisco IOS', "Can't add firmware '" + firmware_full_name + "' dor boot!")
+            raise Exception('Cisco OS', "Can't add firmware '" + firmware_full_name + "' dor boot!")
 
         self._send_command('exit')
         output = self._send_command('copy run start', expected_map={'\?': expected_actions.send_empty_string})
@@ -564,7 +564,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         if is_firmware_installed != -1:
             return 'Finished updating firmware!'
         else:
-            raise Exception('Cisco IOS', 'Firmware update was unsuccessful!')
+            raise Exception('Cisco OS', 'Firmware update was unsuccessful!')
 
     def _get_resource_attribute(self, resource_full_path, attribute_name):
         try:
@@ -590,20 +590,20 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             destination_host = self._get_resource_attribute(self.attributes_dict['ResourceFullName'],
                                                             'Backup Location')
             if '//' not in destination_host:
-                raise Exception('Cisco IOS', "Remote filesystem must be 'tftp' or 'ftp'!")
+                raise Exception('Cisco OS', "Remote filesystem must be 'tftp' or 'ftp'!")
 
         destination_path = destination_host.split('://')
         remote_host = destination_path[1]
         destination_filesystem = destination_path[0]
 
         if (source_filename != 'startup-config') and (source_filename != 'running-config'):
-            raise Exception('Cisco IOS', "Source filename must be 'startup-config' or 'running-config'!")
+            raise Exception('Cisco OS', "Source filename must be 'startup-config' or 'running-config'!")
 
         if ('127.0.0.1' in destination_host) or ('localhost' in destination_host) or (destination_host == ''):
             remote_host = 'localhost'
 
         elif re.match('tftp|ftp', destination_host) is None:
-            raise Exception('Cisco IOS', "Remote filesystem must be 'tftp' or 'ftp'!")
+            raise Exception('Cisco OS', "Remote filesystem must be 'tftp' or 'ftp'!")
 
         is_uploaded = self.copy(destination_filesystem=destination_filesystem, remote_host=remote_host,
                                 source_filename=source_filename, destination_filename=destination_filename,
@@ -630,12 +630,12 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         source_filesystem = extracted_data[0]
         match_data = re.search('startup-config|running-config', config_type)
         if not match_data:
-            raise Exception('Cisco IOS', "Configuration type is empty")
+            raise Exception('Cisco OS', "Configuration type is empty")
         destination_filename = match_data.group()
 
         remote_host_match = re.search('^(?P<host>\S+)/', extracted_data[1])
         if not remote_host_match or not remote_host_match.groupdict()['host']:
-            raise Exception('Cisco IOS', "Cannot find hostname!")
+            raise Exception('Cisco OS', "Cannot find hostname!")
         else:
             remote_host = remote_host_match.groupdict()['host']
 
@@ -666,14 +666,14 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                                     timeout=600, retries=5)
 
         if is_uploaded[0] is False:
-            raise Exception('Cisco IOS', is_uploaded[1])
+            raise Exception('Cisco OS', is_uploaded[1])
 
         is_downloaded = (True, '')
 
         if is_downloaded[0] is True:
             return 'Finished restore configuration!'
         else:
-            raise Exception('Cisco IOS', is_downloaded[1])
+            raise Exception('Cisco OS', is_downloaded[1])
 
     def _remove_old_boot_system_config(self):
         """Clear boot system parameters in current configuration
