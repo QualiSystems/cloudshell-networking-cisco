@@ -408,7 +408,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             raise Exception('Only one vlan could be assigned to the interface in Access mode')
 
     def get_port_name(self, port):
-        port_resource_map = self.cloud_shell_api().GetResourceDetails(self.attributes_dict['ResourceName'])
+        port_resource_map = self.cloud_shell_api.GetResourceDetails(self.attributes_dict['ResourceName'])
         temp_port_name = self._get_resource_full_name(port, port_resource_map)
         if '/' not in temp_port_name:
             self._logger.error('Interface was not found')
@@ -568,7 +568,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
     def _get_resource_attribute(self, resource_full_path, attribute_name):
         try:
-            result = self.cloud_shell_api().GetAttributeValue(resource_full_path, attribute_name).Value
+            result = self.cloud_shell_api.GetAttributeValue(resource_full_path, attribute_name).Value
         except Exception as e:
             raise Exception(e.message)
         return result
