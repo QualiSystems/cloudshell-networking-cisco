@@ -610,9 +610,9 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                                 timeout=600, retries=5)
 
         if is_uploaded[0] is True:
-            return 'Finished backing up configuration! Destination file is {0}'.format(destination_filename)
+            return '{0},'.format(destination_filename)
         else:
-            return is_uploaded[1]
+            raise Exception(is_uploaded[1])
 
     def _get_time_stamp(self):
         return time.strftime("%d%m%Y-%H%M%S", time.gmtime())
