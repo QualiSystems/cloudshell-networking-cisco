@@ -300,9 +300,8 @@ class CiscoGenericSNMPAutoload(object):
         if match_name:
             vendor = match_name.groupdict()['vendor'].capitalize()
             model = match_name.groupdict()['model']
-            if vendor and vendor in CISCO_RESOURCE_DRIVERS_MAP:
-                if model in CISCO_RESOURCE_DRIVERS_MAP[vendor]:
-                    result['model'] = CISCO_RESOURCE_DRIVERS_MAP[vendor][model].lower().replace('_', '').capitalize()
+            if model in CISCO_RESOURCE_DRIVERS_MAP:
+                result['model'] = CISCO_RESOURCE_DRIVERS_MAP[model].lower().replace('_', '').capitalize()
             elif vendor.upper() == result['vendor'].upper():
                 if model in CISCO_RESOURCE_DRIVERS_MAP['9']:
                     result['model'] = CISCO_RESOURCE_DRIVERS_MAP['9'][model].lower().replace('_', '').capitalize()
