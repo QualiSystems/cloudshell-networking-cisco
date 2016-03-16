@@ -7,10 +7,11 @@ from collections import OrderedDict
 from cloudshell.networking.cisco.autoload.resource import Resource
 from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
+
 class CiscoGenericSNMPAutoload(object):
     def __init__(self, snmp_handler, logger):
         self.snmp = snmp_handler
-        path = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '..', 'mibs'))
+        path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'mibs'))
         self.snmp.update_mib_sources(path)
         self._logger = logger
         self._load_snmp_tables()
@@ -49,8 +50,10 @@ class CiscoGenericSNMPAutoload(object):
         device_id = self.entity_table.filter_by_column('ParentRelPos', '-1').keys()[0]
         port_list = self.entity_table.filter_by_column('Class', "'port'").sort_by_column('ParentRelPos').keys()
         self.module_list = self.entity_table.filter_by_column('Class', "'module'").sort_by_column('ParentRelPos').keys()
-        power_port_list = self.entity_table.filter_by_column('Class', "'powerSupply'").sort_by_column('ParentRelPos').keys()
-        self.chassis_list = self.entity_table.filter_by_column('Class', "'chassis'").sort_by_column('ParentRelPos').keys()
+        power_port_list = self.entity_table.filter_by_column('Class', "'powerSupply'").sort_by_column(
+            'ParentRelPos').keys()
+        self.chassis_list = self.entity_table.filter_by_column('Class', "'chassis'").sort_by_column(
+            'ParentRelPos').keys()
         info_data = {'attributes': self._get_device_details(device_id),
                      'relative_path': ''}
         self.resource.addChild('', '/', info_data)
@@ -100,7 +103,8 @@ class CiscoGenericSNMPAutoload(object):
     def _get_module_attributes(self):
         self._logger.info('Start loading Modules')
         for module in self.module_list:
-            if 'MODULE' not in self.entity_table[module]['entPhysicalName'].upper():
+            if 'MODULE' not in self.entity_table[module]['entPhysicalName'].upper() and \
+                    'SLOT' not in self.entity_table[module]['entPhysicalName'].upper():
                 continue
             module_id = str(self.module_list.index(module))
             relative_id = self._get_relative_path(module) + '/' + module_id
@@ -195,12 +199,12 @@ class CiscoGenericSNMPAutoload(object):
                              'description': self.if_x_table[self.port_mapping[port]]['ifAlias'],
                              'adjacent': self._get_adjacent(port),
                              'protocol_type': 'Transparent'}
-            #device_attributes.update(self.if_table[self.port_mapping[port]])
-            #device_attributes.update(self.if_x_table[self.port_mapping[port]])
+            # device_attributes.update(self.if_table[self.port_mapping[port]])
+            # device_attributes.update(self.if_x_table[self.port_mapping[port]])
             attribute_map.update(self._get_interface_details(self.port_mapping[port]))
             attribute_map.update(self._get_ip_interface_details(self.port_mapping[port]))
-            #attribute_map = getDictionaryData(device_attributes, ['entPhysicalDescr'])
-            #attribute_map.update(getDictionaryData(device_attributes, ['entPhysicalName']))
+            # attribute_map = getDictionaryData(device_attributes, ['entPhysicalDescr'])
+            # attribute_map.update(getDictionaryData(device_attributes, ['entPhysicalName']))
             info_data = {'model': interface_model,
                          'name': '{0}'.format(datamodel_interface_name),
                          'relative_path': interface_id,
@@ -260,7 +264,7 @@ class CiscoGenericSNMPAutoload(object):
                   'firmware': ''}
 
         match_version = re.search('\S\s*\((?P<firmware>\S+)\)\S\s*Version\s+(?P<software_version>\S+)\S*\s+',
-                                 self.snmp_mib[0]['sysDescr'])
+                                  self.snmp_mib[0]['sysDescr'])
         if match_version:
             result['os_version'] = match_version.groupdict()['software_version'].replace(',', '')
             result['firmware'] = match_version.groupdict()['firmware']
@@ -290,26 +294,24 @@ class CiscoGenericSNMPAutoload(object):
             match_name = re.search(r'1\.3\.6\.1\.4\.1\.(?P<vendor>\d+)(\.\d)+\.(?P<model>\d+$)',
                                    self.snmp_mib[0]['sysObjectID'])
             if match_name is None:
-
                 match_name = re.search(r'^(?P<vendor>\w+)-SMI::ciscoProducts\.(?P<model>\d+)$',
-                               self.snmp_mib[0]['sysObjectID'])
+                                       self.snmp_mib[0]['sysObjectID'])
 
         if match_name:
             vendor = match_name.groupdict()['vendor'].capitalize()
             model = match_name.groupdict()['model']
-            if vendor and vendor in CISCO_RESOURCE_DRIVERS_MAP:
-                if model in CISCO_RESOURCE_DRIVERS_MAP[vendor]:
-                    result['model'] = CISCO_RESOURCE_DRIVERS_MAP[vendor][model].lower().replace('_', '').capitalize()
+            if model in CISCO_RESOURCE_DRIVERS_MAP:
+                result['model'] = CISCO_RESOURCE_DRIVERS_MAP[model].lower().replace('_', '').capitalize()
             elif vendor.upper() == result['vendor'].upper():
                 if model in CISCO_RESOURCE_DRIVERS_MAP['9']:
                     result['model'] = CISCO_RESOURCE_DRIVERS_MAP['9'][model].lower().replace('_', '').capitalize()
             if not result['model'] or result['model'] == '':
-                    self.snmp.load_mib('CISCO-PRODUCTS-MIB')
-                    match_name = re.search(r'^(?P<vendor>\S+)-P\S*\s*::(?P<model>\S+$)',
-                                           self.snmp.get(('SNMPv2-MIB', 'sysObjectID', '0')).values()[0])
-                    if match_name:
-                        result['vendor'] = match_name.groupdict()['vendor'].capitalize()
-                        result['model'] = match_name.groupdict()['model'].capitalize()
+                self.snmp.load_mib('CISCO-PRODUCTS-MIB')
+                match_name = re.search(r'^(?P<vendor>\S+)-P\S*\s*::(?P<model>\S+$)',
+                                       self.snmp.get(('SNMPv2-MIB', 'sysObjectID', '0')).values()[0])
+                if match_name:
+                    result['vendor'] = match_name.groupdict()['vendor'].capitalize()
+                    result['model'] = match_name.groupdict()['model'].capitalize()
         return result
 
     def get_mapping(self):
