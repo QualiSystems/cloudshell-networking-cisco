@@ -1,1 +1,1 @@
-CloudShell networking cisco specific package powered by QualiSystems
+CloudShell shell core package powered by QualiSystems

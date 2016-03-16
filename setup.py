@@ -19,7 +19,7 @@ setup(
     install_requires=required,
     tests_require=required_for_tests,
     version=version_from_file,
-    description='CloudShell Networking Cisco Specific Package',
+	package_data={'': ['*.txt']},
+    description='QualiSystems networking cisco specific package',
     include_package_data = True
 )
-
