@@ -14,9 +14,9 @@ from cloudshell.cli import expected_actions
 
 
 class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
-    DEFAULT_PROMPT = '.*>*$'
+    DEFAULT_PROMPT = '.*>\s*$'
     ENABLE_PROMPT = '.*#\s*$'
-    CONFIG_MODE_PROMPT = '\(config.*\)#*$'
+    CONFIG_MODE_PROMPT = '\(config.*\)#\s*$'
     ERR_STR = 'Invalid input detected|Incomplete command.'
     SPACE = '<QS_SP>'
     RETURN = '<QS_CR>'
@@ -663,7 +663,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
             # if not (remote_host == 'localhost'):
             #     source_filename = source_file
-            if self.is_replace_command_exist():
+            if self.check_replace_command():
                 self.configure('replace', source_filename=source_filename, timeout=600)
                 is_uploaded = (True, '')
             else:
@@ -683,13 +683,11 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         else:
             raise Exception('Cisco OS', is_downloaded[1])
 
-    def is_replace_command_exist(self):
-        try:
-            output = self._send_command('configure ?', '.*]?$')
-            return True
-        except Exception as e:
-            self._logger.error("Replace command doesn't exist")
+    def check_replace_command(self):
+        output = self._send_command('configure replace')
+        if 'invalid input' in output.lower():
             return False
+        return True
 
     def _remove_old_boot_system_config(self):
         """Clear boot system parameters in current configuration
