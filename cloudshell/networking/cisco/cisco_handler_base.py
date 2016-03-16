@@ -14,9 +14,9 @@ from cloudshell.cli import expected_actions
 
 
 class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
-    DEFAULT_PROMPT = '.*> *$'
-    ENABLE_PROMPT = '.*# *$'
-    CONFIG_MODE_PROMPT = '\(config.*\)# *$'
+    DEFAULT_PROMPT = '.*>*$'
+    ENABLE_PROMPT = '.*#\s*$'
+    CONFIG_MODE_PROMPT = '\(config.*\)#*$'
     ERR_STR = 'Invalid input detected|Incomplete command.'
     SPACE = '<QS_SP>'
     RETURN = '<QS_CR>'
@@ -410,10 +410,15 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
     def get_port_name(self, port):
         port_resource_map = self.cloud_shell_api.GetResourceDetails(self.attributes_dict['ResourceName'])
         temp_port_name = self._get_resource_full_name(port, port_resource_map)
+        port_name = temp_port_name.split('/')[-1]
         if '/' not in temp_port_name:
             self._logger.error('Interface was not found')
             raise Exception('Interface was not found')
-        return temp_port_name.split('/')[-1].replace('-', '/')
+        if re.match('PC\d+', port_name):
+            result = port_name.upper().replace('PC', 'port-channel')
+        else:
+            result = port_name.replace('-', '/')
+        return result
 
     def configure_vlan_interface_ethernet(self, **kwargs):
         """
@@ -581,29 +586,30 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :param source_filename: what file to backup
         :return: status message / exception
         """
+        if (source_filename != 'startup-config') and (source_filename != 'running-config'):
+            raise Exception('Cisco OS', "Source filename must be 'startup-config' or 'running-config'!")
 
         system_name = self.attributes_dict['ResourceFullName'].replace('.', '_')
         destination_filename = '{0}-{1}-{2}'.format(system_name, source_filename, self._get_time_stamp())
         self._logger.info('destination filename is {0}'.format(destination_filename))
 
-        if '//' not in destination_host:
-            destination_host = self._get_resource_attribute(self.attributes_dict['ResourceFullName'],
-                                                            'Backup Location')
+        if len(destination_host) > 0:
             if '//' not in destination_host:
+                destination_host = self._get_resource_attribute(self.attributes_dict['ResourceFullName'],
+                                                                'Backup Location')
+
+            destination_path = destination_host.split('://')
+            remote_host = destination_path[1]
+            destination_filesystem = destination_path[0]
+
+            if ('127.0.0.1' in destination_host) or ('localhost' in destination_host) or (destination_host == ''):
+                remote_host = 'localhost'
+
+            elif re.match('tftp|ftp', destination_host) is None:
                 raise Exception('Cisco OS', "Remote filesystem must be 'tftp' or 'ftp'!")
-
-        destination_path = destination_host.split('://')
-        remote_host = destination_path[1]
-        destination_filesystem = destination_path[0]
-
-        if (source_filename != 'startup-config') and (source_filename != 'running-config'):
-            raise Exception('Cisco OS', "Source filename must be 'startup-config' or 'running-config'!")
-
-        if ('127.0.0.1' in destination_host) or ('localhost' in destination_host) or (destination_host == ''):
-            remote_host = 'localhost'
-
-        elif re.match('tftp|ftp', destination_host) is None:
-            raise Exception('Cisco OS', "Remote filesystem must be 'tftp' or 'ftp'!")
+        else:
+            destination_filesystem = ''
+            remote_host = ''
 
         is_uploaded = self.copy(destination_filesystem=destination_filesystem, remote_host=remote_host,
                                 source_filename=source_filename, destination_filename=destination_filename,
@@ -624,25 +630,27 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :param clear_config: override current config or not
         :return:
         """
+        remote_host = ''
+        source_filesystem = ''
         self._logger.info('Start restoring device configuration from {}'.format(source_file))
-
-        extracted_data = source_file.split('://')
-        source_filesystem = extracted_data[0]
         match_data = re.search('startup-config|running-config', config_type)
         if not match_data:
             raise Exception('Cisco OS', "Configuration type is empty")
         destination_filename = match_data.group()
-
-        remote_host_match = re.search('^(?P<host>\S+)/', extracted_data[1])
-        if not remote_host_match or not remote_host_match.groupdict()['host']:
-            raise Exception('Cisco OS', "Cannot find hostname!")
-        else:
-            remote_host = remote_host_match.groupdict()['host']
-
-        source_filename = extracted_data[1].replace(remote_host + '/', '')
-
         if ('127.0.0.1' in source_file) or ('localhost' in source_file):
             remote_host = 'localhost'
+        if '://' in source_file:
+            extracted_data = source_file.split('://')
+            source_filesystem = extracted_data[0]
+            remote_host_match = re.search('^(?P<host>\S+)/', extracted_data[1])
+            if not remote_host_match or not remote_host_match.groupdict()['host']:
+                raise Exception('Cisco OS', "Cannot find hostname!")
+            else:
+                remote_host = remote_host_match.groupdict()['host']
+
+            source_filename = extracted_data[1].replace(remote_host + '/', '')
+        else:
+            source_filename = source_file
 
         if (clear_config.lower() == 'override') and (destination_filename == 'startup-config'):
             self._send_command('del ' + destination_filename,
@@ -653,13 +661,13 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                                     timeout=600, retries=5)
         elif (clear_config.lower() == 'override') and (destination_filename == 'running-config'):
 
-            if not (remote_host == 'localhost'):
-                source_filename = source_file
-            if 'NXOS' not in self.supported_os:
+            # if not (remote_host == 'localhost'):
+            #     source_filename = source_file
+            if self.is_replace_command_exist():
                 self.configure('replace', source_filename=source_filename, timeout=600)
                 is_uploaded = (True, '')
             else:
-                raise Exception('Overwrite running-config is not supported for NXOS device')
+                raise Exception('Override running-config is not supported for this device')
         else:
             is_uploaded = self.copy(source_filesystem=source_filesystem, remote_host=remote_host,
                                     source_filename=source_filename, destination_filename=destination_filename,
@@ -674,6 +682,14 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             return 'Finished restore configuration!'
         else:
             raise Exception('Cisco OS', is_downloaded[1])
+
+    def is_replace_command_exist(self):
+        try:
+            output = self._send_command('configure ?', '.*]?$')
+            return True
+        except Exception as e:
+            self._logger.error("Replace command doesn't exist")
+            return False
 
     def _remove_old_boot_system_config(self):
         """Clear boot system parameters in current configuration
