@@ -238,6 +238,11 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                     output = self._send_command("", expected_str=expected_string)
 
             is_downloaded = self._check_download_from_tftp(output)
+            if is_downloaded[1] == '':
+                if re.search('(.*[error|fail].*)', output.lower()):
+                    msg = 'Failed to copy configuration.'
+                    msg += '\n{}'.format(output)
+                    is_downloaded = (False, msg)
 
         return is_downloaded
 
@@ -675,7 +680,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         else:
             is_uploaded = self.copy(source_filesystem=source_filesystem, remote_host=remote_host,
                                     source_filename=source_filename, destination_filename=destination_filename,
-                                    timeout=600, retries=5)
+                                    timeout=600, retries=20)
 
         if is_uploaded[0] is False:
             raise Exception('Cisco OS', is_uploaded[1])
