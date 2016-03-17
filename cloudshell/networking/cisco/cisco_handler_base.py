@@ -586,8 +586,10 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :param source_filename: what file to backup
         :return: status message / exception
         """
+        if '-config' not in source_filename:
+            source_filename = source_filename.lower() + '-config'
         if (source_filename != 'startup-config') and (source_filename != 'running-config'):
-            raise Exception('Cisco OS', "Source filename must be 'startup-config' or 'running-config'!")
+            raise Exception('Cisco OS', "Source filename must be 'startup' or 'running'!")
 
         system_name = self.attributes_dict['ResourceFullName'].replace('.', '_')
         destination_filename = '{0}-{1}-{2}'.format(system_name, source_filename, self._get_time_stamp())
@@ -630,12 +632,14 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :param clear_config: override current config or not
         :return:
         """
+        if '-config' not in config_type:
+            config_type = config_type.lower() + '-config'
         remote_host = ''
         source_filesystem = ''
         self._logger.info('Start restoring device configuration from {}'.format(source_file))
         match_data = re.search('startup-config|running-config', config_type)
         if not match_data:
-            raise Exception('Cisco OS', "Configuration type is empty")
+            raise Exception('Cisco OS', "Configuration type is empty or wrong")
         destination_filename = match_data.group()
         if ('127.0.0.1' in source_file) or ('localhost' in source_file):
             remote_host = 'localhost'
