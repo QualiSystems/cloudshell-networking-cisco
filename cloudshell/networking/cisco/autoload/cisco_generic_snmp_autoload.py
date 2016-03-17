@@ -302,9 +302,6 @@ class CiscoGenericSNMPAutoload(object):
             model = match_name.groupdict()['model']
             if model in CISCO_RESOURCE_DRIVERS_MAP:
                 result['model'] = CISCO_RESOURCE_DRIVERS_MAP[model].lower().replace('_', '').capitalize()
-            elif vendor.upper() == result['vendor'].upper():
-                if model in CISCO_RESOURCE_DRIVERS_MAP['9']:
-                    result['model'] = CISCO_RESOURCE_DRIVERS_MAP['9'][model].lower().replace('_', '').capitalize()
             if not result['model'] or result['model'] == '':
                 self.snmp.load_mib('CISCO-PRODUCTS-MIB')
                 match_name = re.search(r'^(?P<vendor>\S+)-P\S*\s*::(?P<model>\S+$)',
