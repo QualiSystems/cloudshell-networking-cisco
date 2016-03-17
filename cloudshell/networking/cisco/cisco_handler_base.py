@@ -161,7 +161,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             self.send_config_command(command)
 
     def normalize_output(self, output):
-        return output.replace(' ', self.SPACE).replace('\r\n', self.NEWLINE).replace('\n', self.NEWLINE).\
+        return output.replace(' ', self.SPACE).replace('\r\n', self.NEWLINE).replace('\n', self.NEWLINE). \
             replace('\r', self.NEWLINE)
 
     def _check_download_from_tftp(self, output):
@@ -374,7 +374,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                     raise Exception('interface does not support QnQ')
                 if 'switchport_mode_trunk' in params_map:
                     raise Exception('interface cannot have trunk and dot1q-tunneling modes in the same time')
-                params_map['qnq'] = ''
+                params_map['qnq'] = []
 
             self.configure_vlan_interface_ethernet(**params_map)
             self._exit_configuration_mode()
@@ -534,7 +534,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             #     raise Exception('Cisco OS', "Not valid remote host IP address!")
         free_memory_size = self._get_free_memory_size('bootflash')
 
-        #if size_of_firmware > free_memory_size:
+        # if size_of_firmware > free_memory_size:
         #    raise Exception('Cisco ISR 4K', "Not enough memory for firmware!")
 
         is_downloaded = self.copy('tftp', 'bootflash', remote_host=remote_host,
@@ -591,37 +591,36 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :param source_filename: what file to backup
         :return: status message / exception
         """
+        remote_host = ''
         if '-config' not in source_filename:
             source_filename = source_filename.lower() + '-config'
         if (source_filename != 'startup-config') and (source_filename != 'running-config'):
             raise Exception('Cisco OS', "Source filename must be 'startup' or 'running'!")
 
-        system_name = self.attributes_dict['ResourceFullName'].replace('.', '_')
+        system_name = self.attributes_dict['ResourceFullName']
         destination_filename = '{0}-{1}-{2}'.format(system_name, source_filename, self._get_time_stamp())
         self._logger.info('destination filename is {0}'.format(destination_filename))
 
-        if len(destination_host) > 0:
-            if '//' not in destination_host:
+        if ':/' not in destination_host:
+            if len(destination_host) <= 0:
                 destination_host = self._get_resource_attribute(self.attributes_dict['ResourceFullName'],
                                                                 'Backup Location')
-
+            if len(destination_host) <= 0:
+                raise Exception('Folder patch and Backup Location is empty')
+        if '://' in destination_host:
             destination_path = destination_host.split('://')
             remote_host = destination_path[1]
-            destination_filesystem = destination_path[0]
-
-            if ('127.0.0.1' in destination_host) or ('localhost' in destination_host) or (destination_host == ''):
-                remote_host = 'localhost'
-
-            elif re.match('tftp|ftp', destination_host) is None:
-                raise Exception('Cisco OS', "Remote filesystem must be 'tftp' or 'ftp'!")
         else:
-            destination_filesystem = ''
-            remote_host = ''
+            destination_path = destination_host.split(':/')
 
+        destination_filesystem = destination_path[0]
+        if ('127.0.0.1' in destination_host) or ('localhost' in destination_host) or (destination_host == ''):
+            remote_host = 'localhost'
+        elif re.match('tftp|ftp|flash', destination_host) is None:
+            raise Exception('Cisco OS', "Remote filesystem must be 'tftp://', 'ftp://' or 'flash:/'!")
         is_uploaded = self.copy(destination_filesystem=destination_filesystem, remote_host=remote_host,
                                 source_filename=source_filename, destination_filename=destination_filename,
                                 timeout=600, retries=5)
-
         if is_uploaded[0] is True:
             return '{0},'.format(destination_filename)
         else:
@@ -753,7 +752,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         data_str = re.sub('[\n\r]', '$', interface_data)
         data_str = re.sub(' +', ' ', data_str)
 
-        #hardware
+        # hardware
         interface_info.update(self._get_data_match('Hardware is (?P<type>[\w/\-\+\d ]+).*', data_str))
         interface_info.update(self._get_data_match('address is (?P<mac>[\w\d]{4}\.[\d\w]{4}\.[\w\d]{4})', data_str))
         interface_info.update(self._get_data_match(
