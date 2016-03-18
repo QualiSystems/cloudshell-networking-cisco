@@ -26,7 +26,7 @@ class CiscoGenericSNMPAutoload(object):
         self.if_table = self.snmp.get_table('IF-MIB', 'ifTable')
         self._logger.info('IfTable loaded')
 
-        self.snmp_mib = self.snmp.get_table('SNMPv2-MIB', 'system')
+        #self.snmp_mib = self.snmp.get_table('SNMPv2-MIB', 'system')
         self.lldp_local_table = self.snmp.get_table('LLDP-MIB', 'lldpLocPortDesc')
         self.lldp_remote_table = self.snmp.get_table('LLDP-MIB', 'lldpRemTable')
         self.cdp_index_table = self.snmp.get_table('CISCO-CDP-MIB', 'cdpInterface')
@@ -255,16 +255,16 @@ class CiscoGenericSNMPAutoload(object):
     def _get_device_details(self, index):
         self._logger.info('Start loading Switch Attributes')
         result = {'vendor': 'Cisco',
-                  'system_name': self.snmp_mib[0]['sysName'],
+                  'system_name': self.snmp.get_value('SNMPv2-MIB', 'sysName', 0),
                   'pid': self.entity_table[index]['entPhysicalHardwareRev'],
                   'model': '',
-                  'location': self.snmp_mib[0]['sysLocation'],
-                  'contact': self.snmp_mib[0]['sysContact'],
+                  'location': self.snmp.get_value('SNMPv2-MIB', 'sysLocation', 0),
+                  'contact': self.snmp.get_value('SNMPv2-MIB', 'sysContact', 0),
                   'os_version': '',
                   'firmware': ''}
 
         match_version = re.search('\S\s*\((?P<firmware>\S+)\)\S\s*Version\s+(?P<software_version>\S+)\S*\s+',
-                                  self.snmp_mib[0]['sysDescr'])
+                                  self.snmp.get_value('SNMPv2-MIB', 'sysDescr', 0))
         if match_version:
             result['os_version'] = match_version.groupdict()['software_version'].replace(',', '')
             result['firmware'] = match_version.groupdict()['firmware']
@@ -289,13 +289,13 @@ class CiscoGenericSNMPAutoload(object):
     def _get_device_model_and_vendor(self):
         result = {'vendor': 'Cisco', 'model': ''}
         match_name = re.search(r'^SNMPv2-SMI::enterprises\.(?P<vendor>\d+)(\.\d)+\.(?P<model>\d+$)',
-                               self.snmp_mib[0]['sysObjectID'])
+                               self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', 0))
         if match_name is None:
             match_name = re.search(r'1\.3\.6\.1\.4\.1\.(?P<vendor>\d+)(\.\d)+\.(?P<model>\d+$)',
-                                   self.snmp_mib[0]['sysObjectID'])
+                                   self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', 0))
             if match_name is None:
                 match_name = re.search(r'^(?P<vendor>\w+)-SMI::ciscoProducts\.(?P<model>\d+)$',
-                                       self.snmp_mib[0]['sysObjectID'])
+                                       self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', 0))
 
         if match_name:
             vendor = match_name.groupdict()['vendor'].capitalize()
@@ -305,7 +305,7 @@ class CiscoGenericSNMPAutoload(object):
             if not result['model'] or result['model'] == '':
                 self.snmp.load_mib('CISCO-PRODUCTS-MIB')
                 match_name = re.search(r'^(?P<vendor>\S+)-P\S*\s*::(?P<model>\S+$)',
-                                       self.snmp.get(('SNMPv2-MIB', 'sysObjectID', '0')).values()[0])
+                                       self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', '0'))
                 if match_name:
                     result['vendor'] = match_name.groupdict()['vendor'].capitalize()
                     result['model'] = match_name.groupdict()['model'].capitalize()
