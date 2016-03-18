@@ -112,7 +112,7 @@ class CiscoGenericSNMPAutoload(object):
                 continue
             module_details_map = {
                 'model': self.entity_table[module]['entPhysicalDescr'] or '',
-                'software_version': self.entity_table[module]['entPhysicalSoftwareRev'] or '',
+                'version': self.entity_table[module]['entPhysicalSoftwareRev'] or '',
                 'serial_number': self.entity_table[module]['entPhysicalSerialNum'] or ''
             }
             model = 'Generic Sub Module'
