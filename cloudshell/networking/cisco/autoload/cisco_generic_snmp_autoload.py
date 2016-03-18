@@ -294,7 +294,7 @@ class CiscoGenericSNMPAutoload(object):
             match_name = re.search(r'1\.3\.6\.1\.4\.1\.(?P<vendor>\d+)(\.\d)+\.(?P<model>\d+$)',
                                    self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', 0))
             if match_name is None:
-                match_name = re.search(r'^(?P<vendor>\w+)-SMI::ciscoProducts\.(?P<model>\d+)$',
+                match_name = re.search(r'^(?P<vendor>\w+)-SMI::cisco(Products|Modules)\S+\.(?P<model>\d+)$',
                                        self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', 0))
 
         if match_name:
