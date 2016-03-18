@@ -106,7 +106,7 @@ class CiscoGenericSNMPAutoload(object):
             if 'MODULE' not in self.entity_table[module]['entPhysicalName'].upper() and \
                     'SLOT' not in self.entity_table[module]['entPhysicalName'].upper():
                 continue
-            module_id = str(self.module_list.index(module) + 1)
+            module_id = str(self.module_list.index(module))
             relative_id = self._get_relative_path(module) + '/' + module_id
             if relative_id not in self.port_relative_address:
                 continue
