@@ -594,10 +594,10 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :return: status message / exception
         """
         remote_host = ''
-        if '-config' not in source_filename:
-            source_filename = source_filename.lower() + '-config'
         if source_filename == '':
             source_filename = 'running-config'
+        if '-config' not in source_filename:
+            source_filename = source_filename.lower() + '-config'
         if ('startup' not in source_filename) and ('running' not in source_filename):
             raise Exception('Cisco OS', "Source filename must be 'startup' or 'running'!")
 
