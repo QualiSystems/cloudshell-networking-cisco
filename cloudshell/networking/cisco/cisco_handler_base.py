@@ -596,11 +596,17 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         remote_host = ''
         if '-config' not in source_filename:
             source_filename = source_filename.lower() + '-config'
-        if (source_filename != 'startup-config') and (source_filename != 'running-config'):
+        if source_filename == '':
+            source_filename = 'running-config'
+        if ('startup' not in source_filename) and ('running' not in source_filename):
             raise Exception('Cisco OS', "Source filename must be 'startup' or 'running'!")
 
-        system_name = self.attributes_dict['ResourceFullName']
-        destination_filename = '{0}-{1}-{2}'.format(system_name, source_filename, self._get_time_stamp())
+        system_name = re.sub('\s+', '_', self.attributes_dict['ResourceFullName'])
+        if len(system_name) > 23:
+            system_name = system_name[:23]
+
+        destination_filename = '{0}-{1}-{2}'.format(system_name, source_filename.replace('-config', ''),
+                                                    self._get_time_stamp())
         self._logger.info('destination filename is {0}'.format(destination_filename))
 
         if ':/' not in destination_host:
@@ -636,7 +642,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             raise Exception(is_uploaded[1])
 
     def _get_time_stamp(self):
-        return time.strftime("%d%m%Y-%H%M%S", time.gmtime())
+        return time.strftime("%d%m%y-%H%M%S", time.localtime())
 
     def restore_configuration(self, source_file, config_type, clear_config='override'):
         """Restore configuration on device from provided configuration file
