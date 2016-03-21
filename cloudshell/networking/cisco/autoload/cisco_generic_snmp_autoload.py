@@ -90,6 +90,8 @@ class CiscoGenericSNMPAutoload(object):
                 'model': self.entity_table[chassis]['entPhysicalModelName'],
                 'serial_number': self.entity_table[chassis]['entPhysicalSerialNum']
             }
+            if chassis_details_map['model'] == '':
+                chassis_details_map['model'] = self.entity_table[chassis]['entPhysicalDescr']
             module_name = 'Chassis {0}'.format(chassis_id)
             relative_path = '{0}'.format(chassis_id)
             info_data = {'name': module_name,
