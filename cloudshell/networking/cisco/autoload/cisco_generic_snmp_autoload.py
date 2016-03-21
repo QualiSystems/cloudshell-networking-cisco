@@ -90,6 +90,8 @@ class CiscoGenericSNMPAutoload(object):
                 'model': self.entity_table[chassis]['entPhysicalModelName'],
                 'serial_number': self.entity_table[chassis]['entPhysicalSerialNum']
             }
+            if chassis_details_map['model'] == '':
+                chassis_details_map['model'] = self.entity_table[chassis]['entPhysicalDescr']
             module_name = 'Chassis {0}'.format(chassis_id)
             relative_path = '{0}'.format(chassis_id)
             info_data = {'name': module_name,
@@ -294,21 +296,21 @@ class CiscoGenericSNMPAutoload(object):
             match_name = re.search(r'1\.3\.6\.1\.4\.1\.(?P<vendor>\d+)(\.\d)+\.(?P<model>\d+$)',
                                    self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', 0))
             if match_name is None:
-                match_name = re.search(r'^(?P<vendor>\w+)-SMI::cisco(Products|Modules)\S+\.(?P<model>\d+)$',
+                match_name = re.search(r'^(?P<vendor>\w+)-SMI::cisco(Products|Modules)\S*\.(?P<model>\d+)$',
                                        self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', 0))
 
         if match_name:
-            vendor = match_name.groupdict()['vendor'].capitalize()
+            #vendor = match_name.groupdict()['vendor'].capitalize()
             model = match_name.groupdict()['model']
             if model in CISCO_RESOURCE_DRIVERS_MAP:
                 result['model'] = CISCO_RESOURCE_DRIVERS_MAP[model].lower().replace('_', '').capitalize()
-            if not result['model'] or result['model'] == '':
-                self.snmp.load_mib('CISCO-PRODUCTS-MIB')
-                match_name = re.search(r'^(?P<vendor>\S+)-P\S*\s*::(?P<model>\S+$)',
-                                       self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', '0'))
-                if match_name:
-                    result['vendor'] = match_name.groupdict()['vendor'].capitalize()
-                    result['model'] = match_name.groupdict()['model'].capitalize()
+        if not result['model'] or result['model'] == '':
+            self.snmp.load_mib('CISCO-PRODUCTS-MIB')
+            match_name = re.search(r'^(?P<vendor>\S+)-P\S*\s*::(?P<model>\S+$)',
+                                   self.snmp.get_value('SNMPv2-MIB', 'sysObjectID', '0'))
+            if match_name:
+                result['vendor'] = match_name.groupdict()['vendor'].capitalize()
+                result['model'] = match_name.groupdict()['model'].capitalize()
         return result
 
     def get_mapping(self):

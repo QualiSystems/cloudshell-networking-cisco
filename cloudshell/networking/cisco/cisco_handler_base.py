@@ -371,11 +371,11 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                 params_map['access_allow_vlan'] = [vlan_range]
             if 'qnq' in additional_info.lower():
                 if not self._is_interface_support_qnq(port_name):
-                    raise Exception('interface does not support QnQ')
-                if 'switchport_mode_trunk' in params_map:
-                    raise Exception('interface cannot have trunk and dot1q-tunneling modes in the same time')
+                    raise Exception('interface does not support QinQ')
+                if 'trunk' in port_mode.lower():
+                    self._logger.info('QinQ cannot be assigned')
+                    raise Exception('QinQ cannot be assigned')
                 params_map['qnq'] = []
-
             self.configure_vlan_interface_ethernet(**params_map)
             self._exit_configuration_mode()
             self._logger.info('Vlan {0} was assigned to the interface {1}'.format(vlan_range, port_name))
