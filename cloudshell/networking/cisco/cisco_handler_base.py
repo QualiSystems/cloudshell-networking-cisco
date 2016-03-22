@@ -209,7 +209,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         copy_command_str = 'copy ' + source_filesystem + destination_filesystem
 
         is_downloaded = (False, '')
-        expected_string = '\?|.*: \[.*\]|.*: *$|' + self._prompt
+        expected_string = '\?|.*: \[.*\]|.*\]: *$|' + self._prompt
         while (not is_downloaded[0]) and (retries > 0):
             retries -= 1
 
@@ -226,7 +226,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                         raise Exception('Cisco OS', 'Copy method: remote host ip is not valid!')
 
                     output = self._send_command(kwargs['remote_host'], expected_str=expected_string)
-                elif re.search('destination filename', output.lower()):
+                elif re.search('[Dd]estination filename', output.lower()):
                     destination_filename = ''
                     if 'destination_filename' in kwargs:
                         destination_filename = kwargs['destination_filename']
@@ -239,11 +239,13 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
             is_downloaded = self._check_download_from_tftp(output)
             if is_downloaded[1] == '':
-                if re.search('(.*[error|fail].*)', output.lower()):
+                if re.search('(error|fail)', output.lower()):
                     msg = 'Failed to copy configuration.'
                     msg += '\n{}'.format(output)
                     is_downloaded = (False, msg)
-
+                else:
+                    msg = 'Successfully copied configuration'
+                    is_downloaded = (True, msg)
         return is_downloaded
 
     def configure(self, type, timeout=30, retries=5, **kwargs):
@@ -606,13 +608,19 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :return: status message / exception
         """
         remote_host = ''
+        if source_filename == '':
+            source_filename = 'running-config'
         if '-config' not in source_filename:
             source_filename = source_filename.lower() + '-config'
-        if (source_filename != 'startup-config') and (source_filename != 'running-config'):
+        if ('startup' not in source_filename) and ('running' not in source_filename):
             raise Exception('Cisco OS', "Source filename must be 'startup' or 'running'!")
 
-        system_name = self.attributes_dict['ResourceFullName']
-        destination_filename = '{0}-{1}-{2}'.format(system_name, source_filename, self._get_time_stamp())
+        system_name = re.sub('\s+', '_', self.attributes_dict['ResourceFullName'])
+        if len(system_name) > 23:
+            system_name = system_name[:23]
+
+        destination_filename = '{0}-{1}-{2}'.format(system_name, source_filename.replace('-config', ''),
+                                                    self._get_time_stamp())
         self._logger.info('destination filename is {0}'.format(destination_filename))
 
         if ':/' not in destination_host:
@@ -623,11 +631,18 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                 raise Exception('Folder patch and Backup Location is empty')
         if '://' in destination_host:
             destination_path = destination_host.split('://')
+            destination_filesystem = destination_path[0]
             remote_host = destination_path[1]
         else:
             destination_path = destination_host.split(':/')
+            destination_filesystem = destination_path[0]
+            if destination_host.endswith('/'):
+                destination_filename = destination_host.replace(destination_filesystem + ':/', '') + \
+                                       destination_filename
+            else:
+                destination_filename = destination_host.replace(destination_filesystem + ':/', '') + '/' + \
+                                       destination_filename
 
-        destination_filesystem = destination_path[0]
         if ('127.0.0.1' in destination_host) or ('localhost' in destination_host) or (destination_host == ''):
             remote_host = 'localhost'
         elif re.match('tftp|ftp|flash', destination_host) is None:
@@ -641,7 +656,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             raise Exception(is_uploaded[1])
 
     def _get_time_stamp(self):
-        return time.strftime("%d%m%Y-%H%M%S", time.gmtime())
+        return time.strftime("%d%m%y-%H%M%S", time.localtime())
 
     def restore_configuration(self, source_file, config_type, clear_config='override'):
         """Restore configuration on device from provided configuration file
