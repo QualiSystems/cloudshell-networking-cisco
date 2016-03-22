@@ -85,7 +85,9 @@ class CiscoGenericSNMPAutoload(object):
         '''
         self._logger.info('Start loading Chassis')
         for chassis in chassis_list:
-            chassis_id = chassis_list.index(chassis)
+            chassis_id = self.entity_table[chassis]['entPhysicalParentRelPos']
+            if chassis_id == '-1':
+                chassis_id = '0'
             chassis_details_map = {
                 'model': self.entity_table[chassis]['entPhysicalModelName'],
                 'serial_number': self.entity_table[chassis]['entPhysicalSerialNum']
@@ -106,9 +108,9 @@ class CiscoGenericSNMPAutoload(object):
         self._logger.info('Start loading Modules')
         for module in self.module_list:
             if 'MODULE' not in self.entity_table[module]['entPhysicalName'].upper() and \
-                    'SLOT' not in self.entity_table[module]['entPhysicalName'].upper():
+                            'SLOT' not in self.entity_table[module]['entPhysicalName'].upper():
                 continue
-            module_id = str(self.module_list.index(module))
+            module_id = self.entity_table[module]['entPhysicalParentRelPos']
             relative_id = self._get_relative_path(module) + '/' + module_id
             if relative_id not in self.port_relative_address:
                 continue
@@ -135,7 +137,8 @@ class CiscoGenericSNMPAutoload(object):
         self._logger.info('Start loading Power Ports')
         for port in power_ports:
             module_name = self.entity_table[port]['entPhysicalName']
-            relative_path = '{0}/PP{1}'.format(self._get_relative_path(port), power_ports.index(port))
+            relative_path = '{0}/PP{1}'.format(self._get_relative_path(port),
+                                               self.entity_table[port]['entPhysicalParentRelPos'])
             chassis_details_map = {'model': self.entity_table[port]['entPhysicalModelName'].strip(' \t\n\r'),
                                    'description': self.entity_table[port]['entPhysicalDescr'],
                                    'version': self.entity_table[port]['entPhysicalHardwareRev'],
@@ -153,21 +156,20 @@ class CiscoGenericSNMPAutoload(object):
         self._logger.info('Start loading Port Channels')
         for key, value in port_channel_dic.iteritems():
             interface_model = value['ifDescr']
-            interface_id = str(len(self.chassis_list) + (port_channel_dic.keys().index(key)))
             match_object = re.search('\d+$', interface_model)
             if match_object:
-                interface_name = match_object.group(0)
+                interface_name = 'PC{0}'.format(match_object.group(0))
             else:
-                interface_name = interface_id
-
+                self._logger.error('Adding of {0} failed. Name is invalid'.format(interface_model))
+                continue
             attribute_map = {'protocol_type': 'Transparent', 'description': self.if_x_table[key]['ifAlias'],
                              'associated_ports': self._get_associated_ports(key)}
             attribute_map.update(self._get_ip_interface_details(key))
             info_data = {'model': 'Generic Port Channel',
-                         'name': 'PC{0}'.format(interface_name),
-                         'relative_path': interface_id,
+                         'name': interface_name,
+                         'relative_path': interface_name,
                          'attributes': attribute_map}
-            self.resource.addChild(interface_id, '/', info_data)
+            self.resource.addChild(interface_name, '/', info_data)
             self._logger.info('Added ' + interface_model + ' Port Channel')
         self._logger.info('Finished Loading Port Channels')
 
@@ -192,7 +194,7 @@ class CiscoGenericSNMPAutoload(object):
             interface_name = self.if_table[self.port_mapping[port]]['ifDescr']
             datamodel_interface_name = interface_name.replace('/', '-').replace('\s+', '')
             relative_id = self._get_relative_path(port)
-            interface_id = relative_id + '/{0}'.format(ports.index(port))
+            interface_id = relative_id + '/{0}'.format(self.entity_table[port]['entPhysicalParentRelPos'])
             attribute_map = {'l2_protocol_type':
                                  self.if_table[self.port_mapping[port]]['ifType'].replace('/', '').replace("'", ''),
                              'mac': self.if_table[self.port_mapping[port]]['ifPhysAddress'],
@@ -201,12 +203,8 @@ class CiscoGenericSNMPAutoload(object):
                              'description': self.if_x_table[self.port_mapping[port]]['ifAlias'],
                              'adjacent': self._get_adjacent(port),
                              'protocol_type': 'Transparent'}
-            # device_attributes.update(self.if_table[self.port_mapping[port]])
-            # device_attributes.update(self.if_x_table[self.port_mapping[port]])
             attribute_map.update(self._get_interface_details(self.port_mapping[port]))
             attribute_map.update(self._get_ip_interface_details(self.port_mapping[port]))
-            # attribute_map = getDictionaryData(device_attributes, ['entPhysicalDescr'])
-            # attribute_map.update(getDictionaryData(device_attributes, ['entPhysicalName']))
             info_data = {'model': interface_model,
                          'name': '{0}'.format(datamodel_interface_name),
                          'relative_path': interface_id,
@@ -222,10 +220,12 @@ class CiscoGenericSNMPAutoload(object):
     def __get_relative_path(self, item_id):
         parent = int(self.entity_table[item_id]['entPhysicalContainedIn'])
         if parent in self.module_list:
-            result = str(self.module_list.index(parent)) + '/'
+            result = self.entity_table[parent]['entPhysicalParentRelPos'] + '/'
             result += self._get_relative_path(parent)
         elif parent in self.chassis_list:
-            result = str(self.chassis_list.index(parent))
+            result = self.entity_table[parent]['entPhysicalParentRelPos']
+            if result == '-1':
+                result = '0'
         else:
             result = self._get_relative_path(parent)
         return result
