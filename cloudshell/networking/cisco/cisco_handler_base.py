@@ -651,6 +651,9 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :param clear_config: override current config or not
         :return:
         """
+        clear_config_match_data = re.search('append|override', clear_config.lower())
+        if not clear_config_match_data:
+            raise Exception('Cisco OS', "Restore method is wrong! Should be Append or Override")
         if '-config' not in config_type:
             config_type = config_type.lower() + '-config'
         remote_host = ''
@@ -686,11 +689,10 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
             # if not (remote_host == 'localhost'):
             #     source_filename = source_file
-            if self.check_replace_command():
-                self.configure('replace', source_filename=source_filename, timeout=600)
-                is_uploaded = (True, '')
-            else:
+            if not self.check_replace_command():
                 raise Exception('Override running-config is not supported for this device')
+            self.configure('replace', source_filename=source_filename, timeout=600)
+            is_uploaded = (True, '')
         else:
             is_uploaded = self.copy(source_filesystem=source_filesystem, remote_host=remote_host,
                                     source_filename=source_filename, destination_filename=destination_filename,
