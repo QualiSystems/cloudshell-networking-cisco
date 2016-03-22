@@ -436,25 +436,27 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         """
         interface_ethernet = Ethernet()
         commands_list = interface_ethernet.get_commands_list(**kwargs)
-        current_config = self._show_command('running-config interface {0}'.format(kwargs['configure_interface']))
 
-        for line in current_config.splitlines():
-            if re.search('^\s*switchport', line):
-                commands_list.insert(1, 'no {0}'.format(line))
+        qnq = None
         if 'NXOS' in self.supported_os:
-            # dot1q-tunnel
-            qnq = ''
             for commands_list_item in commands_list:
                 if 'dot1q-tunnel' in commands_list_item:
                     qnq = commands_list_item
                     break
             if qnq and qnq in commands_list:
                 commands_list.remove(qnq)
-            self.send_commands_list(commands_list)
-            if qnq:
-                config_command = self.send_config_command(qnq, expected_str='\(y/n\).*\?\s*\[(y|n|[Yy]es|[Nn]o)\]')
-                if 'continue(' in config_command:
-                    self._send_command('y')
+
+        current_config = self._show_command('running-config interface {0}'.format(kwargs['configure_interface']))
+
+        for line in current_config.splitlines():
+            if re.search('^\s*switchport', line):
+                commands_list.insert(1, 'no {0}'.format(line))
+
+        self.send_commands_list(commands_list)
+        if qnq:
+            config_command = self.send_config_command(qnq, expected_str='\(y/n\).*\?\s*\[(y|n|[Yy]es|[Nn]o)\]')
+            if 'continue(' in config_command:
+                self._send_command('y')
 
         return 'Finished configuration of ethernet interface!'
 
