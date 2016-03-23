@@ -451,7 +451,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         current_config = self._show_command('running-config interface {0}'.format(kwargs['configure_interface']))
 
         for line in current_config.splitlines():
-            if re.search('^\s*switchport', line):
+            if re.search('^\s*switchport\s+', line):
                 commands_list.insert(1, 'no {0}'.format(line))
 
         output = self.send_commands_list(commands_list)
@@ -460,7 +460,11 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             if 'continue(' in config_command:
                 self._send_command('y')
         if re.search('[Cc]ommand rejected.*', output):
-            raise Exception('Cisco OS', 'Failed to assign Vlan, command rejected')
+            error = 'Command rejected'
+            for line in output.splitlines():
+                if line.lower().startswith('command rejected'):
+                    error = line.strip(' \t\n\r')
+            raise Exception('Cisco OS', 'Failed to assign Vlan, {0}'.format(error))
 
         return 'Finished configuration of ethernet interface!'
 
