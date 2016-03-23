@@ -211,7 +211,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         copy_command_str = 'copy ' + source_filesystem + destination_filesystem
 
         is_downloaded = (False, '')
-        expected_string = '\?|.*: \[.*\]|.*\]: *$|' + self._prompt
+        expected_string = '\?|.*: \[.*\]|.*[\]\)]: *$|' + self._prompt
         while (not is_downloaded[0]) and (retries > 0):
             retries -= 1
 
