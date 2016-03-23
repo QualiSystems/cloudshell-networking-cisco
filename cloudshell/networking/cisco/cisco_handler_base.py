@@ -634,7 +634,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             destination_host = self._get_resource_attribute(self.attributes_dict['ResourceFullName'],
                                                             'Backup Location')
             if len(destination_host) <= 0:
-                raise Exception('Folder patch and Backup Location is empty')
+                raise Exception('Folder path and Backup Location is empty')
         if '://' in destination_host:
             destination_path = destination_host.split('://')
             destination_filesystem = destination_path[0]
