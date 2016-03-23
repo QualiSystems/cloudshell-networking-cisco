@@ -157,8 +157,10 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         return out
 
     def send_commands_list(self, commands_list):
+        result = ''
         for command in commands_list:
-            self.send_config_command(command)
+            result += self.send_config_command(command)
+        return result
 
     def normalize_output(self, output):
         return output.replace(' ', self.SPACE).replace('\r\n', self.NEWLINE).replace('\n', self.NEWLINE). \
@@ -452,11 +454,13 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             if re.search('^\s*switchport', line):
                 commands_list.insert(1, 'no {0}'.format(line))
 
-        self.send_commands_list(commands_list)
+        output = self.send_commands_list(commands_list)
         if qnq:
             config_command = self.send_config_command(qnq, expected_str='\(y/n\).*\?\s*\[(y|n|[Yy]es|[Nn]o)\]')
             if 'continue(' in config_command:
                 self._send_command('y')
+        if re.search('[Cc]ommand rejected.*', output):
+            raise Exception('Cisco OS', 'Failed to assign Vlan, command rejected')
 
         return 'Finished configuration of ethernet interface!'
 
