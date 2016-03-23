@@ -704,7 +704,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
             if not self.check_replace_command():
                 raise Exception('Override running-config is not supported for this device')
-            self.configure('replace', source_filename=source_filename, timeout=600)
+            self.configure('replace', source_filename=source_file, timeout=600)
             is_uploaded = (True, '')
         else:
             is_uploaded = self.copy(source_filesystem=source_filesystem, remote_host=remote_host,
@@ -723,7 +723,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
     def check_replace_command(self):
         output = self._send_command('configure replace')
-        if 'invalid input' in output.lower():
+        if re.search('invalid (input|command)', output.lower()):
             return False
         return True
 
