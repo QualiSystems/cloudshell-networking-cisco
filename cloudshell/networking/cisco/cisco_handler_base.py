@@ -655,8 +655,6 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
         if ('127.0.0.1' in destination_host) or ('localhost' in destination_host) or (destination_host == ''):
             remote_host = 'localhost'
-        elif re.match('tftp|ftp|flash', destination_host) is None:
-            raise Exception('Cisco OS', "Remote filesystem must be 'tftp://', 'ftp://' or 'flash:/'!")
         is_uploaded = self.copy(destination_filesystem=destination_filesystem, remote_host=remote_host,
                                 source_filename=source_filename, destination_filename=destination_filename,
                                 timeout=600, retries=5)
