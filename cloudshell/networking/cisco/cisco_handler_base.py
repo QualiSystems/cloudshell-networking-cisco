@@ -180,17 +180,10 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
         return is_success, message
 
-    def _is_valid_copy_filesystem(self, filesystem):
-        return not re.match('bootflash$|tftp$|ftp$|harddisk$|nvram$|pram$|flash$|localhost$', filesystem) is None
+    # def _is_valid_copy_filesystem(self, filesystem):
+    #     return not re.match('bootflash$|tftp$|ftp$|harddisk$|nvram$|pram$|flash$|localhost$', filesystem) is None
 
     def copy(self, source_filesystem='', destination_filesystem='', timeout=30, retries=5, **kwargs):
-        if len(source_filesystem) != 0 and not self._is_valid_copy_filesystem(source_filesystem):
-            raise Exception('Cisco OS', 'Copy method: source filesystem \"' + source_filesystem
-                            + '\" is incorrect!')
-
-        if len(destination_filesystem) != 0 and not self._is_valid_copy_filesystem(destination_filesystem):
-            raise Exception('Cisco OS', 'Copy method: destination filesystem \"' + destination_filesystem
-                            + '\" is incorrect!')
 
         if 'source_filename' not in kwargs or len(kwargs['source_filename']) == 0:
             raise Exception('Cisco OS', 'Copy method: source filename not set!')
@@ -211,7 +204,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         copy_command_str = 'copy ' + source_filesystem + destination_filesystem
 
         is_downloaded = (False, '')
-        expected_string = '\?|.*: \[.*\]|.*[\]\)]: *$|' + self._prompt
+        expected_string = '\?|.*: (\[|\().*(\]|\))|.*[\]\)]:\s*$|' + self._prompt
         while (not is_downloaded[0]) and (retries > 0):
             retries -= 1
 
@@ -459,11 +452,14 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             config_command = self.send_config_command(qnq, expected_str='\(y/n\).*\?\s*\[(y|n|[Yy]es|[Nn]o)\]')
             if 'continue(' in config_command:
                 self._send_command('y')
+
         if re.search('[Cc]ommand rejected.*', output):
             error = 'Command rejected'
-            for line in output.splitlines():
-                if line.lower().startswith('command rejected'):
-                    error = line.strip(' \t\n\r')
+            if re.search('[Cc]ommand rejected.*', output):
+                error = 'Command rejected'
+                for line in output.splitlines():
+                    if line.lower().startswith('command rejected'):
+                        error = line.strip(' \t\n\r')
             raise Exception('Cisco OS', 'Failed to assign Vlan, {0}'.format(error))
 
         return 'Finished configuration of ethernet interface!'
@@ -618,6 +614,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :return: status message / exception
         """
         remote_host = ''
+        destination_filesystem = ''
         if source_filename == '':
             source_filename = 'running-config'
         if '-config' not in source_filename:
@@ -633,10 +630,9 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                                                     self._get_time_stamp())
         self._logger.info('destination filename is {0}'.format(destination_filename))
 
-        if ':/' not in destination_host:
-            if len(destination_host) <= 0:
-                destination_host = self._get_resource_attribute(self.attributes_dict['ResourceFullName'],
-                                                                'Backup Location')
+        if len(destination_host) <= 0:
+            destination_host = self._get_resource_attribute(self.attributes_dict['ResourceFullName'],
+                                                            'Backup Location')
             if len(destination_host) <= 0:
                 raise Exception('Folder patch and Backup Location is empty')
         if '://' in destination_host:
@@ -644,14 +640,11 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             destination_filesystem = destination_path[0]
             remote_host = destination_path[1]
         else:
-            destination_path = destination_host.split(':/')
-            destination_filesystem = destination_path[0]
             if destination_host.endswith('/'):
-                destination_filename = destination_host.replace(destination_filesystem + ':/', '') + \
-                                       destination_filename
+                destination_filename = destination_host + destination_filename
+
             else:
-                destination_filename = destination_host.replace(destination_filesystem + ':/', '') + '/' + \
-                                       destination_filename
+                destination_filename = destination_host + '/' + destination_filename
 
         if ('127.0.0.1' in destination_host) or ('localhost' in destination_host) or (destination_host == ''):
             remote_host = 'localhost'
@@ -709,8 +702,6 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                                     timeout=600, retries=5)
         elif (clear_config.lower() == 'override') and (destination_filename == 'running-config'):
 
-            # if not (remote_host == 'localhost'):
-            #     source_filename = source_file
             if not self.check_replace_command():
                 raise Exception('Override running-config is not supported for this device')
             self.configure('replace', source_filename=source_filename, timeout=600)
