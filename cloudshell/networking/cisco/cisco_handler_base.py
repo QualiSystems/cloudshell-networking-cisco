@@ -217,7 +217,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                     if 'remote_host' not in kwargs or len(kwargs['remote_host']) == 0:
                         raise Exception('Cisco OS', 'Copy method: remote host not set!')
 
-                    if not validateIP(kwargs['remote_host']):
+                    if validateIP(kwargs['remote_host']):
                         raise Exception('Cisco OS', 'Copy method: remote host ip is not valid!')
 
                     output = self._send_command(kwargs['remote_host'], expected_str=expected_string)
