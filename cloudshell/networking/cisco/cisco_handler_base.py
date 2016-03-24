@@ -204,7 +204,8 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         copy_command_str = 'copy ' + source_filesystem + destination_filesystem
 
         is_downloaded = (False, '')
-        expected_string = '\?|.*: (\[|\().*(\]|\))|.*[\]\)]:\s*$|.*:\s+$|' + self._prompt
+        error_expected_string = '(ERROR|[Ee]rror)\s*:.*\n|(FAILED|[Ff]ailed)\n'
+        expected_string = '\?|.*: (\[|\().*(\]|\))|.*[\]\)]:\s*$|.*:\s+$|' + error_expected_string + '|' + self._prompt
         while (not is_downloaded[0]) and (retries > 0):
             retries -= 1
 
@@ -231,7 +232,9 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                                                 timeout=timeout)
                 elif re.search('vrf', output.lower()):
                     output = self._send_command("", expected_str=expected_string)
-
+                match_data = re.search(error_expected_string, output)
+                if match_data:
+                    raise Exception('Cisco OS', match_data.group().replace('\n', ''))
             is_downloaded = self._check_download_from_tftp(output)
             if is_downloaded[1] == '':
                 if re.search('(error|fail)', output.lower()):
