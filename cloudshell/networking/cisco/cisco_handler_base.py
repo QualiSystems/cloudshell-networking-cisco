@@ -419,8 +419,8 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         if '/' not in temp_port_name:
             self._logger.error('Interface was not found')
             raise Exception('Interface was not found')
-        if re.match('PC\d+', port_name):
-            result = port_name.upper().replace('PC', 'port-channel')
+        if re.match('port-channel\d+', port_name.lower()):
+            result = port_name.lower()
         else:
             result = port_name.replace('-', '/')
         return result

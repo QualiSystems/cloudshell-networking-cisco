@@ -158,7 +158,7 @@ class CiscoGenericSNMPAutoload(object):
             interface_model = value['ifDescr']
             match_object = re.search('\d+$', interface_model)
             if match_object:
-                interface_name = 'PC{0}'.format(match_object.group(0))
+                interface_id = 'PC{0}'.format(match_object.group(0))
             else:
                 self._logger.error('Adding of {0} failed. Name is invalid'.format(interface_model))
                 continue
@@ -166,10 +166,10 @@ class CiscoGenericSNMPAutoload(object):
                              'associated_ports': self._get_associated_ports(key)}
             attribute_map.update(self._get_ip_interface_details(key))
             info_data = {'model': 'Generic Port Channel',
-                         'name': interface_name,
-                         'relative_path': interface_name,
+                         'name': interface_model,
+                         'relative_path': interface_id,
                          'attributes': attribute_map}
-            self.resource.addChild(interface_name, '/', info_data)
+            self.resource.addChild(interface_id, '/', info_data)
             self._logger.info('Added ' + interface_model + ' Port Channel')
         self._logger.info('Finished Loading Port Channels')
 
