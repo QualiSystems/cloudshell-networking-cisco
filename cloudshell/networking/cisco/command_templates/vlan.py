@@ -2,7 +2,7 @@ __author__ = 'g8y3e'
 
 from cloudshell.networking.utils import *
 from cloudshell.networking.cisco.command_templates.cisco_interface \
-    import CiscoInterface, ParametersService, CommandTemplate
+    import CiscoInterface, CommandTemplateValidator, CommandTemplate
 
 class Vlan(CiscoInterface):
     COMMANDS_TEMPLATE = {
@@ -27,7 +27,7 @@ class Vlan(CiscoInterface):
         for command, value in kwargs.items():
             if command in Vlan.COMMANDS_TEMPLATE:
                 command_template = Vlan.COMMANDS_TEMPLATE[command]
-                prepared_commands.append(ParametersService.get_validate_list(command_template, value))
+                prepared_commands.append(CommandTemplateValidator.get_validate_list(command_template, value))
 
         return prepared_commands
 
