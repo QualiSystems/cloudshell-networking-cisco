@@ -188,7 +188,10 @@ class CiscoGenericSNMPAutoload(object):
         '''
         self._logger.info('Start loading Ports')
         for port in ports:
-            if 'serial' in self.entity_table[port]['entPhysicalName']:
+            if port not in self.port_mapping:
+                continue
+            if 'serial' in self.entity_table[port]['entPhysicalName'].lower() or \
+                    'serial' in self.if_table[self.port_mapping[port]]['ifDescr'].lower():
                 continue
             interface_model = 'Generic Port'
             interface_name = self.if_table[self.port_mapping[port]]['ifDescr']
@@ -327,8 +330,9 @@ class CiscoGenericSNMPAutoload(object):
         entAliasMappingTable = self.snmp.walk(('ENTITY-MIB', 'entAliasMappingTable'))
         if entAliasMappingTable:
             for port in self.entity_table.filter_by_column('Class', "'port'"):
-                entAliasMappingIdentifier = entAliasMappingTable[port]['entAliasMappingIdentifier']
-                mapping[port] = int(entAliasMappingIdentifier.split('.')[-1])
+                if port in entAliasMappingTable.keys():
+                    entAliasMappingIdentifier = entAliasMappingTable[port]['entAliasMappingIdentifier']
+                    mapping[port] = int(entAliasMappingIdentifier.split('.')[-1])
         else:
             mapping = self._descr_based_mapping()
 
