@@ -49,7 +49,9 @@ class CiscoGenericSNMPAutoload(object):
         self.resource = Resource()
         device_id = self.entity_table.filter_by_column('ParentRelPos', '-1').keys()[0]
         port_list = self.entity_table.filter_by_column('Class', "'port'").sort_by_column('ParentRelPos').keys()
-        self.module_list = self.entity_table.filter_by_column('Class', "'module'").sort_by_column('ParentRelPos').keys()
+        #self.module_list = self.entity_table.filter_by_column('Class', "'module'").sort_by_column('ParentRelPos').keys()
+        self.module_list = [] #self.entity_table.filter_by_column('Class', "'module'").sort_by_column('ParentRelPos').keys()
+        self.get_module_list(port_list)
         power_port_list = self.entity_table.filter_by_column('Class', "'powerSupply'").sort_by_column(
             'ParentRelPos').keys()
         self.chassis_list = self.entity_table.filter_by_column('Class', "'chassis'").sort_by_column(
@@ -76,6 +78,15 @@ class CiscoGenericSNMPAutoload(object):
         self._logger.info('*******************************************')
 
         return resource_to_str
+
+    def get_module_list(self, port_list):
+        for port in port_list:
+            module_id = int(self.entity_table[port]['entPhysicalContainedIn'])
+            if re.search('container', self.entity_table[module_id]['entPhysicalClass']):
+                module_id = int(self.entity_table[module_id]['entPhysicalContainedIn'])
+            if re.search('module', self.entity_table[module_id]['entPhysicalClass']):
+                if module_id not in self.module_list:
+                    self.module_list.append(int(self.entity_table[port]['entPhysicalContainedIn']))
 
     def _get_chassis_attributes(self, chassis_list):
         '''Get Chassis element attributes
@@ -107,10 +118,11 @@ class CiscoGenericSNMPAutoload(object):
     def _get_module_attributes(self):
         self._logger.info('Start loading Modules')
         for module in self.module_list:
-            if 'MODULE' not in self.entity_table[module]['entPhysicalName'].upper() and \
-                            'SLOT' not in self.entity_table[module]['entPhysicalName'].upper():
-                continue
-            module_id = self.entity_table[module]['entPhysicalParentRelPos']
+            parent_id = int(self.entity_table[module]['entPhysicalContainedIn'])
+            if re.search('container', self.entity_table[parent_id]['entPhysicalClass']):
+                module_id = self.entity_table[parent_id]['entPhysicalParentRelPos']
+            else:
+                module_id = self.entity_table[module]['entPhysicalParentRelPos']
             relative_id = self._get_relative_path(module) + '/' + module_id
             if relative_id not in self.port_relative_address:
                 continue
@@ -188,10 +200,9 @@ class CiscoGenericSNMPAutoload(object):
         '''
         self._logger.info('Start loading Ports')
         for port in ports:
-            if port not in self.port_mapping:
+            if port not in self.port_mapping.keys():
                 continue
-            if 'serial' in self.entity_table[port]['entPhysicalName'].lower() or \
-                    'serial' in self.if_table[self.port_mapping[port]]['ifDescr'].lower():
+            if 'serial' in self.entity_table[port]['entPhysicalName']:
                 continue
             interface_model = 'Generic Port'
             interface_name = self.if_table[self.port_mapping[port]]['ifDescr']
@@ -223,7 +234,11 @@ class CiscoGenericSNMPAutoload(object):
     def __get_relative_path(self, item_id):
         parent = int(self.entity_table[item_id]['entPhysicalContainedIn'])
         if parent in self.module_list:
-            result = self.entity_table[parent]['entPhysicalParentRelPos'] + '/'
+            parent_id = int(self.entity_table[parent]['entPhysicalContainedIn'])
+            if re.search('container', self.entity_table[parent_id]['entPhysicalClass']):
+                result = self.entity_table[parent_id]['entPhysicalParentRelPos'] + '/'
+            else:
+                result = self.entity_table[parent]['entPhysicalParentRelPos'] + '/'
             result += self._get_relative_path(parent)
         elif parent in self.chassis_list:
             result = self.entity_table[parent]['entPhysicalParentRelPos']
