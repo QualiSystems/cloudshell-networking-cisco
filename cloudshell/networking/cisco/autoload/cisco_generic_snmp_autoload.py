@@ -90,7 +90,6 @@ class CiscoGenericSNMPAutoload(object):
 
     def _get_chassis_attributes(self, chassis_list):
         '''Get Chassis element attributes
-
         :param chassis_list: list of chassis to load attributes for
         :return:
         '''
