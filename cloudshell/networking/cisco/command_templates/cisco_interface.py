@@ -1,3 +1,4 @@
+from cloudshell.networking.command_template_base import InterfaceBase
 __author__ = 'g8y3e'
 
 from abc import ABCMeta
