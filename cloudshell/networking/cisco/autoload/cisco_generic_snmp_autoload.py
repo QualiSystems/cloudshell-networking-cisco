@@ -47,7 +47,15 @@ class CiscoGenericSNMPAutoload(object):
         """
         self.port_relative_address = []
         self.resource = Resource()
-        device_id = self.entity_table.filter_by_column('ParentRelPos', '-1').keys()[0]
+        root_element = self.entity_table.filter_by_column('ParentRelPos', '-1')
+        if len(root_element.keys()) > 0:
+            device_id = root_element.keys()[0]
+        else:
+            root_element = self.entity_table.filter_by_column('ParentRelPos', '0')
+            if len(root_element.keys()) > 0:
+                device_id = root_element.keys()[0]
+            else:
+                raise Exception('Cisco Autoload', "Device's root element not found")
         port_list = self.get_port_list()
         self.module_list = []
         self.get_module_list(port_list)
