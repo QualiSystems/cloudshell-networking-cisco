@@ -3,10 +3,7 @@ __author__ = 'g8y3e'
 import time
 import inject
 import ipcalc
-from cloudshell.api.cloudshell_api import CloudShellAPISession
 
-from cloudshell.networking.networking_handler_interface import NetworkingHandlerInterface
-from cloudshell.shell.core.handler_base import HandlerBase
 from cloudshell.networking.utils import *
 from cloudshell.networking.cisco.command_templates.ethernet import Ethernet
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
