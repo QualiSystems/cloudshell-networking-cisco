@@ -1,7 +1,7 @@
 __author__ = 'g8y3e'
 
 import time
-
+import inject
 import ipcalc
 from cloudshell.api.cloudshell_api import CloudShellAPISession
 
@@ -14,157 +14,53 @@ from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoF
 from cloudshell.cli import expected_actions
 
 
-class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
-    DEFAULT_PROMPT = '.*> *$'
-    ENABLE_PROMPT = '.*# *$'
-    CONFIG_MODE_PROMPT = '\(config.*\)# *$'
-    ERR_STR = 'Invalid input detected|Incomplete command.'
-    SPACE = '<QS_SP>'
-    RETURN = '<QS_CR>'
-    NEWLINE = '<QS_LF>'
-
-    def __init__(self, connection_manager, logger):
-        HandlerBase.__init__(self, connection_manager, logger)
+class CiscoHandlerBase:
+    def __init__(self):
         self.supported_os = []
-        self._prompt = "{0}|{1}|{2}".format(self.DEFAULT_PROMPT, self.ENABLE_PROMPT, self.CONFIG_MODE_PROMPT)
-        self._snmp_handler = None
-        self._cloud_shell_api = None
 
     @property
     def snmp_handler(self):
-        if not self._snmp_handler:
-            self.create_snmp_handler()
-        return self._snmp_handler
+        _snmp_handler = inject.instance('snmp_handler')
+        if not _snmp_handler:
+            raise Exception('SNMP handler is None. Injection failed')
+        return _snmp_handler
 
-    @snmp_handler.setter
-    def snmp_handler(self, hsnmp):
-        self._snmp_handler = hsnmp
+    @property
+    def logger(self):
+        _logger = inject.instance('logger')
+        if not _logger:
+            raise Exception('SNMP handler is None. Injection failed')
+        return _logger
 
-    def _default_actions(self):
+    @property
+    def cli(self):
+        cli = inject.instance('cli_service')
+        if not cli:
+            raise Exception('SNMP handler is None. Injection failed')
+        return cli
+
+    @staticmethod
+    def _default_actions(cli=None):
         """Send default commands to configure/clear session outputs
         :return:
         """
-        self._session.set_unsafe_mode(True)
-
-        output = self._send_command('')
+        output = cli.send_command('')
 
         if re.search('> *$', output):
-            output = self._send_command('enable',
-                                        expected_map={'[Pp]assword': expected_actions.send_default_password})
+            output = cli.send_command('enable',
+                                      expected_map={'[Pp]assword': expected_actions.send_default_password})
 
         if re.search('> *$', output):
             raise Exception('Cisco IOSX', "Can't set enable mode!")
 
-        self._set_terminal_length(0)
-        self._send_command('terminal no exec prompt timestamp')
+        cli.send_command('terminal length {0}'.format(0))
+        cli.send_command('terminal no exec prompt timestamp')
 
-        self._enter_configuration_mode()
-        self._send_command('no logging console')
-        self._exit_configuration_mode()
-
-    def _set_terminal_length(self, length):
-        return self._send_command('terminal length {0}'.format(length))
+        cli.send_config_command('no logging console')
+        cli.exit_configuration_mode()
 
     def _show_command(self, data):
-        return self._send_command('show {0}'.format(data))
-
-    def _enter_configuration_mode(self):
-        """Send 'enter' to SSH console to get prompt,
-        if default prompt received , send 'configure terminal' command, change _prompt to CONFIG_MODE
-        else: return
-
-        :return: True if config mode entered, else - False
-        """
-        if not self._get_session_handler():
-            self.connect()
-
-        if self._session.__class__.__name__ == 'FileManager':
-            return ''
-
-        out = None
-        for retry in range(3):
-            out = self._send_command(' ')
-            if not out:
-                self._logger.error('Failed to get prompt, retrying ...')
-                time.sleep(1)
-
-            elif not re.search(self.CONFIG_MODE_PROMPT, out):
-                out = self._send_command('configure terminal', self.CONFIG_MODE_PROMPT)
-
-            else:
-                break
-
-        if not out:
-            return False
-        return re.search(self._prompt, out)
-
-    def _exit_configuration_mode(self):
-        """Send 'enter' to SSH console to get prompt,
-        if config prompt received , send 'exit' command, change _prompt to DEFAULT
-        else: return
-
-        :return: console output
-        """
-
-        if not self._get_session_handler():
-            self.connect()
-
-        if self._session.__class__.__name__ == 'FileManager':
-            return ''
-
-        out = None
-        for retry in range(5):
-            out = self._send_command(' ')
-            if re.search(self.CONFIG_MODE_PROMPT, out):
-                self._send_command('exit')
-            else:
-                break
-
-        return out
-
-    def send_config_command(self, cmd, expected_str=None, timeout=30):
-        """Send command into configuration mode, enter to config mode if needed
-
-        :param cmd: command to send
-        :param expected_str: expected output string (_prompt by default)
-        :param timeout: command timeout
-        :return: received output buffer
-        """
-
-        self._enter_configuration_mode()
-
-        if expected_str is None:
-            expected_str = self._prompt
-
-        out = self._send_command(command=cmd, expected_str=expected_str, timeout=timeout, is_need_default_prompt=False)
-        self._logger.info(out)
-        return out
-
-    def send_command(self, cmd, expected_str=None, timeout=30):
-        """Send command into default mode, exit config mode if needed
-
-        :param cmd: command to send
-        :param expected_str: expected output string (_prompt by default)
-        :param timeout: command timeout
-        :return: received output buffer
-        """
-
-        self._exit_configuration_mode()
-
-        if expected_str is None:
-            expected_str = self._prompt
-
-        out = self._send_command(command=cmd, expected_str=expected_str, timeout=timeout, is_need_default_prompt=False)
-        self._logger.info(out)
-        return out
-
-    def send_commands_list(self, commands_list):
-        for command in commands_list:
-            self.send_config_command(command)
-
-    def normalize_output(self, output):
-        return output.replace(' ', self.SPACE).replace('\r\n', self.NEWLINE).replace('\n', self.NEWLINE).\
-            replace('\r', self.NEWLINE)
+        return self.send_command('show {0}'.format(data))
 
     def _check_download_from_tftp(self, output):
         status_match = re.search('\[OK - [0-9]* bytes\]', output)
@@ -237,7 +133,6 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                                                 timeout=timeout)
 
             is_downloaded = self._check_download_from_tftp(output)
-
         return is_downloaded
 
     def configure(self, type, timeout=30, retries=5, **kwargs):
@@ -258,17 +153,6 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                 error_str = output[match_error.end() + 1:]
                 error_str = error_str[:error_str.find('\n')]
                 raise Exception('Cisco IOS', 'Configure replace error: ' + error_str)
-
-    def cloud_shell_api(self):
-        if not self._cloud_shell_api:
-            hostname = socket.gethostname()
-            testshell_ip = socket.gethostbyname(hostname)
-            testshell_user = self.reservation_dict['AdminUsername']
-            testshell_password = self.reservation_dict['AdminPassword']
-            testshell_domain = self.reservation_dict['Domain']
-            self._cloud_shell_api = CloudShellAPISession(testshell_ip, testshell_user, testshell_password,
-                                                         testshell_domain)
-        return self._cloud_shell_api
 
     def reload(self, sleep_timeout=60, retry_count=5):
         output = self._send_command('reload', expected_str='\[yes/no\]:|[confirm]')
@@ -296,31 +180,6 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                 pass
 
         return is_reloaded
-
-    def _get_all_interfaces_info(self):
-        """Get list of interfaces and their information, trigger 'show ip interface brief' command and parse output
-
-        :return: dictionary with all interfaces' info
-        """
-
-        data_str = self._send_command('show ip interface b ')
-        interface_data = {}
-        data_str = re.sub(' +', ' ', data_str)
-
-        for line in data_str.splitlines():
-            match_object = re.search(r'^(?P<interface_name>\S+)' +
-                                     '\s+(?P<port_ip>\S+)' +
-                                     '\s+(?P<port_state>\S+)' +
-                                     '\s+(?P<port_method>\S+)' +
-                                     '\s+(?P<port_status>.+)', line.strip())
-            if match_object:
-                match_dict = match_object.groupdict()
-
-                if 'interface_name' in match_dict and \
-                                re.search('[Ii]nterface', match_dict['interface_name']) is None:
-                    interface_data[match_dict['interface_name']] = \
-                        getDictionaryData(match_dict, ['interface_name'])
-        return interface_data
 
     def _get_data_match(self, reg_exp, data_str):
         data_map = {}
@@ -499,14 +358,14 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         if not self.is_valid_device_os():
             error_message = 'Incompatible driver! Please use correct resource driver for {0} operation system(s)'. \
                 format(str(tuple(self.supported_os)))
-            self._logger.error(error_message)
+            self.logger.error(error_message)
             raise Exception(error_message)
 
-        self._logger.info('************************************************************************')
-        self._logger.info('Start SNMP discovery process .....')
-        generic_autoload = CiscoGenericSNMPAutoload(self.snmp_handler, self._logger)
+        self.logger.info('************************************************************************')
+        self.logger.info('Start SNMP discovery process .....')
+        generic_autoload = CiscoGenericSNMPAutoload(self.snmp_handler, self.logger)
         result = generic_autoload.discover()
-        self._logger.info('Start SNMP discovery Completed')
+        self.logger.info('SNMP discovery Completed')
         return result
 
     def update_firmware(self, remote_host, file_path, size_of_firmware=200000000):
