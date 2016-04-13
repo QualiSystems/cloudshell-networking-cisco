@@ -8,7 +8,7 @@ from cloudshell.networking.utils import *
 from cloudshell.networking.cisco.command_templates.ethernet import Ethernet
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
-from cloudshell.cli import expected_actions
+from cloudshell.cli.old import expected_actions
 
 
 class CiscoHandlerBase:

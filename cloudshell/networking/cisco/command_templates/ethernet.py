@@ -1,8 +1,10 @@
+
 __author__ = 'wise__000'
 
 from cloudshell.networking.utils import *
 from cloudshell.networking.cisco.command_templates.cisco_interface \
-    import CiscoInterface, ParametersService, CommandTemplate
+    import CiscoInterface, CommandTemplate
+from cloudshell.shell.core.command_template.command_template_validator import CommandTemplateValidator
 
 class Ethernet(CiscoInterface):
     COMMANDS_TEMPLATE = {
@@ -39,6 +41,6 @@ class Ethernet(CiscoInterface):
         for command, value in kwargs.items():
             if command in Ethernet.COMMANDS_TEMPLATE:
                 command_template = Ethernet.COMMANDS_TEMPLATE[command]
-                prepared_commands.append(ParametersService.get_validate_list(command_template, value))
+                prepared_commands.append(CommandTemplateValidator.get_validate_list(command_template, value))
 
         return prepared_commands
