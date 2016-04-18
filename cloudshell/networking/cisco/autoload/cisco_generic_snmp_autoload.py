@@ -307,20 +307,20 @@ class CiscoGenericSNMPAutoload(object):
 
     def _get_device_details(self, index):
         self._logger.info('Start loading Switch Attributes')
-        result = {'vendor': 'Cisco',
-                  'system_name': self.snmp.get_value('SNMPv2-MIB', 'sysName', 0),
+        result = {'Vendor': 'Cisco',
+                  'System Name': self.snmp.get_value('SNMPv2-MIB', 'sysName', 0),
                   # 'pid': self.entity_table[index]['entPhysicalHardwareRev'],
-                  'model': '',
-                  'location': self.snmp.get_value('SNMPv2-MIB', 'sysLocation', 0),
-                  'contact_name': self.snmp.get_value('SNMPv2-MIB', 'sysContact', 0),
-                  'os_version': ''
+                  'Model': '',
+                  'Location': self.snmp.get_value('SNMPv2-MIB', 'sysLocation', 0),
+                  'Contact Name': self.snmp.get_value('SNMPv2-MIB', 'sysContact', 0),
+                  'OS Version': ''
                   # 'firmware': ''
                   }
 
         match_version = re.search('\S\s*\((?P<firmware>\S+)\)\S\s*Version\s+(?P<software_version>\S+)\S*\s+',
                                   self.snmp.get_value('SNMPv2-MIB', 'sysDescr', 0))
         if match_version:
-            result['os_version'] = match_version.groupdict()['software_version'].replace(',', '')
+            result['OS Version'] = match_version.groupdict()['software_version'].replace(',', '')
             # result['firmware'] = match_version.groupdict()['firmware']
 
         result.update(self._get_device_model_and_vendor())
