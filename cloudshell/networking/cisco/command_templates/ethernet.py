@@ -4,7 +4,8 @@ __author__ = 'wise__000'
 from cloudshell.networking.utils import *
 from cloudshell.networking.cisco.command_templates.cisco_interface \
     import CiscoInterface, CommandTemplate
-from cloudshell.shell.core.command_template.command_template_validator import *
+from cloudshell.cli.command_template.command_template_validator import *
+
 
 class Ethernet(CiscoInterface):
     COMMANDS_TEMPLATE = {

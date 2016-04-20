@@ -3,8 +3,10 @@ __author__ = 'g8y3e'
 
 from abc import ABCMeta
 from abc import abstractmethod
-from cloudshell.shell.core.command_template.command_template import CommandTemplate
-from cloudshell.shell.core.command_template.command_template_validator import *
+
+
+from cloudshell.cli.command_template.command_template import CommandTemplate
+from cloudshell.cli.command_template.command_template_validator import *
 from cloudshell.networking.command_template_base import InterfaceBase
 
 class CiscoInterface(InterfaceBase):
