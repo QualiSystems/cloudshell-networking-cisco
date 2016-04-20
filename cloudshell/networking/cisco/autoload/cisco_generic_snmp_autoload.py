@@ -18,12 +18,13 @@ class CiscoGenericSNMPAutoload(object):
         self.resource = None
 
     def _load_snmp_tables(self):
-
         self._logger.info('Start loading MIB tables:')
         self.entity_table = self.snmp.get_table('ENTITY-MIB', 'entPhysicalTable')
+        if len(self.entity_table.keys()) < 1:
+            raise Exception('Cannot load entPhysicalTable. Autoload cannot continue')
         self._logger.info('Entity table loaded')
 
-        self.if_table = self.snmp.get_table('IF-MIB', 'ifTable')
+        self.if_table = self.snmp.get_table('IF-MIB', 'ifDescr')
         self._logger.info('IfTable loaded')
 
         #self.snmp_mib = self.snmp.get_table('SNMPv2-MIB', 'system')
@@ -31,7 +32,7 @@ class CiscoGenericSNMPAutoload(object):
         self.lldp_remote_table = self.snmp.get_table('LLDP-MIB', 'lldpRemTable')
         self.cdp_index_table = self.snmp.get_table('CISCO-CDP-MIB', 'cdpInterface')
         self.cdp_table = self.snmp.get_table('CISCO-CDP-MIB', 'cdpCacheTable')
-        self.duplex_table = self.snmp.get_table('EtherLike-MIB', 'dot3StatsTable')
+        self.duplex_table = self.snmp.get_table('EtherLike-MIB', 'dot3StatsIndex')
         self.ip_v4_table = self.snmp.get_table('IP-MIB', 'ipAddrTable')
         self.ip_v6_table = self.snmp.get_table('IPV6-MIB', 'ipv6AddrEntry')
         self.if_x_table = self.snmp.get_table('IF-MIB', 'ifAlias')
@@ -227,6 +228,9 @@ class CiscoGenericSNMPAutoload(object):
             if port not in self.port_mapping.keys():
                 continue
             interface_model = 'Generic Port'
+            if_table_port_attr = {'ifType': 'str', 'ifPhysAddress': 'str', 'ifMtu': 'int', 'ifSpeed': 'int'}
+            if_table = self.if_table[self.port_mapping[port]].copy()
+            if_table.update(self.snmp.get_bulk_values('IF-MIB', self.port_mapping[port], if_table_port_attr))
             interface_name = self.if_table[self.port_mapping[port]]['ifDescr']
             datamodel_interface_name = interface_name.replace('/', '-').replace('\s+', '')
             parent_id = int(self.entity_table[port]['entPhysicalContainedIn'])
@@ -236,10 +240,10 @@ class CiscoGenericSNMPAutoload(object):
             relative_id = self._get_relative_path(port)
             relative_path = relative_id + '/{0}'.format(interface_id)
             attribute_map = {'l2_protocol_type':
-                                 self.if_table[self.port_mapping[port]]['ifType'].replace('/', '').replace("'", ''),
-                             'mac': self.if_table[self.port_mapping[port]]['ifPhysAddress'],
-                             'mtu': self.if_table[self.port_mapping[port]]['ifMtu'],
-                             'bandwidth': self.if_table[self.port_mapping[port]]['ifSpeed'],
+                                 if_table[self.port_mapping[port]]['ifType'].replace('/', '').replace("'", ''),
+                             'mac': if_table[self.port_mapping[port]]['ifPhysAddress'],
+                             'mtu': if_table[self.port_mapping[port]]['ifMtu'],
+                             'bandwidth': if_table[self.port_mapping[port]]['ifSpeed'],
                              'description': self.if_x_table[self.port_mapping[port]]['ifAlias'],
                              'adjacent': self._get_adjacent(port),
                              'protocol_type': 'Transparent'}
@@ -290,9 +294,10 @@ class CiscoGenericSNMPAutoload(object):
         if auto_negotiation and auto_negotiation == 'enabled':
             interface_details['auto_negotiation'] = 'True'
         for key, value in self.duplex_table.iteritems():
-            if value['dot3StatsIndex'] == str(index) and 'dot3StatsDuplexStatus' in value.keys():
-                if 'halfDuplex' in value['dot3StatsDuplexStatus']:
-                    interface_details['duplex'] = 'Half'
+            if value['dot3StatsIndex'] == str(index):
+                interface_duplex = self.snmp.get_value('EtherLike-MIB', 'dot3StatsDuplexStatus', key)
+                if 'halfDuplex' in interface_duplex:
+                    interface_details['Duplex'] = 'Half'
         return interface_details
 
     def _get_device_details(self, index):
