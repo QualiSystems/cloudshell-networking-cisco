@@ -47,7 +47,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         output = self._send_command('')
 
         if re.search('> *$', output):
-            output = self._send_command('enable',
+            output = self._send_command(command='enable', is_need_default_expect_list=False,
                                         expected_map={'[Pp]assword': expected_actions.send_default_password})
 
         if re.search('> *$', output):
