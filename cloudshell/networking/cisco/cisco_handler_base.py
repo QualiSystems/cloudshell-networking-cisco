@@ -3,7 +3,7 @@ __author__ = 'g8y3e'
 import time
 
 import ipcalc
-
+from collections import OrderedDict
 from cloudshell.networking.networking_handler_interface import NetworkingHandlerInterface
 from cloudshell.shell.core.handler_base import HandlerBase
 from cloudshell.networking.utils import *
@@ -361,7 +361,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         for port in port_list.split('|'):
             port_name = self.get_port_name(port)
             self._logger.info('Vlan {0} will be assigned to interface {1}'.format(vlan_range, port_name))
-            params_map = dict()
+            params_map = OrderedDict()
             params_map['configure_interface'] = port_name
             if self.supported_os and 'NXOS' in self.supported_os:
                 params_map['switchport'] = []
@@ -378,7 +378,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                     self._logger.info('QnQ cannot be assigned')
                     raise Exception('QnQ cannot be assigned')
                 params_map['qnq'] = []
-            self.configure_vlan_interface_ethernet(**params_map)
+            self.configure_vlan_interface_ethernet(params_map)
             self._exit_configuration_mode()
             self._logger.info('Vlan {0} was assigned to the interface {1}'.format(vlan_range, port_name))
         return 'Vlan Configuration Completed'
@@ -398,9 +398,9 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         for port in port_list.split('|'):
             port_name = self.get_port_name(port)
             self._logger.info('Vlan {0} will be removed from interface {1}'.format(vlan_range, port_name))
-            params_map = dict()
+            params_map = OrderedDict()
             params_map['configure_interface'] = port_name
-            self.configure_vlan_interface_ethernet(**params_map)
+            self.configure_vlan_interface_ethernet(params_map)
             self._exit_configuration_mode()
             self._logger.info('All vlans and switchport mode were removed from the interface {0}'.format(port_name))
         return 'Vlan Configuration Completed'
@@ -427,7 +427,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             result = port_name.replace('-', '/')
         return result
 
-    def configure_vlan_interface_ethernet(self, **kwargs):
+    def configure_vlan_interface_ethernet(self, ordered_parameters_dict):
         """
         Configures interface ethernet
         :param kwargs: dictionary of parameters
@@ -435,7 +435,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         :rtype: string
         """
         interface_ethernet = Ethernet()
-        commands_list = interface_ethernet.get_commands_list(**kwargs)
+        commands_list = interface_ethernet.get_commands_list(ordered_parameters_dict)
 
         qnq = None
         if 'NXOS' in self.supported_os:
@@ -446,7 +446,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             if qnq and qnq in commands_list:
                 commands_list.remove(qnq)
 
-        current_config = self._show_command('running-config interface {0}'.format(kwargs['configure_interface']))
+        current_config = self._show_command('running-config interface {0}'.format(ordered_parameters_dict['configure_interface']))
 
         for line in current_config.splitlines():
             if re.search('^\s*switchport\s+', line):

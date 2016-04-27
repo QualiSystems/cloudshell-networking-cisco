@@ -6,6 +6,7 @@ from cloudshell.networking.cisco.command_templates.cisco_interface \
 
 class Ethernet(CiscoInterface):
     COMMANDS_TEMPLATE = {
+        'switchport': CommandTemplate('switchport'),
         'ip': CommandTemplate('ip {0}', validateIP, 'Wrong ip address!'),
         'ip_address': CommandTemplate('ip address {0} {1}', [validateIP, validateIP],
                                       ['Wrong ip address!', 'Wrong ip mask!']),
@@ -30,14 +31,14 @@ class Ethernet(CiscoInterface):
                                               ['Wrong mode number', 'Wrong state']),
         'no_shutdown': CommandTemplate('no shutdown'),
         'qnq': CommandTemplate('switchport mode dot1q-tunnel'),
-        'switchport': CommandTemplate('switchport'),
+
         'mode_trunk': CommandTemplate('mode trunk')
     }
 
-    def get_commands_list(self, **kwargs):
-        prepared_commands = CiscoInterface.get_commands_list(self, **kwargs)
+    def get_commands_list(self, ordered_parameters_dict):
+        prepared_commands = CiscoInterface.get_commands_list(self, ordered_parameters_dict)
 
-        for command, value in kwargs.items():
+        for command, value in ordered_parameters_dict.iteritems():
             if command in Ethernet.COMMANDS_TEMPLATE:
                 command_template = Ethernet.COMMANDS_TEMPLATE[command]
                 prepared_commands.append(ParametersService.get_validate_list(command_template, value))

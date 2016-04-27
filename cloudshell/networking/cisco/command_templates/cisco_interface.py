@@ -17,13 +17,14 @@ class CiscoInterface(InterfaceBase):
     }
 
     @abstractmethod
-    def get_commands_list(self, **kwargs):
+    def get_commands_list(self, ordered_parameters_dict):
         prepared_commands = []
 
-        if 'configure_interface' not in kwargs:
+        if 'configure_interface' not in ordered_parameters_dict:
             raise Exception('Need to set configure_interface parameter!')
 
         command_template = CiscoInterface.COMMANDS_TEMPLATE['configure_interface']
-        prepared_commands.append(ParametersService.get_validate_list(command_template, [kwargs['configure_interface']]))
+        prepared_commands.append(ParametersService.get_validate_list(command_template,
+                                                                     [ordered_parameters_dict['configure_interface']]))
 
         return prepared_commands
