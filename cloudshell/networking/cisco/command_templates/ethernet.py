@@ -30,6 +30,7 @@ class Ethernet(CiscoInterface):
                                               ['Wrong mode number', 'Wrong state']),
         'no_shutdown': CommandTemplate('no shutdown'),
         'qnq': CommandTemplate('switchport mode dot1q-tunnel'),
+        'switchport': CommandTemplate('switchport'),
         'mode_trunk': CommandTemplate('mode trunk')
     }
 

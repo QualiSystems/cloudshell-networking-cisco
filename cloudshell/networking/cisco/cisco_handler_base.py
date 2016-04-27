@@ -363,6 +363,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             self._logger.info('Vlan {0} will be assigned to interface {1}'.format(vlan_range, port_name))
             params_map = dict()
             params_map['configure_interface'] = port_name
+            params_map['switchport'] = []
             if 'trunk' in port_mode and vlan_range == '':
                 params_map['switchport_mode_trunk'] = []
             elif 'trunk' in port_mode and vlan_range != '':
