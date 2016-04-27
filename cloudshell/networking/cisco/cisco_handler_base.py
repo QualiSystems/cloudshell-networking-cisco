@@ -363,7 +363,8 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             self._logger.info('Vlan {0} will be assigned to interface {1}'.format(vlan_range, port_name))
             params_map = dict()
             params_map['configure_interface'] = port_name
-            params_map['switchport'] = []
+            if self.supported_os and 'NXOS' in self.supported_os:
+                params_map['switchport'] = []
             if 'trunk' in port_mode and vlan_range == '':
                 params_map['switchport_mode_trunk'] = []
             elif 'trunk' in port_mode and vlan_range != '':
@@ -374,8 +375,8 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                 if not self._is_interface_support_qnq(port_name):
                     raise Exception('interface does not support QinQ')
                 if 'trunk' in port_mode.lower():
-                    self._logger.info('QinQ cannot be assigned')
-                    raise Exception('QinQ cannot be assigned')
+                    self._logger.info('QnQ cannot be assigned')
+                    raise Exception('QnQ cannot be assigned')
                 params_map['qnq'] = []
             self.configure_vlan_interface_ethernet(**params_map)
             self._exit_configuration_mode()
