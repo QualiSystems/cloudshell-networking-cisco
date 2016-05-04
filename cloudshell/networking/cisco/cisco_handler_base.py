@@ -3,21 +3,34 @@ import inject
 import jsonpickle
 from collections import OrderedDict
 
+from cloudshell.core.action_result import ActionResult
+from cloudshell.core.driver_response import DriverResponse, DriverResponseRoot
 from cloudshell.networking.utils import *
-from cloudshell.networking.cisco.command_templates.ethernet import Ethernet
+from cloudshell.networking.cisco.command_templates.ethernet import ETHERNET_COMMANDS_TEMPLATE
+from cloudshell.networking.cisco.command_templates.cisco_interface import ENTER_INTERFACE_CONF_MODE
+from cloudshell.cli.command_template.command_template_service import add_templates, get_commands_list
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
 from cloudshell.shell.core.context.context_utils import get_resource_name
 from cloudshell.networking.core.connectivity_request_helper import ConnectivityRequestDeserializer
 
+
 class CiscoHandlerBase:
+    APPLY_CONNECTIVITY_CHANGES_ACTION_REQUIRED_ATTRIBUTE_LIST = ['type', 'actionId',
+                                                                 ('connectionParams', 'mode'),
+                                                                 ('actionTarget', 'fullAddress')]
+
     @inject.params(cli='cli_service', logger='logger', snmp='snmp_handler', api='api')
-    def __init__(self, cli, logger, snmp, api):
+    def __init__(self, cli, logger, snmp, api, resource_name=None):
         self.supported_os = []
         self.cli = cli
         self.logger = logger
         self.api = api
         self.snmp_handler = snmp
+        try:
+            self.resource_name = resource_name or get_resource_name()
+        except Exception:
+            raise Exception('CiscoHandlerBase', 'ResourceName is empty or None')
 
     def send_command(self, command, expected_str=None, expected_map=None, timeout=30, retry_count=10,
                      is_need_default_prompt=True, session=None):
@@ -25,8 +38,13 @@ class CiscoHandlerBase:
 
     def send_config_command(self, command, expected_str=None, expected_map=None, timeout=30, retry_count=10,
                             is_need_default_prompt=True):
-        self.cli.send_config_command(self, command, expected_str, expected_map, timeout, retry_count,
-                                     is_need_default_prompt)
+        return self.cli.send_config_command(command, expected_str, expected_map, timeout, retry_count,
+                                            is_need_default_prompt)
+
+    def send_config_command_list(self, command_list):
+        result = self.cli.send_command_list(command_list)
+        self.cli.exit_configuration_mode()
+        return result
 
     def _show_command(self, data):
         return self.send_command('show {0}'.format(data))
@@ -46,17 +64,90 @@ class CiscoHandlerBase:
         return is_success, message
 
     def apply_connectivity_changes(self, request):
+        if request is None or request == '':
+            raise Exception('CiscoHandlerBase', 'request is None or empty')
+
         holder = ConnectivityRequestDeserializer(jsonpickle.decode(request))
-        driver_responce = DriverResponce()
+
+        if not holder or not hasattr(holder, 'driverRequest'):
+            raise Exception('CiscoHandlerBase', 'Deserialized request is None or empty')
+
+        driver_response = DriverResponse()
+        results = []
+        driver_response_root = DriverResponseRoot()
+
         for action in holder.driverRequest.actions:
             self.logger.info('Action: ', action.__dict__)
-            result = self.add_vlan(action.connectionParams.vlanId,
-                                         action.actionTarget.fullName,
-                                         action.connectionParams.vlan,
-                                         action.connectionParams.vlanServiceAttributes.QnQ,
-                                         action.connectionParams.vlanServiceAttributes.CTag)
-            responce = DriverResponce(result)
-            driver_responce.responces.append(responce)
+            self._validate_request_action(action)
+            action_result = ActionResult()
+            action_result.type = action.type
+            action_result.actionId = action.actionId
+            action_result.updatedInterface = action.actionTarget.fullName
+            if action.type == 'setVlan':
+                qnq = False
+                ctag = ''
+                for attribute in action.connectionParams.vlanServiceAttributes:
+                    if attribute.attributeName.lower() == 'qnq':
+                        qnq = attribute.attributeValue
+                    elif attribute.attributeName.lower() == 'ctag':
+                        ctag = attribute.attributeValue
+                try:
+                    action_result.infoMessage = self.add_vlan(action.connectionParams.vlanId,
+                                                              action.actionTarget.fullAddress,
+                                                              action.connectionParams.mode,
+                                                              qnq,
+                                                              ctag)
+                except Exception as e:
+                    action_result.errorMessage = e.message
+                    action_result.success = False
+            elif action.type == 'removeVlan':
+                try:
+                    action_result.infoMessage = self.remove_vlan(action.connectionParams.vlanId,
+                                                                 action.actionTarget.fullAddress,
+                                                                 action.connectionParams.mode)
+                except Exception as e:
+                    action_result.errorMessage = e.message
+                    action_result.success = False
+            else:
+                continue
+            results.append(action_result)
+
+        driver_response.actionResults = results
+        driver_response_root.driverResponse = driver_response
+        return self.set_command_result(driver_response_root)
+
+    def _validate_request_action(self, action):
+        is_fail = False
+        fail_attribute = ''
+        for class_attribute in self.APPLY_CONNECTIVITY_CHANGES_ACTION_REQUIRED_ATTRIBUTE_LIST:
+            if type(class_attribute) is tuple:
+                if not hasattr(action, class_attribute[0]):
+                    is_fail = True
+                    fail_attribute = class_attribute[0]
+                if not hasattr(getattr(action, class_attribute[0]), class_attribute[1]):
+                    is_fail = True
+                    fail_attribute = class_attribute[1]
+            else:
+                if not hasattr(action, class_attribute):
+                    is_fail = True
+                    fail_attribute = class_attribute
+
+        if is_fail:
+            raise Exception('CiscoHandlerBase',
+                            'Mandatory field {0} is missing in ApplyConnectivityChanges request json'.format(
+                                fail_attribute))
+
+    def set_command_result(self, result, unpicklable=False):
+        """
+        Serializes output as JSON and writes it to console output wrapped with special prefix and suffix
+        :param result: Result to return
+        :param unpicklable: If True adds JSON can be deserialized as real object.
+                            When False will be deserialized as dictionary
+        """
+        json = jsonpickle.encode(result, unpicklable=unpicklable)
+        result_for_output = str(json)
+        print result_for_output
+        return result_for_output
 
     def _is_valid_copy_filesystem(self, filesystem):
         return not re.match('bootflash$|tftp$|ftp$|harddisk$|nvram$|pram$|flash$|localhost$', filesystem) is None
@@ -91,7 +182,7 @@ class CiscoHandlerBase:
         copy_command_str = 'copy ' + source_filesystem + destination_filesystem
 
         error_expected_string = '(ERROR|[Ee]rror)\s*:.*\n|(FAILED|[Ff]ailed)\n'
-        #expected_string = '\?|.*: (\[|\().*(\]|\))|.*[\]\)]:\s*$|.*:\s+$|' + error_expected_string
+        # expected_string = '\?|.*: (\[|\().*(\]|\))|.*[\]\)]:\s*$|.*:\s+$|' + error_expected_string
         expected_map = OrderedDict()
         expected_map['[Ss]ource [Ff]ilename'] = lambda session: session.send_line(kwargs['source_filename'])
         expected_map['[Rr]emote [Hh]ost'] = lambda session: session.send_line(kwargs['remote_host'])
@@ -134,12 +225,12 @@ class CiscoHandlerBase:
                 raise Exception('Cisco IOS', 'Configure replace error: ' + error_str)
 
     def reload(self, sleep_timeout=60, retry_count=5):
-        output = self._send_command('reload', expected_str='\[yes/no\]:|[confirm]')
+        output = self.send_command('reload', expected_str='\[yes/no\]:|[confirm]')
 
         if re.search('\[yes/no\]:', output):
-            self._send_command('yes', '[confirm]')
+            self.send_command('yes', '[confirm]')
 
-        output = self._send_command('', expected_str='.*', expected_map={})
+        output = self.send_command('', expected_str='.*', expected_map={})
 
         retry = 0
         is_reloaded = False
@@ -189,6 +280,10 @@ class CiscoHandlerBase:
                 return result
         return result
 
+    def load_vlan_command_templates(self):
+        add_templates(ETHERNET_COMMANDS_TEMPLATE)
+        add_templates(ENTER_INTERFACE_CONF_MODE)
+
     def add_vlan(self, vlan_range, port_list, port_mode, qnq, ctag):
         """
         Add vlan to port
@@ -200,31 +295,35 @@ class CiscoHandlerBase:
         :return: success message
         :rtype: string
         """
+
+        self.load_vlan_command_templates()
         self.validate_vlan_parameters(vlan_range, port_list, port_mode)
         for port in port_list.split('|'):
             port_name = self.get_port_name(port)
-            self._logger.info('Vlan {0} will be assigned to interface {1}'.format(vlan_range, port_name))
-            params_map = dict()
+            self.logger.info('Vlan {0} will be assigned to interface {1}'.format(vlan_range, port_name))
+            params_map = OrderedDict()
             params_map['configure_interface'] = port_name
-            if 'trunk' in port_mode and vlan_range == '':
+            if self.supported_os and 'NXOS' in self.supported_os:
+                params_map['switchport'] = []
+            if 'trunk' in port_mode.lower() and vlan_range == '':
                 params_map['switchport_mode_trunk'] = []
-            elif 'trunk' in port_mode and vlan_range != '':
+            elif 'trunk' in port_mode.lower() and vlan_range != '':
                 params_map['trunk_allow_vlan'] = [vlan_range]
-            elif 'access' in port_mode and vlan_range != '':
+            elif 'access' in port_mode.lower() and vlan_range != '':
                 params_map['access_allow_vlan'] = [vlan_range]
-            # if 'qnq' in qnq.lower():
-            #     if not self._is_interface_support_qnq(port_name):
-            #         raise Exception('interface does not support QnQ')
-            #     if 'switchport_mode_trunk' in params_map:
-            #         raise Exception('interface cannot have trunk and dot1q-tunneling modes in the same time')
-            #     params_map['qnq'] = ''
+            if qnq and qnq is True:
+                if not self._is_interface_support_qnq(port_name):
+                    raise Exception('interface does not support QnQ')
+                if 'switchport_mode_trunk' in params_map:
+                    raise Exception('interface cannot have trunk and dot1q-tunneling modes in the same time')
+                params_map['qnq'] = ''
 
-            self.configure_vlan_interface_ethernet(**params_map)
+            self.configure_vlan_interface_ethernet(params_map)
             self.send_config_command('exit')
             self.logger.info('Vlan {0} was assigned to the interface {1}'.format(vlan_range, port_name))
         return 'Vlan Configuration Completed'
 
-    def remove_vlan(self, vlan_range, port_list, port_mode, additional_info):
+    def remove_vlan(self, vlan_range, port_list, port_mode):
         """
         Remove vlan from port
         :param vlan_range: range of vlans to be added, if empty, and switchport_type = trunk,
@@ -235,19 +334,21 @@ class CiscoHandlerBase:
         :return: success message
         :rtype: string
         """
+
+        self.load_vlan_command_templates()
         self.validate_vlan_parameters(vlan_range, port_list, port_mode)
         for port in port_list.split('|'):
             port_name = self.get_port_name(port)
-            self._logger.info('Vlan {0} will be removed from interface {1}'.format(vlan_range, port_name))
-            params_map = dict()
+            self.logger.info('Vlan {0} will be removed from interface {1}'.format(vlan_range, port_name))
+            params_map = OrderedDict()
             params_map['configure_interface'] = port_name
-            self.configure_vlan_interface_ethernet(**params_map)
-            self._exit_configuration_mode()
-            self._logger.info('All vlans and switchport mode were removed from the interface {0}'.format(port_name))
+            self.configure_vlan_interface_ethernet(params_map)
+            self.logger.info(
+                'All vlans and switchport configurationd were removed from the interface {0}'.format(port_name))
         return 'Vlan Configuration Completed'
 
     def validate_vlan_parameters(self, vlan_range, port_list, port_mode):
-        self._logger.info('Vlan Configuration Started')
+        self.logger.info('Vlan Configuration Started')
         if len(port_list) < 1:
             raise Exception('Port list is empty')
         if vlan_range == '' and port_mode == 'access':
@@ -256,28 +357,27 @@ class CiscoHandlerBase:
             raise Exception('Only one vlan could be assigned to the interface in Access mode')
 
     def get_port_name(self, port):
-        port_resource_map = self.cloud_shell_api().GetResourceDetails(get_resource_name)
+        port_resource_map = self.api.GetResourceDetails(self.resource_name)
         temp_port_name = self._get_resource_full_name(port, port_resource_map)
-        if '/' not in temp_port_name:
+        if not temp_port_name or '/' not in temp_port_name:
             self.logger.error('Interface was not found')
             raise Exception('Interface was not found')
         return temp_port_name.split('/')[-1].replace('-', '/')
 
-    def configure_vlan_interface_ethernet(self, **kwargs):
+    def configure_vlan_interface_ethernet(self, commands_dict):
         """
         Configures interface ethernet
         :param kwargs: dictionary of parameters
         :return: success message
         :rtype: string
         """
-        interface_ethernet = Ethernet()
-        commands_list = interface_ethernet.get_commands_list(**kwargs)
-        current_config = self._show_command('running-config interface {0}'.format(kwargs['configure_interface']))
+        commands_list = get_commands_list(commands_dict)
+        current_config = self._show_command('running-config interface {0}'.format(commands_dict['configure_interface']))
 
         for line in current_config.splitlines():
             if re.search('^\s*switchport', line):
                 commands_list.insert(1, 'no {0}'.format(line))
-        self.send_commands_list(commands_list)
+        result = self.send_config_command_list(commands_list)
         return 'Finished configuration of ethernet interface!'
 
     def configure_interface_ethernet(self, **kwargs):
@@ -290,7 +390,7 @@ class CiscoHandlerBase:
         interface_ethernet = Ethernet()
         commands_list = interface_ethernet.get_commands_list(**kwargs)
 
-        self.send_commands_list(commands_list)
+        self.send_config_command_list(commands_list)
         return 'Finished configuration of ethernet interface!'
 
     def snmp_get(self, get_mib, get_command, get_index, oid=None):
@@ -308,7 +408,7 @@ class CiscoHandlerBase:
         elif get_mib != '' and get_command != '' and get_index != '':
             request_command = (get_mib, get_command, get_index)
         else:
-            self._logger.error('One or several Snmp Get parameters is empty')
+            self.logger.error('One or several Snmp Get parameters is empty')
 
         return self.snmp_handler.get(request_command)
 
@@ -325,7 +425,7 @@ class CiscoHandlerBase:
             version = res.group(0).strip(' \s\r\n')
         if version and version in self.supported_os:
             return True
-        self._logger.info('System description from device: \'{0}\''.format(system_description))
+        self.logger.info('System description from device: \'{0}\''.format(system_description))
         return False
 
     def discover_snmp(self):
@@ -446,7 +546,7 @@ class CiscoHandlerBase:
         self.logger.info('destination filename is {0}'.format(destination_filename))
 
         if len(destination_host) <= 0:
-            destination_host = self._get_resource_attribute(get_resource_name(), 'Backup Location')
+            destination_host = self._get_resource_attribute(self.resource_name, 'Backup Location')
             if len(destination_host) <= 0:
                 raise Exception('Folder path and Backup Location is empty')
         if '://' in destination_host:
