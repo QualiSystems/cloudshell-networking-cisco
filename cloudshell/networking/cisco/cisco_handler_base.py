@@ -462,8 +462,11 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         current_config = self._show_command('running-config interface {0}'.format(ordered_parameters_dict['configure_interface']))
 
         for line in current_config.splitlines():
-            if re.search('^\s*switchport\s+', line.replace(vlan_range, '').strip('\s')):
-                commands_list.insert(1, 'no {0}'.format(line))
+            if re.search('^\s*switchport\s+', line):
+                line_to_remove = re.sub('\s+\d+[-\d+\,]+', '', line)
+                if not line_to_remove:
+                    line_to_remove = line
+                commands_list.insert(1, 'no {0}'.format(line_to_remove.strip(' ')))
 
         output = self.send_commands_list(commands_list)
         if qnq:
