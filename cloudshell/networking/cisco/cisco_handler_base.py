@@ -368,8 +368,10 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             if 'trunk' in port_mode and vlan_range == '':
                 params_map['switchport_mode_trunk'] = []
             elif 'trunk' in port_mode and vlan_range != '':
+                params_map['switchport_mode_trunk'] = []
                 params_map['trunk_allow_vlan'] = [vlan_range]
             elif 'access' in port_mode and vlan_range != '':
+                params_map['switchport_mode_access'] = []
                 params_map['access_allow_vlan'] = [vlan_range]
             if 'qnq' in additional_info.lower():
                 if not self._is_interface_support_qnq(port_name):

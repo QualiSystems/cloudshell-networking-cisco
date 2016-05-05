@@ -12,6 +12,7 @@ class Ethernet(CiscoInterface):
                                       ['Wrong ip address!', 'Wrong ip mask!']),
         'description': CommandTemplate('description {0}', r'[\w ]+', 'Wrong description!'),
         'switchport_mode_trunk': CommandTemplate('switchport mode trunk'),
+        'switchport_mode_access': CommandTemplate('switchport mode access'),
         'trunk_encapsulation': CommandTemplate('switchport trunk encapsulation {0}',
                                                [r'\bdot1q\b|\bisl\b|\bnegotiate\b'],
                                                'Wrong encapsulation name!'),
