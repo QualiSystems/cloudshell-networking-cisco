@@ -493,6 +493,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         commands_list = vlan_configurator.get_commands_list(ordered_parameters_dict)
 
         self.send_commands_list(commands_list)
+        self._exit_configuration_mode()
         return 'Finished configuration of ethernet interface!'
 
     def snmp_get(self, get_mib, get_command, get_index, oid=None):
