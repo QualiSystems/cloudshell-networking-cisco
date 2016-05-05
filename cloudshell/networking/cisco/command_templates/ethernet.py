@@ -16,6 +16,7 @@ class Ethernet(CiscoInterface):
         'trunk_encapsulation': CommandTemplate('switchport trunk encapsulation {0}',
                                                [r'\bdot1q\b|\bisl\b|\bnegotiate\b'],
                                                'Wrong encapsulation name!'),
+        'exit': CommandTemplate('exit'),
         'trunk_allow_vlan': CommandTemplate('switchport trunk allowed vlan {0}',
                                             validateVlanRange, 'Wrong vlan number(s)!'),
         'trunk_remove_vlan': CommandTemplate('switchport trunk allowed vlan remove {0}',

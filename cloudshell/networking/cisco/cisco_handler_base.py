@@ -1,13 +1,15 @@
 __author__ = 'g8y3e'
 
 import time
-
+import re
 import ipcalc
+
 from collections import OrderedDict
 from cloudshell.networking.networking_handler_interface import NetworkingHandlerInterface
 from cloudshell.shell.core.handler_base import HandlerBase
 from cloudshell.networking.utils import *
 from cloudshell.networking.cisco.command_templates.ethernet import Ethernet
+from cloudshell.networking.cisco.command_templates.vlan import Vlan
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
 from cloudshell.cli import expected_actions
@@ -361,8 +363,17 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         for port in port_list.split('|'):
             port_name = self.get_port_name(port)
             self._logger.info('Vlan {0} will be assigned to interface {1}'.format(vlan_range, port_name))
+            vlan_params_map = OrderedDict()
             params_map = OrderedDict()
+            vlan_params_map['configure_vlan'] = vlan_range
+            vlan_params_map['state_active'] = []
+            vlan_params_map['no_shutdown'] = []
+            vlan_params_map['exit'] = []
+
+            self.configure_vlan(vlan_params_map)
+
             params_map['configure_interface'] = port_name
+            params_map['no_shutdown'] = []
             if self.supported_os and 'NXOS' in self.supported_os:
                 params_map['switchport'] = []
             if 'trunk' in port_mode and vlan_range == '':
@@ -471,15 +482,15 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
 
         return 'Finished configuration of ethernet interface!'
 
-    def configure_interface_ethernet(self, **kwargs):
+    def configure_vlan(self, ordered_parameters_dict):
         """
         Configures interface ethernet
         :param kwargs: dictionary of parameters
         :return: success message
         :rtype: string
         """
-        interface_ethernet = Ethernet()
-        commands_list = interface_ethernet.get_commands_list(**kwargs)
+        vlan_configurator = Vlan()
+        commands_list = vlan_configurator.get_commands_list(ordered_parameters_dict)
 
         self.send_commands_list(commands_list)
         return 'Finished configuration of ethernet interface!'
