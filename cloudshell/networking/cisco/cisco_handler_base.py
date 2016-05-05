@@ -391,7 +391,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
                     self._logger.info('QnQ cannot be assigned')
                     raise Exception('QnQ cannot be assigned')
                 params_map['qnq'] = []
-            self.configure_vlan_interface_ethernet(params_map)
+            self.configure_vlan_interface_ethernet(params_map, vlan_range)
             self._exit_configuration_mode()
             self._logger.info('Vlan {0} was assigned to the interface {1}'.format(vlan_range, port_name))
         return 'Vlan Configuration Completed'
@@ -413,7 +413,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             self._logger.info('Vlan {0} will be removed from interface {1}'.format(vlan_range, port_name))
             params_map = OrderedDict()
             params_map['configure_interface'] = port_name
-            self.configure_vlan_interface_ethernet(params_map)
+            self.configure_vlan_interface_ethernet(params_map, vlan_range)
             self._exit_configuration_mode()
             self._logger.info('All vlans and switchport mode were removed from the interface {0}'.format(port_name))
         return 'Vlan Configuration Completed'
@@ -440,7 +440,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
             result = port_name.replace('-', '/')
         return result
 
-    def configure_vlan_interface_ethernet(self, ordered_parameters_dict):
+    def configure_vlan_interface_ethernet(self, ordered_parameters_dict, vlan_range=''):
         """
         Configures interface ethernet
         :param kwargs: dictionary of parameters
@@ -462,7 +462,7 @@ class CiscoHandlerBase(HandlerBase, NetworkingHandlerInterface):
         current_config = self._show_command('running-config interface {0}'.format(ordered_parameters_dict['configure_interface']))
 
         for line in current_config.splitlines():
-            if re.search('^\s*switchport\s+', line):
+            if re.search('^\s*switchport\s+', line.replace(vlan_range, '').strip('\s')):
                 commands_list.insert(1, 'no {0}'.format(line))
 
         output = self.send_commands_list(commands_list)
