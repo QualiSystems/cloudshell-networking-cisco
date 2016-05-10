@@ -4,9 +4,11 @@ import jsonpickle
 from collections import OrderedDict
 
 from cloudshell.core.action_result import ActionResult
-from cloudshell.core.driver_response import DriverResponse, DriverResponseRoot
+from cloudshell.core.driver_response import DriverResponse
+from cloudshell.core.driver_response_root import DriverResponseRoot
 from cloudshell.networking.utils import *
-from cloudshell.networking.cisco.command_templates.ethernet import ETHERNET_COMMANDS_TEMPLATE
+from cloudshell.networking.cisco.command_templates.ethernet import ETHERNET_COMMANDS_TEMPLATES
+from cloudshell.networking.cisco.command_templates.vlan import VLAN_COMMANDS_TEMPLATES
 from cloudshell.networking.cisco.command_templates.cisco_interface import ENTER_INTERFACE_CONF_MODE
 from cloudshell.cli.command_template.command_template_service import add_templates, get_commands_list
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
@@ -281,7 +283,8 @@ class CiscoHandlerBase:
         return result
 
     def load_vlan_command_templates(self):
-        add_templates(ETHERNET_COMMANDS_TEMPLATE)
+        add_templates(ETHERNET_COMMANDS_TEMPLATES)
+        add_templates(VLAN_COMMANDS_TEMPLATES)
         add_templates(ENTER_INTERFACE_CONF_MODE)
 
     def add_vlan(self, vlan_range, port_list, port_mode, qnq, ctag):
@@ -301,15 +304,27 @@ class CiscoHandlerBase:
         for port in port_list.split('|'):
             port_name = self.get_port_name(port)
             self.logger.info('Vlan {0} will be assigned to interface {1}'.format(vlan_range, port_name))
+            vlan_params_map = OrderedDict()
             params_map = OrderedDict()
+            vlan_params_map['configure_vlan'] = vlan_range
+            vlan_params_map['state_active'] = []
+            vlan_params_map['no_shutdown'] = []
+            vlan_params_map['exit'] = []
+
+            self.configure_vlan(vlan_params_map)
+            self.send_config_command('exit')
+
             params_map['configure_interface'] = port_name
+            params_map['no_shutdown'] = []
             if self.supported_os and 'NXOS' in self.supported_os:
                 params_map['switchport'] = []
-            if 'trunk' in port_mode.lower() and vlan_range == '':
+            if 'trunk' in port_mode and vlan_range == '':
                 params_map['switchport_mode_trunk'] = []
-            elif 'trunk' in port_mode.lower() and vlan_range != '':
+            elif 'trunk' in port_mode and vlan_range != '':
+                params_map['switchport_mode_trunk'] = []
                 params_map['trunk_allow_vlan'] = [vlan_range]
-            elif 'access' in port_mode.lower() and vlan_range != '':
+            elif 'access' in port_mode and vlan_range != '':
+                params_map['switchport_mode_access'] = []
                 params_map['access_allow_vlan'] = [vlan_range]
             if qnq and qnq is True:
                 if not self._is_interface_support_qnq(port_name):
@@ -344,7 +359,7 @@ class CiscoHandlerBase:
             params_map['configure_interface'] = port_name
             self.configure_vlan_interface_ethernet(params_map)
             self.logger.info(
-                'All vlans and switchport configurationd were removed from the interface {0}'.format(port_name))
+                'All vlans and switchport configuration were removed from the interface {0}'.format(port_name))
         return 'Vlan Configuration Completed'
 
     def validate_vlan_parameters(self, vlan_range, port_list, port_mode):
@@ -372,12 +387,51 @@ class CiscoHandlerBase:
         :rtype: string
         """
         commands_list = get_commands_list(commands_dict)
+        qnq = None
+        if 'NXOS' in self.supported_os:
+            for commands_list_item in commands_list:
+                if 'dot1q-tunnel' in commands_list_item:
+                    qnq = commands_list_item
+                    break
+            if qnq and qnq in commands_list:
+                commands_list.remove(qnq)
+
         current_config = self._show_command('running-config interface {0}'.format(commands_dict['configure_interface']))
 
         for line in current_config.splitlines():
-            if re.search('^\s*switchport', line):
-                commands_list.insert(1, 'no {0}'.format(line))
-        result = self.send_config_command_list(commands_list)
+            if re.search('^\s*switchport\s+', line):
+                line_to_remove = re.sub('\s+\d+[-\d+,]+', '', line)
+                if not line_to_remove:
+                    line_to_remove = line
+                commands_list.insert(1, 'no {0}'.format(line_to_remove.strip(' ')))
+
+        output = self.send_config_command_list(commands_list)
+        if qnq:
+            config_command = self.send_config_command(qnq, expected_str='\(y/n\).*\?\s*\[(y|n|[Yy]es|[Nn]o)\]')
+            if 'continue(' in config_command:
+                self.send_command('y')
+
+        if re.search('[Cc]ommand rejected.*', output):
+            error = 'Command rejected'
+            if re.search('[Cc]ommand rejected.*', output):
+                error = 'Command rejected'
+                for line in output.splitlines():
+                    if line.lower().startswith('command rejected'):
+                        error = line.strip(' \t\n\r')
+            raise Exception('Cisco OS', 'Failed to assign Vlan, {0}'.format(error))
+
+        return 'Finished configuration of ethernet interface!'
+
+    def configure_vlan(self, ordered_parameters_dict):
+        """
+        Configures interface ethernet
+        :param kwargs: dictionary of parameters
+        :return: success message
+        :rtype: string
+        """
+        commands_list = get_commands_list(ordered_parameters_dict)
+
+        self.send_config_command_list(commands_list)
         return 'Finished configuration of ethernet interface!'
 
     def configure_interface_ethernet(self, **kwargs):
@@ -387,8 +441,8 @@ class CiscoHandlerBase:
         :return: success message
         :rtype: string
         """
-        interface_ethernet = Ethernet()
-        commands_list = interface_ethernet.get_commands_list(**kwargs)
+
+        commands_list = get_commands_list(**kwargs)
 
         self.send_config_command_list(commands_list)
         return 'Finished configuration of ethernet interface!'
@@ -438,7 +492,7 @@ class CiscoHandlerBase:
             error_message = 'Incompatible driver! Please use correct resource driver for {0} operation system(s)'. \
                 format(str(tuple(self.supported_os)))
             self.logger.error(error_message)
-            raise Exception(error_message)
+#            raise Exception(error_message)
 
         self.logger.info('************************************************************************')
         self.logger.info('Start SNMP discovery process .....')
