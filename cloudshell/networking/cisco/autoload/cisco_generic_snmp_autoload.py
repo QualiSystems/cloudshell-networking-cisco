@@ -124,8 +124,15 @@ class CiscoGenericSNMPAutoload(object):
         self._filter_entity_table(result_dict)
         return result_dict
 
-    def add_port_relative_paths(self):
-        for port in self.port_list:
+    def add_relative_paths(self):
+        port_list = list(self.port_list)
+        module_list = list(self.module_list)
+        for module in module_list:
+            if module not in self.exclusion_list:
+                self.relative_path[module] = self.get_relative_path(module) + '/' + self._get_resource_id(module)
+            else:
+                self.module_list.remove(module)
+        for port in port_list:
             if port not in self.exclusion_list:
                 self.relative_path[port] = self.get_relative_path(port) + '/' + self._get_resource_id(port)
             else:
@@ -148,7 +155,7 @@ class CiscoGenericSNMPAutoload(object):
                     chassis_id = '0'
                 self.relative_path[chassis] = chassis_id
         self.get_module_list()
-        self.add_port_relative_paths()
+        self.add_relative_paths()
         self._get_device_details()
         self._get_chassis_attributes(self.chassis_list)
         self._get_ports_attributes()
@@ -176,7 +183,6 @@ class CiscoGenericSNMPAutoload(object):
             if re.search('module', self.entity_table[module_id]['entPhysicalClass']):
                 if module_id not in self.exclusion_list and module_id not in self.module_list:
                     self.module_list.append(module_id)
-                    self.relative_path[module_id] = self.get_relative_path(module_id)
 
     def _get_resource_id(self, item_id):
         parent_id = int(self.entity_table[item_id]['entPhysicalContainedIn'])
@@ -217,6 +223,7 @@ class CiscoGenericSNMPAutoload(object):
         self._logger.info('Start loading Modules')
         for module in self.module_list:
             module_id = self.relative_path[module]
+            module_index = self._get_resource_id(module)
             module_details_map = {
                 'module_model': self.entity_table[module]['entPhysicalDescr'],
                 'version': self.snmp.get_property_value('ENTITY-MIB', 'entPhysicalSoftwareRev', module),
@@ -224,10 +231,10 @@ class CiscoGenericSNMPAutoload(object):
             }
 
             if '/' in module_id and len(module_id.split('/')) < 3:
-                module_name = 'Module {0}'.format(module_id)
+                module_name = 'Module {0}'.format(module_index)
                 model = 'Generic Module'
             else:
-                module_name = 'Sub Module {0}'.format(module_id)
+                module_name = 'Sub Module {0}'.format(module_index)
                 model = 'Generic Sub Module'
             module_object = Module(name=module_name, model=model, relative_path=module_id, **module_details_map)
             self._add_resource(module_object)
@@ -244,10 +251,10 @@ class CiscoGenericSNMPAutoload(object):
         self._logger.info('Start loading Power Ports')
         for port in power_ports:
             port_id = self._get_resource_id(port)
-            parent_id = self.entity_table[port]['entPhysicalContainedIn']
-            relative_path = '{0}/PP{1}'.format(parent_id, port_id)
-            port_name = 'PP{0}-{1}'.format(parent_id, port_id)
-            port_details = {'model': self.snmp.get_property_value('ENTITY-MIB', 'entPhysicalModelName', port, ),
+            parent_id = self.get_relative_path(port)
+            relative_path = '{0}/{1}'.format(parent_id, port_id)
+            port_name = 'PP{1}'.format(power_ports.index(port))
+            port_details = {'port_model': self.snmp.get_property_value('ENTITY-MIB', 'entPhysicalModelName', port, ),
                             'description': self.snmp.get_property_value('ENTITY-MIB', 'entPhysicalDescr', port,
                                                                         'str'),
                             'version': self.snmp.get_property_value('ENTITY-MIB', 'entPhysicalHardwareRev', port),

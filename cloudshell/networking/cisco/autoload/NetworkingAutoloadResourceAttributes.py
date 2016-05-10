@@ -78,10 +78,10 @@ class NetworkingStandardPortChannelAttributes(GenericResourceAttribute):
         self.ipv6_address = ResourceAttribute('IPv6 Address', ipv6_address)
 
 class NetworkingStandardPowerPortAttributes(GenericResourceAttribute):
-    def __init__(self, relative_path, serial_number='', model='', version='', description=''):
+    def __init__(self, relative_path, serial_number='', port_model='', version='', description=''):
         GenericResourceAttribute.__init__(self, relative_path)
         self.serial_number = ResourceAttribute('Serial Number', serial_number)
-        self.model = ResourceAttribute('Model', model)
+        self.port_model = ResourceAttribute('Model', port_model)
         self.version = ResourceAttribute('Version', version)
         self.description = ResourceAttribute('Port Description', description)
 
