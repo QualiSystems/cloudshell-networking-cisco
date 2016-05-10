@@ -160,7 +160,7 @@ class CiscoGenericSNMPAutoload(object):
         self._get_chassis_attributes(self.chassis_list)
         self._get_ports_attributes()
         self._get_module_attributes()
-        self._get_power_ports(self.power_supply_list)
+        self._get_power_ports()
         self._get_port_channels()
 
         result = AutoLoadDetails(resources=self.resources, attributes=self.attributes)
@@ -188,7 +188,7 @@ class CiscoGenericSNMPAutoload(object):
         parent_id = int(self.entity_table[item_id]['entPhysicalContainedIn'])
         if parent_id > 0 and parent_id in self.entity_table \
                 and re.search('container', self.entity_table[parent_id]['entPhysicalClass']):
-            result = self.entity_table[parent_id]['entPhysicalParentRelPos']
+            result = self._get_resource_id(parent_id)
         else:
             result = self.entity_table[item_id]['entPhysicalParentRelPos']
         return result
@@ -242,18 +242,18 @@ class CiscoGenericSNMPAutoload(object):
             self._logger.info('Added ' + self.entity_table[module]['entPhysicalDescr'] + ' Module')
         self._logger.info('Finished Loading Modules')
 
-    def _get_power_ports(self, power_ports):
+    def _get_power_ports(self):
         """Get attributes for ports provided in power_ports list
 
         :param power_ports:
         :return:
         """
         self._logger.info('Start loading Power Ports')
-        for port in power_ports:
+        for port in self.power_supply_list:
             port_id = self._get_resource_id(port)
             parent_id = self.get_relative_path(port)
             relative_path = '{0}/{1}'.format(parent_id, port_id)
-            port_name = 'PP{1}'.format(power_ports.index(port))
+            port_name = 'PP{0}'.format(self.power_supply_list.index(port))
             port_details = {'port_model': self.snmp.get_property_value('ENTITY-MIB', 'entPhysicalModelName', port, ),
                             'description': self.snmp.get_property_value('ENTITY-MIB', 'entPhysicalDescr', port,
                                                                         'str'),
