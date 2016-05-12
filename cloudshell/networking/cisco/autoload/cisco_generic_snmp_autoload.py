@@ -8,9 +8,10 @@ from cloudshell.shell.core.context.driver_context import AutoLoadResource
 from cloudshell.shell.core.context.driver_context import AutoLoadAttribute
 from cloudshell.shell.core.context.driver_context import AutoLoadDetails
 from cloudshell.snmp.quali_snmp import QualiMibTable
-from cloudshell.networking.cisco.autoload.NetworkingAutoloadResourceStructure import Port, PortChannel, PowerPort, \
+from cloudshell.networking.cisco.autoload.networking_autoload_resource_structure import Port, PortChannel, PowerPort, \
     Chassis, Module
-from cloudshell.networking.cisco.autoload.NetworkingAutoloadResourceAttributes import NetworkingStandardRootAttributes
+from cloudshell.networking.cisco.autoload.networking_autoload_resource_attributes import \
+    NetworkingStandardRootAttributes
 
 from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
@@ -83,18 +84,14 @@ class CiscoGenericSNMPAutoload(object):
         physical_indexes = self.snmp.get_table('ENTITY-MIB', 'entPhysicalParentRelPos')
         for index in physical_indexes.keys():
             is_excluded = False
-
+            if physical_indexes[index]['entPhysicalParentRelPos'] == '':
+                is_excluded = True
+                self.exclusion_list.append(index)
+                continue
             temp_entity_table = physical_indexes[index].copy()
-
-            for key, value in physical_indexes[index].iteritems():
-                temp_entity_table.update(self.snmp.get_bulk_values('ENTITY-MIB', index, entity_table_critical_port_attr)
-                                         [index])
-                if value == '':
-                    is_excluded = True
-                    self.exclusion_list.append(index)
-                    break
-
-            if int(temp_entity_table['entPhysicalContainedIn']) in self.exclusion_list:
+            temp_entity_table.update(self.snmp.get_bulk_values('ENTITY-MIB', index, entity_table_critical_port_attr)
+                                     [index])
+            if temp_entity_table['entPhysicalContainedIn'] == '':
                 is_excluded = True
                 self.exclusion_list.append(index)
 
@@ -104,21 +101,34 @@ class CiscoGenericSNMPAutoload(object):
             temp_entity_table.update(self.snmp.get_bulk_values('ENTITY-MIB', index, entity_table_optional_port_attr)
                                      [index])
 
-            if re.search('chassis|module|port|powerSupply|container', temp_entity_table['entPhysicalClass']):
+            if temp_entity_table['entPhysicalClass'] == '':
+                match_data = re.search(r'module|container|chassis|stack',
+                                       temp_entity_table['entPhysicalDescr'].lower())
+                if match_data:
+                    temp_entity_table['entPhysicalClass'] = match_data.group()
+                else:
+                    match_data = re.search('module|container|chassis|stack',
+                                           temp_entity_table['entPhysicalName'].lower())
+                    if match_data:
+                        temp_entity_table['entPhysicalClass'] = match_data.group()
+                    else:
+                        continue
+            else:
+                temp_entity_table['entPhysicalClass'] = temp_entity_table['entPhysicalClass'].replace("'", "")
+
+            if re.search('stack|chassis|module|port|powerSupply|container', temp_entity_table['entPhysicalClass']):
                 result_dict[index] = temp_entity_table
 
-            if temp_entity_table['entPhysicalClass'] == "'chassis'":
+            if temp_entity_table['entPhysicalClass'] == 'chassis':
                 self.chassis_list.append(index)
-            # if temp_entity_table['entPhysicalClass'] == "'module'":
-            #     self.raw_module_list.append(index)
-            elif temp_entity_table['entPhysicalClass'] == "'port'":
+            elif temp_entity_table['entPhysicalClass'] == 'port':
                 if not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalName']) \
                         and not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalDescr']):
                     port_id = self._get_mapping(index, temp_entity_table['entPhysicalDescr'])
                     if port_id and port_id in self.if_table and port_id not in self.port_mapping.values():
                         self.port_mapping[index] = port_id
                         self.port_list.append(index)
-            elif temp_entity_table['entPhysicalClass'] == "'powerSupply'":
+            elif temp_entity_table['entPhysicalClass'] == 'powerSupply':
                 self.power_supply_list.append(index)
 
         self._filter_entity_table(result_dict)
@@ -356,7 +366,8 @@ class CiscoGenericSNMPAutoload(object):
         elements = raw_entity_table.filter_by_column('ContainedIn').sort_by_column('ParentRelPos').keys()
         for element in reversed(elements):
             parent_id = int(self.entity_table[element]['entPhysicalContainedIn'])
-            if parent_id in self.exclusion_list:
+
+            if parent_id not in raw_entity_table or parent_id in self.exclusion_list:
                 self.exclusion_list.append(element)
 
     def _get_ip_interface_details(self, port_index):

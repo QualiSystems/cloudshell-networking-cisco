@@ -183,11 +183,11 @@ class CiscoHandlerBase:
 
         copy_command_str = 'copy ' + source_filesystem + destination_filesystem
 
-        error_expected_string = '(ERROR|[Ee]rror)\s*:.*\n|(FAILED|[Ff]ailed)\n'
-        # expected_string = '\?|.*: (\[|\().*(\]|\))|.*[\]\)]:\s*$|.*:\s+$|' + error_expected_string
+        error_expected_string = 'ERROR|[Ee]rror\s*:.*\n|\%?[Ee]rror.*$|(FAILED|[Ff]ailed)\n'
+        # expected_string = '\?|.*: (\[|\().*(\]|\))|.*[\]\)]:\s*$|.*:\s+$|.*host.*tftp\s\S+\:' + error_expected_string
         expected_map = OrderedDict()
         expected_map['[Ss]ource [Ff]ilename'] = lambda session: session.send_line(kwargs['source_filename'])
-        expected_map['[Rr]emote [Hh]ost'] = lambda session: session.send_line(kwargs['remote_host'])
+        expected_map['[Rr]emote [Hh]ost|[Hh]ostname'] = lambda session: session.send_line(kwargs['remote_host'])
         expected_map['[Dd]estination [Ff]ilename'] = lambda session: session.send_line(destination_filename)
         expected_map['\s*[Vv]rf\s*'] = lambda session: session.send_line(destination_filename)
         output = self.send_command(command=copy_command_str, expected_str=error_expected_string,

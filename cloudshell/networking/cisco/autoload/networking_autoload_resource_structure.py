@@ -1,5 +1,5 @@
 from cloudshell.shell.core.context.driver_context import AutoLoadResource
-from cloudshell.networking.cisco.autoload.NetworkingAutoloadResourceAttributes import GenericResourceAttribute, \
+from cloudshell.networking.cisco.autoload.networking_autoload_resource_attributes import GenericResourceAttribute, \
     NetworkingStandardChassisAttributes, NetworkingStandardModuleAttributes, NetworkingStandardPortAttributes, \
     NetworkingStandardPortChannelAttributes, NetworkingStandardPowerPortAttributes
 
