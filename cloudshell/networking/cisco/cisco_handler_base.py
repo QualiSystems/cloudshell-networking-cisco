@@ -44,7 +44,7 @@ class CiscoHandlerBase:
         except Exception:
             raise Exception('CiscoHandlerBase', 'ResourceName is empty or None')
 
-    def send_command(self, command, expected_str=None, expected_map=None, timeout=30, retry_count=10,
+    def send_command(self, command, expected_str=None, expected_map=None, timeout=30, retries=10,
                      is_need_default_prompt=True, session=None):
         """Send command
 
@@ -52,7 +52,7 @@ class CiscoHandlerBase:
         :param expected_str: optional, custom expected string, if you expect something different from default prompts
         :param expected_map: optional, custom expected map, if you expect some actions in progress of the command
         :param timeout: optional, custom timeout
-        :param retry_count: optional, custom retry count, if you need more than 5 retries
+        :param retries: optional, custom retry count, if you need more than 5 retries
         :param is_need_default_prompt: default
         :param session:
         :return output from cli
@@ -61,15 +61,15 @@ class CiscoHandlerBase:
 
         if session:
             response = self.cli.send_command(command=command, expected_str=expected_str, expected_map=expected_map,
-                                             timeout=timeout, retry_count=retry_count,
+                                             timeout=timeout, retries=retries,
                                              is_need_default_prompt=is_need_default_prompt, session=session)
         else:
             response = self.cli.send_command(command=command, expected_str=expected_str, expected_map=expected_map,
-                                             timeout=timeout, retry_count=retry_count,
+                                             timeout=timeout, retries=retries,
                                              is_need_default_prompt=is_need_default_prompt)
         return response
 
-    def send_config_command(self, command, expected_str=None, expected_map=None, timeout=30, retry_count=10,
+    def send_config_command(self, command, expected_str=None, expected_map=None, timeout=30, retries=10,
                             is_need_default_prompt=True):
         """Send list of config commands
 
@@ -78,7 +78,7 @@ class CiscoHandlerBase:
         :rtype: string
         """
 
-        return self.cli.send_config_command(command, expected_str, expected_map, timeout, retry_count,
+        return self.cli.send_config_command(command, expected_str, expected_map, timeout, retries,
                                             is_need_default_prompt)
 
     def send_config_command_list(self, command_list):
@@ -804,7 +804,7 @@ class CiscoHandlerBase:
         """
 
         cmd = 'dir {0}:'.format(partition)
-        output = self.send_command(command=cmd, retry_count=100)
+        output = self.send_command(command=cmd, retries=100)
 
         find_str = 'bytes total ('
         position = output.find(find_str)
