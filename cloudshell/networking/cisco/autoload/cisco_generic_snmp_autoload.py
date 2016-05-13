@@ -47,7 +47,7 @@ class CiscoGenericSNMPAutoload(object):
         self._load_snmp_tables()
 
     def _load_snmp_tables(self):
-        """ Load cisco required snmp tables
+        """ Load all cisco required snmp tables
 
         :return:
         """
@@ -185,6 +185,11 @@ class CiscoGenericSNMPAutoload(object):
         return result
 
     def _add_resource(self, resource):
+        """Add object data to resources and attributes lists
+
+        :param resource: object which contains all required data for certain resource
+        """
+
         self.resources.append(resource.get_autoload_resource_details())
         self.attributes.extend(resource.get_autoload_resource_attributes())
 
@@ -372,6 +377,11 @@ class CiscoGenericSNMPAutoload(object):
         return result
 
     def _filter_entity_table(self, raw_entity_table):
+        """Filters out all elements if their parents, doesn't exist, or listed in self.exclusion_list
+
+        :param raw_entity_table: entity table with unfiltered elements
+        """
+
         elements = raw_entity_table.filter_by_column('ContainedIn').sort_by_column('ParentRelPos').keys()
         for element in reversed(elements):
             parent_id = int(self.entity_table[element]['entPhysicalContainedIn'])
@@ -421,6 +431,10 @@ class CiscoGenericSNMPAutoload(object):
         return interface_details
 
     def _get_device_details(self):
+        """Get root element attributes
+
+        """
+
         self._logger.info('Start loading Switch Attributes')
         result = {'system_name': self.snmp.get_property('SNMPv2-MIB', 'sysName', 0),
                   'model': self._get_device_model(),
@@ -438,6 +452,13 @@ class CiscoGenericSNMPAutoload(object):
         self._logger.info('Finished Loading Switch Attributes')
 
     def _get_adjacent(self, interface_id):
+        """Get connected device interface and device name to the specified port id, using cdp or lldp protocols
+
+        :param interface_id: port id
+        :return: device's name and port connected to port id
+        :rtype string
+        """
+
         result = ''
         for key, value in self.cdp_table.iteritems():
             if 'cdpCacheDeviceId' in value and 'cdpCacheDevicePort' in value:
@@ -455,6 +476,12 @@ class CiscoGenericSNMPAutoload(object):
         return result
 
     def _get_device_model(self):
+        """Get device model form snmp SNMPv2 mib
+        
+        :return: device model
+        :rtype: str
+        """
+
         result = ''
         snmp_object_id = self.snmp.get_property('SNMPv2-MIB', 'sysObjectID', 0)
         match_name = re.search(r'\.(?P<model>\d+$)', snmp_object_id)
