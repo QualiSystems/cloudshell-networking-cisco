@@ -1,6 +1,6 @@
 __author__ = 'g8y3e'
 
-from cloudshell.networking.utils import validateIP, validateVlanRange
+from cloudshell.networking.networking_utils import validateIP, validateVlanRange
 from cloudshell.networking.cisco.command_templates.cisco_interface import CommandTemplate
 
 VLAN_COMMANDS_TEMPLATES = {
