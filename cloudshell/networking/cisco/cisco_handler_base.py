@@ -6,7 +6,7 @@ from collections import OrderedDict
 from cloudshell.core.action_result import ActionResult
 from cloudshell.core.driver_response import DriverResponse
 from cloudshell.core.driver_response_root import DriverResponseRoot
-from cloudshell.networking.utils import *
+from cloudshell.networking.networking_utils import *
 from cloudshell.networking.cisco.command_templates.ethernet import ETHERNET_COMMANDS_TEMPLATES
 from cloudshell.networking.cisco.command_templates.vlan import VLAN_COMMANDS_TEMPLATES
 from cloudshell.networking.cisco.command_templates.cisco_interface import ENTER_INTERFACE_CONF_MODE
