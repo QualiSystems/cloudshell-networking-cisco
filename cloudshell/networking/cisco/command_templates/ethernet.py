@@ -1,5 +1,5 @@
 from cloudshell.cli.command_template.command_template import CommandTemplate
-from cloudshell.networking.utils import validateIP, validateVlanNumber, validateVlanRange, validateSpanningTreeType
+from cloudshell.networking.networking_utils import validateIP, validateVlanNumber, validateVlanRange, validateSpanningTreeType
 
 ETHERNET_COMMANDS_TEMPLATES = {
     'switchport': CommandTemplate('switchport'),
