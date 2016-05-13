@@ -477,7 +477,7 @@ class CiscoGenericSNMPAutoload(object):
 
     def _get_device_model(self):
         """Get device model form snmp SNMPv2 mib
-        
+
         :return: device model
         :rtype: str
         """

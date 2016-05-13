@@ -24,15 +24,14 @@ class CiscoHandlerBase:
 
     @inject.params(cli='cli_service', logger='logger', snmp='snmp_handler', api='api')
     def __init__(self, cli, logger, snmp, api, resource_name=None):
-        """Send list of config commands
+        """Create CiscoIOSHandlerBase
 
         :param cli: CliService object
-        :param logger: qs_logger object
+        :param logger: QsLogger object
         :param snmp: QualiSnmp object
-        :param api: Cloudshell api object
+        :param api: CloudShell Api object
         :param resource_name: resource name
-        :return output from cli
-        :rtype: string
+        :return:
         """
 
         self.supported_os = []
@@ -343,7 +342,7 @@ class CiscoHandlerBase:
         output = self.send_config_command('switchport mode ?')
         if 'dot1q-tunnel' in output.lower():
             result = True
-        self.send_config_command('exit')
+        self.cli.exit_configuration_mode()
         return result
 
     def _get_resource_full_name(self, port_resource_address, resource_details_map):
@@ -391,37 +390,37 @@ class CiscoHandlerBase:
         self.validate_vlan_methods_incoming_parameters(vlan_range, port_list, port_mode)
         for port in port_list.split('|'):
             port_name = self.get_port_name(port)
-            self.logger.info('Vlan {0} will be assigned to interface {1}'.format(vlan_range, port_name))
-            vlan_params_map = OrderedDict()
-            params_map = OrderedDict()
-            vlan_params_map['configure_vlan'] = vlan_range
-            vlan_params_map['state_active'] = []
-            vlan_params_map['no_shutdown'] = []
+            self.logger.info('Start assigning Vlan {0} to interface {1}'.format(vlan_range, port_name))
+            vlan_config_actions = OrderedDict()
+            interface_config_actions = OrderedDict()
+            vlan_config_actions['configure_vlan'] = vlan_range
+            vlan_config_actions['state_active'] = []
+            vlan_config_actions['no_shutdown'] = []
 
-            self.configure_vlan(vlan_params_map)
+            self.configure_vlan(vlan_config_actions)
             self.cli.exit_configuration_mode()
 
-            params_map['configure_interface'] = port_name
-            params_map['no_shutdown'] = []
+            interface_config_actions['configure_interface'] = port_name
+            interface_config_actions['no_shutdown'] = []
             if self.supported_os and 'NXOS' in self.supported_os:
-                params_map['switchport'] = []
+                interface_config_actions['switchport'] = []
             if 'trunk' in port_mode and vlan_range == '':
-                params_map['switchport_mode_trunk'] = []
+                interface_config_actions['switchport_mode_trunk'] = []
             elif 'trunk' in port_mode and vlan_range != '':
-                params_map['switchport_mode_trunk'] = []
-                params_map['trunk_allow_vlan'] = [vlan_range]
+                interface_config_actions['switchport_mode_trunk'] = []
+                interface_config_actions['trunk_allow_vlan'] = [vlan_range]
             elif 'access' in port_mode and vlan_range != '':
-                params_map['switchport_mode_access'] = []
-                params_map['access_allow_vlan'] = [vlan_range]
+                interface_config_actions['switchport_mode_access'] = []
+                interface_config_actions['access_allow_vlan'] = [vlan_range]
             if qnq and qnq is True:
                 if not self._does_interface_support_qnq(port_name):
                     raise Exception('interface does not support QnQ')
-                if 'switchport_mode_trunk' in params_map:
+                if 'switchport_mode_trunk' in interface_config_actions:
                     raise Exception('interface cannot have trunk and dot1q-tunneling modes in the same time')
-                params_map['qnq'] = ''
+                interface_config_actions['qnq'] = ''
 
-            self.configure_vlan_on_interface(params_map)
-            self.send_config_command('exit')
+            self.configure_vlan_on_interface(interface_config_actions)
+            self.cli.exit_configuration_mode()
             self.logger.info('Vlan {0} was assigned to the interface {1}'.format(vlan_range, port_name))
         return 'Vlan Configuration Completed'
 
@@ -441,9 +440,9 @@ class CiscoHandlerBase:
         for port in port_list.split('|'):
             port_name = self.get_port_name(port)
             self.logger.info('Vlan {0} will be removed from interface {1}'.format(vlan_range, port_name))
-            params_map = OrderedDict()
-            params_map['configure_interface'] = port_name
-            self.configure_vlan_on_interface(params_map)
+            interface_config_actions = OrderedDict()
+            interface_config_actions['configure_interface'] = port_name
+            self.configure_vlan_on_interface(interface_config_actions)
             self.logger.info(
                 'All vlans and switchport configuration were removed from the interface {0}'.format(port_name))
         return 'Vlan Configuration Completed'
@@ -458,11 +457,11 @@ class CiscoHandlerBase:
 
         self.logger.info('Vlan Configuration Started')
         if len(port_list) < 1:
-            raise Exception('Port list is empty')
+            raise Exception('CiscoHandlerBase', 'Port list is empty')
         if vlan_range == '' and port_mode == 'access':
-            raise Exception('Switchport type is Access, but vlan id/range is empty')
+            raise Exception('CiscoHandlerBase', 'Switchport type is Access, but vlan id/range is empty')
         if (',' in vlan_range or '-' in vlan_range) and port_mode == 'access':
-            raise Exception('Only one vlan could be assigned to the interface in Access mode')
+            raise Exception('CiscoHandlerBase', 'Only one vlan could be assigned to the interface in Access mode')
 
     def get_port_name(self, port):
         """Get port name from port resource full address
@@ -476,7 +475,7 @@ class CiscoHandlerBase:
         temp_port_name = self._get_resource_full_name(port, port_resource_map)
         if not temp_port_name or '/' not in temp_port_name:
             self.logger.error('Interface was not found')
-            raise Exception('Interface was not found')
+            raise Exception('CiscoHandlerBase', 'Interface name was not found')
         return temp_port_name.split('/')[-1].replace('-', '/')
 
     def configure_vlan_on_interface(self, commands_dict):
@@ -751,7 +750,7 @@ class CiscoHandlerBase:
                                     timeout=600, retries=5)
         elif (clear_config.lower() == 'override') and (destination_filename == 'running-config'):
 
-            if not self.check_replace_command():
+            if not self._check_replace_command():
                 raise Exception('Override running-config is not supported for this device')
             self.configure_replace(source_filename=source_file, timeout=600)
             is_uploaded = (True, '')
@@ -770,7 +769,7 @@ class CiscoHandlerBase:
         else:
             raise Exception('Cisco OS', is_downloaded[1])
 
-    def check_replace_command(self):
+    def _check_replace_command(self):
         """Checks whether replace command exist on device or not
         """
 
