@@ -89,10 +89,8 @@ class CiscoHandlerBase:
         :rtype: string
         """
 
-        result = ''
-        for command in command_list:
-            result = self.send_config_command(command)
-        self.send_command('')
+        result = self.cli.send_command_list(command_list)
+        self.cli.exit_configuration_mode()
         return result
 
     def _show_command(self, data):
