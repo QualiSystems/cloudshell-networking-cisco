@@ -167,7 +167,7 @@ class CiscoHandlerBase:
                 try:
                     action_result.infoMessage = self.add_vlan(action.connectionParams.vlanId,
                                                               action.actionTarget.fullAddress,
-                                                              action.connectionParams.mode,
+                                                              action.connectionParams.mode.lower(),
                                                               qnq,
                                                               ctag)
                 except Exception as e:
@@ -177,7 +177,7 @@ class CiscoHandlerBase:
                 try:
                     action_result.infoMessage = self.remove_vlan(action.connectionParams.vlanId,
                                                                  action.actionTarget.fullAddress,
-                                                                 action.connectionParams.mode)
+                                                                 action.connectionParams.mode.lower())
                 except Exception as e:
                     action_result.errorMessage = e.message
                     action_result.success = False
