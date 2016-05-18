@@ -161,7 +161,9 @@ class CiscoHandlerBase:
                 ctag = ''
                 for attribute in action.connectionParams.vlanServiceAttributes:
                     if attribute.attributeName.lower() == 'qnq':
-                        qnq = attribute.attributeValue
+                        request_qnq = attribute.attributeValue
+                        if request_qnq.lower() == 'true':
+                            qnq = True
                     elif attribute.attributeName.lower() == 'ctag':
                         ctag = attribute.attributeValue
                 try:
@@ -405,7 +407,9 @@ class CiscoHandlerBase:
                 interface_config_actions['switchport_mode_trunk'] = []
                 interface_config_actions['trunk_allow_vlan'] = [vlan_range]
             elif 'access' in port_mode and vlan_range != '':
-                interface_config_actions['switchport_mode_access'] = []
+                if not qnq or qnq is False:
+                    self.logger.info('qnq is {0}'.format(qnq))
+                    interface_config_actions['switchport_mode_access'] = []
                 interface_config_actions['access_allow_vlan'] = [vlan_range]
             if qnq and qnq is True:
                 if not self._does_interface_support_qnq(port_name):
