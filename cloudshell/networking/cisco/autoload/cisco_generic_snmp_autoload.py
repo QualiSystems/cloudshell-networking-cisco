@@ -105,17 +105,18 @@ class CiscoGenericSNMPAutoload(object):
                                      [index])
 
             if temp_entity_table['entPhysicalClass'] == '':
-                match_data = re.search(r'module|container|chassis|stack',
+                match_data = re.search(r'module|slot|chassis',
                                        temp_entity_table['entPhysicalDescr'].lower())
                 if match_data:
-                    temp_entity_table['entPhysicalClass'] = match_data.group()
+                    index_entity_class = match_data.group()
                 else:
-                    match_data = re.search('module|container|chassis|stack',
+                    match_data = re.search('module|slot|chassis',
                                            temp_entity_table['entPhysicalName'].lower())
                     if match_data:
-                        temp_entity_table['entPhysicalClass'] = match_data.group()
+                        index_entity_class = match_data.group()
                     else:
                         continue
+                temp_entity_table['entPhysicalClass'] = index_entity_class.replace('slot', 'container')
             else:
                 temp_entity_table['entPhysicalClass'] = temp_entity_table['entPhysicalClass'].replace("'", "")
 
