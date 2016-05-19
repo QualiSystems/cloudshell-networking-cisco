@@ -3,7 +3,7 @@ import os
 
 import inject
 
-from cloudshell.shell.core.context.driver_context import AutoLoadDetails
+from cloudshell.shell.core.driver_context import AutoLoadDetails
 from cloudshell.snmp.quali_snmp import QualiMibTable
 from cloudshell.networking.autoload.networking_autoload_resource_structure import Port, PortChannel, PowerPort, \
     Chassis, Module

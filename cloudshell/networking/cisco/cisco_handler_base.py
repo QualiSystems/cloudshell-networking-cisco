@@ -13,7 +13,7 @@ from cloudshell.networking.cisco.command_templates.cisco_interface import ENTER_
 from cloudshell.cli.command_template.command_template_service import add_templates, get_commands_list
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
-from cloudshell.shell.core.context.context_utils import get_resource_name
+from cloudshell.shell.core.context_utils import get_resource_name
 from cloudshell.networking.core.connectivity_request_helper import ConnectivityRequestDeserializer
 
 
