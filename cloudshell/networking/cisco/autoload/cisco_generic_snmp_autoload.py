@@ -37,9 +37,6 @@ class CiscoGenericSNMPAutoload:
         self.relative_path = {}
         self.port_mapping = {}
 
-        local_mib_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'mibs'))
-        self.snmp.update_mib_sources(local_mib_path)
-
         self.port_exclude_pattern = 'serial|stack|engine|management'
         self.module_exclude_pattern = '^.\S+.3.1.9.51(.\d+)?'
 
@@ -153,6 +150,7 @@ class CiscoGenericSNMPAutoload:
         for port in port_list:
             if port not in self.exclusion_list:
                 self.relative_path[port] = self.get_relative_path(port) + '/' + self._get_resource_id(port)
+
             else:
                 self.port_list.remove(port)
 
@@ -303,6 +301,19 @@ class CiscoGenericSNMPAutoload:
             self._logger.info('Added ' + self.entity_table[module]['entPhysicalDescr'] + ' Module')
         self._logger.info('Finished Loading Modules')
 
+    def _get_power_port_id(self, port_id):
+        parent_id = int(self.entity_table[port_id]['entPhysicalContainedIn'])
+        if parent_id > 0 and parent_id in self.entity_table:
+            if re.search('container|backplane', self.entity_table[parent_id]['entPhysicalClass']):
+                result = self._get_resource_id(parent_id) + self.entity_table[parent_id]['entPhysicalParentRelPos']
+            elif parent_id in self._excluded_models:
+                result = self._get_resource_id(parent_id)
+            else:
+                result = self.entity_table[port_id]['entPhysicalParentRelPos']
+        else:
+            result = ''
+        return result
+
     def _get_power_ports(self):
         """Get attributes for power ports provided in self.power_supply_list
 
@@ -311,9 +322,9 @@ class CiscoGenericSNMPAutoload:
 
         self._logger.info('Start loading Power Ports')
         for port in self.power_supply_list:
-            port_id = self._get_resource_id(port)
+            port_id = self._get_power_port_id(port)
             parent_id = self.get_relative_path(port)
-            relative_path = '{0}/{1}'.format(parent_id, port_id)
+            relative_path = '{0}/PP{1}'.format(parent_id, port_id)
             port_name = 'PP{0}'.format(self.power_supply_list.index(port))
             port_details = {'port_model': self.snmp.get_property('ENTITY-MIB', 'entPhysicalModelName', port, ),
                             'description': self.snmp.get_property('ENTITY-MIB', 'entPhysicalDescr', port, 'str'),
