@@ -33,7 +33,6 @@ class CiscoHandlerBase:
         :param resource_name: resource name
         :return:
         """
-
         self.supported_os = []
         self.cli = cli
         self.logger = logger
@@ -233,11 +232,11 @@ class CiscoHandlerBase:
         host = None
 
         if '://' in source_file:
-            source_file_data_list = source_file.replace('//', '/').split('/')
+            source_file_data_list = re.sub('/+', '/', source_file).split('/')
             host = source_file_data_list[1]
             filename = source_file_data_list[-1]
         elif '://' in destination_file:
-            destination_file_data_list = destination_file.replace('//', '/').split('/')
+            destination_file_data_list = re.sub('/+', '/', destination_file).split('/')
             host = destination_file_data_list[1]
             filename = destination_file_data_list[-1]
         else:
@@ -250,7 +249,7 @@ class CiscoHandlerBase:
         if vrf:
             copy_command_str += ' vrf {0}'.format(vrf)
 
-        error_expected_string = 'ERROR|[Ee]rror\s*:.*\n|\%?[Ee]rror.*\n|(FAILED|[Ff]ailed)\n'
+        error_expected_string = 'ERROR|[Ee]rror\s*:.*\n|(FAILED|[Ff]ailed)\n'  # \%?[Ee]rror.*\n|
         expected_map = OrderedDict()
         if host:
             expected_map[host] = lambda session: session.send_line('')
@@ -260,9 +259,14 @@ class CiscoHandlerBase:
                                    expected_map=expected_map)
 
         match_data = re.search(error_expected_string, output)
-        if match_data:
-            raise Exception('Cisco OS', match_data.group().replace('\n', '').replace('%', ''))
         is_downloaded = self._check_download_from_tftp(output)
+
+        if is_downloaded is False or match_data:
+            if match_data:
+                raise Exception('Cisco OS', match_data.group().replace('\n', '').replace('%', ''))
+            else:
+                raise Exception('Cisco OS', is_downloaded[1])
+
         if is_downloaded[1] == '':
             if re.search('(error|fail)', output.lower()):
                 msg = 'Failed to copy configuration.'
@@ -414,7 +418,7 @@ class CiscoHandlerBase:
                     raise Exception('interface does not support QnQ')
                 if 'switchport_mode_trunk' in interface_config_actions:
                     raise Exception('interface cannot have trunk and dot1q-tunneling modes in the same time')
-                interface_config_actions['qnq'] = ''
+                interface_config_actions['qnq'] = []
 
             self.configure_vlan_on_interface(interface_config_actions)
             self.cli.exit_configuration_mode()
@@ -468,12 +472,18 @@ class CiscoHandlerBase:
         :rtype: string
         """
 
+        temp_port_name = None
         port_resource_map = self.api.GetResourceDetails(self.resource_name)
-        temp_port_name = self._get_resource_full_name(port, port_resource_map)
-        if not temp_port_name or '/' not in temp_port_name:
+        temp_port_full_name = self._get_resource_full_name(port, port_resource_map)
+        if temp_port_full_name and '/' not in temp_port_full_name:
+            temp_port_name = temp_port_full_name.split('/')[-1].replace('-', '/')
+        elif temp_port_full_name and 'port-channel' in temp_port_full_name.lower():
+            temp_port_name = temp_port_full_name.split('/')[-1]
+
+        if not temp_port_full_name:
             self.logger.error('Interface was not found')
-            raise Exception('CiscoHandlerBase', 'Interface name was not found')
-        return temp_port_name.split('/')[-1].replace('-', '/')
+            raise Exception('Cisco OS', 'Interface name was not found')
+        return temp_port_name
 
     def configure_vlan_on_interface(self, commands_dict):
         """
@@ -541,7 +551,7 @@ class CiscoHandlerBase:
 
         system_description = self.snmp_handler.get(('SNMPv2-MIB', 'sysDescr'))['sysDescr']
         match_str = re.sub('[\n\r]+', ' ', system_description.upper())
-        res = re.search('\s+(IOS|IOS-XE|CAT[ -]?OS|NX[ -]?OS)\s*', match_str)
+        res = re.search('\s+(IOS[ -]XR|IOS-XE|CAT[ -]?OS|NX[ -]?OS|IOS)\s*', match_str)
         if res:
             version = res.group(0).strip(' \s\r\n')
         if version and version in self.supported_os:
@@ -667,7 +677,7 @@ class CiscoHandlerBase:
         if destination_host == '':
             raise Exception('Cisco OS', "Destination host is empty")
 
-        system_name = re.sub('\s+', '_', get_resource_name())
+        system_name = re.sub('\s+', '_', self.resource_name)
         if len(system_name) > 23:
             system_name = system_name[:23]
 
