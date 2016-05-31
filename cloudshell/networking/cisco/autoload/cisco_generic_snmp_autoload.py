@@ -96,7 +96,7 @@ class CiscoGenericSNMPAutoload:
                 self.exclusion_list.append(index)
 
             for item in self.entity_table_black_list:
-                if item in temp_entity_table['entPhysicalVendorType']:
+                if item in temp_entity_table['entPhysicalVendorType'].lower():
                     is_excluded = True
                     break
 
