@@ -476,17 +476,17 @@ class CiscoHandlerBase:
         :rtype: string
         """
 
-        temp_port_name = None
         port_resource_map = self.api.GetResourceDetails(self.resource_name)
         temp_port_full_name = self._get_resource_full_name(port, port_resource_map)
-        if temp_port_full_name and '/' in temp_port_full_name:
-            temp_port_name = temp_port_full_name.split('/')[-1].replace('-', '/')
-        elif temp_port_full_name and 'port-channel' in temp_port_full_name.lower():
-            temp_port_name = temp_port_full_name.split('/')[-1]
-
         if not temp_port_full_name:
             self.logger.error('Interface was not found')
             raise Exception('Cisco OS', 'Interface name was not found')
+
+        temp_port_name = temp_port_full_name.split('/')[-1]
+        if 'port-channel' not in temp_port_full_name.lower():
+            temp_port_name = temp_port_name.replace('-', '/')
+
+        self.logger.info('Interface name validated: {0}'.format(temp_port_name))
         return temp_port_name
 
     def configure_vlan_on_interface(self, commands_dict):
