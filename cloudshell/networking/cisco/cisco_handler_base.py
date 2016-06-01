@@ -1,6 +1,7 @@
 import time
 import inject
 import jsonpickle
+import traceback
 from collections import OrderedDict
 
 from cloudshell.core.action_result import ActionResult
@@ -33,6 +34,7 @@ class CiscoHandlerBase:
         :param resource_name: resource name
         :return:
         """
+
         self.supported_os = []
         self.cli = cli
         self.logger = logger
@@ -170,7 +172,8 @@ class CiscoHandlerBase:
                                                               qnq,
                                                               ctag)
                 except Exception as e:
-                    action_result.errorMessage = e.message
+                    self.logger.error('Add vlan failed: {0}'.format(traceback.format_exc()))
+                    action_result.errorMessage = ', '.join(e.args)
                     action_result.success = False
             elif action.type == 'removeVlan':
                 try:
@@ -178,7 +181,8 @@ class CiscoHandlerBase:
                                                                  action.actionTarget.fullAddress,
                                                                  action.connectionParams.mode.lower())
                 except Exception as e:
-                    action_result.errorMessage = e.message
+                    self.logger.error('Remove vlan failed: {0}'.format(traceback.format_exc()))
+                    action_result.errorMessage = ', '.join(e.args)
                     action_result.success = False
             else:
                 continue
@@ -475,7 +479,7 @@ class CiscoHandlerBase:
         temp_port_name = None
         port_resource_map = self.api.GetResourceDetails(self.resource_name)
         temp_port_full_name = self._get_resource_full_name(port, port_resource_map)
-        if temp_port_full_name and '/' not in temp_port_full_name:
+        if temp_port_full_name and '/' in temp_port_full_name:
             temp_port_name = temp_port_full_name.split('/')[-1].replace('-', '/')
         elif temp_port_full_name and 'port-channel' in temp_port_full_name.lower():
             temp_port_name = temp_port_full_name.split('/')[-1]
