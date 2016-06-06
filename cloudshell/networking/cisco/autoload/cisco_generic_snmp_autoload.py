@@ -2,6 +2,7 @@ import re
 import os
 
 import inject
+from cloudshell.networking.operations.interfaces.autoload_operations_interface import AutoloadOperationsInterface
 
 from cloudshell.shell.core.driver_context import AutoLoadDetails
 from cloudshell.snmp.quali_snmp import QualiMibTable
@@ -11,7 +12,7 @@ from cloudshell.networking.autoload.networking_autoload_resource_attributes impo
 from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
 
-class CiscoGenericSNMPAutoload:
+class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
     @inject.params(snmp_handler='snmp_handler', logger='logger')
     def __init__(self, snmp_handler=None, logger=None):
         """Basic init with injected snmp handler and logger
@@ -43,6 +44,53 @@ class CiscoGenericSNMPAutoload:
 
         self.resources = list()
         self.attributes = list()
+
+    def discover(self):
+        """Load device structure and attributes: chassis, modules, submodules, ports, port-channels and power supplies
+
+        :return: AutoLoadDetails object
+        """
+
+        self._get_device_details()
+        self.snmp.load_mib(['CISCO-PRODUCTS-MIB', 'CISCO-ENTITY-VENDORTYPE-OID-MIB'])
+        self._load_snmp_tables()
+
+        if len(self.chassis_list) < 1:
+            self._logger.error('Entity table error, no chassis found')
+            return AutoLoadDetails(list(), list())
+
+        for chassis in self.chassis_list:
+            if chassis not in self.exclusion_list:
+                chassis_id = self._get_resource_id(chassis)
+                if chassis_id == '-1':
+                    chassis_id = '0'
+                self.relative_path[chassis] = chassis_id
+
+        self._filter_lower_bay_containers()
+        self.get_module_list()
+        self.add_relative_paths()
+        self._get_chassis_attributes(self.chassis_list)
+        self._get_ports_attributes()
+        self._get_module_attributes()
+        self._get_power_ports()
+        self._get_port_channels()
+
+        result = AutoLoadDetails(resources=self.resources, attributes=self.attributes)
+
+        self._logger.info('*******************************************')
+        self._logger.info('Discover completed. The following Structure have been loaded:' +
+                          '\nModel, Name, Relative Path, Uniqe Id')
+
+        for resource in self.resources:
+            self._logger.info('{0},\t\t{1},\t\t{2},\t\t{3}'.format(resource.model, resource.name,
+                                                                   resource.relative_address, resource.unique_identifier))
+        self._logger.info('------------------------------')
+        for attribute in self.attributes:
+            self._logger.info('{0},\t\t{1},\t\t{2}'.format(attribute.relative_address, attribute.attribute_name,
+                                                           attribute.attribute_value))
+
+        self._logger.info('*******************************************')
+        return result
 
     def _load_snmp_tables(self):
         """ Load all cisco required snmp tables
@@ -184,53 +232,6 @@ class CiscoGenericSNMPAutoload:
                 self.relative_path[port] = self.get_relative_path(port) + '/' + self._get_resource_id(port)
             else:
                 self.port_list.remove(port)
-
-    def discover(self):
-        """Load device structure and attributes: chassis, modules, submodules, ports, port-channels and power supplies
-
-        :return: AutoLoadDetails object
-        """
-
-        self._get_device_details()
-        self.snmp.load_mib(['CISCO-PRODUCTS-MIB', 'CISCO-ENTITY-VENDORTYPE-OID-MIB'])
-        self._load_snmp_tables()
-
-        if len(self.chassis_list) < 1:
-            self._logger.error('Entity table error, no chassis found')
-            return AutoLoadDetails(list(), list())
-
-        for chassis in self.chassis_list:
-            if chassis not in self.exclusion_list:
-                chassis_id = self._get_resource_id(chassis)
-                if chassis_id == '-1':
-                    chassis_id = '0'
-                self.relative_path[chassis] = chassis_id
-
-        self._filter_lower_bay_containers()
-        self.get_module_list()
-        self.add_relative_paths()
-        self._get_chassis_attributes(self.chassis_list)
-        self._get_ports_attributes()
-        self._get_module_attributes()
-        self._get_power_ports()
-        self._get_port_channels()
-
-        result = AutoLoadDetails(resources=self.resources, attributes=self.attributes)
-
-        self._logger.info('*******************************************')
-        self._logger.info('Discover completed. The following Structure have been loaded:' +
-                          '\nModel, Name, Relative Path, Uniqe Id')
-
-        for resource in self.resources:
-            self._logger.info('{0},\t\t{1},\t\t{2},\t\t{3}'.format(resource.model, resource.name,
-                                                  resource.relative_address, resource.unique_identifier))
-        self._logger.info('------------------------------')
-        for attribute in self.attributes:
-            self._logger.info('{0},\t\t{1},\t\t{2}'.format(attribute.relative_address, attribute.attribute_name,
-                                                           attribute.attribute_value))
-
-        self._logger.info('*******************************************')
-        return result
 
     def _add_resource(self, resource):
         """Add object data to resources and attributes lists
