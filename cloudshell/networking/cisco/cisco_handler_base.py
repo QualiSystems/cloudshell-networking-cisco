@@ -1,12 +1,7 @@
 import time
 import inject
-import jsonpickle
-import traceback
 from collections import OrderedDict
 
-from cloudshell.core.action_result import ActionResult
-from cloudshell.core.driver_response import DriverResponse
-from cloudshell.core.driver_response_root import DriverResponseRoot
 from cloudshell.networking.networking_utils import *
 from cloudshell.networking.cisco.command_templates.ethernet import ETHERNET_COMMANDS_TEMPLATES
 from cloudshell.networking.cisco.command_templates.vlan import VLAN_COMMANDS_TEMPLATES
@@ -19,11 +14,10 @@ from cloudshell.networking.operations.interfaces.configuration_operations_interf
     ConfigurationOperationsInterface
 from cloudshell.networking.operations.interfaces.send_command_interface import SendCommandInterface
 from cloudshell.shell.core.context_utils import get_resource_name
-from cloudshell.networking.core.connectivity_request_helper import ConnectivityRequestDeserializer
 
 
 class CiscoHandlerBase(ConnectivityOperations, ConfigurationOperationsInterface, SendCommandInterface):
-    def __init__(self, resource_name, cli, logger, snmp=None, api=None):
+    def __init__(self, resource_name=None, cli=None, logger=None, snmp=None, api=None):
         """Create CiscoIOSHandlerBase
 
         :param cli: CliService object
