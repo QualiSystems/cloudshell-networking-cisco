@@ -152,7 +152,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
         self.configure_vlan_on_interface(interface_config_actions)
         result = self.cli.send_command('show running-config interface {0}'.format(port_name))
-        self.logger.info('Finished vlan configuration: \n{0}'.format(result))
+        self.logger.info('Vlan configuration completed: \n{0}'.format(result))
 
         return 'Vlan Configuration Completed'
 
