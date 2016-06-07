@@ -98,18 +98,6 @@ class CiscoSendCommandOperations(SendCommandInterface):
         return self.cli.send_config_command(command, expected_str, expected_map, timeout, retries,
                                             is_need_default_prompt)
 
-    def send_config_command_list(self, command_list):
-        """Send list of config commands
-
-        :param command_list: list of commands
-        :return output from cli
-        :rtype: string
-        """
-
-        result = self.cli.send_command_list(command_list)
-        self.cli.exit_configuration_mode()
-        return result
-
     # def _show_command(self, data):
     #     """Execute command: show plus provided part of command, i.e. 'show version'
     #

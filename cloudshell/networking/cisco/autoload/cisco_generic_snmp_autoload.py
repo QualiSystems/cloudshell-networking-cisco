@@ -65,12 +65,8 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         :return: AutoLoadDetails object
         """
 
-        if not self._is_valid_device_os():
-            error_message = 'Incompatible driver! Please use correct resource driver for {0} operation system(s)'. \
-                format(str(tuple(self.supported_os)))
-            self.logger.error(error_message)
-            raise Exception(error_message)
-        
+        self._is_valid_device_os()
+
         self.logger.info('************************************************************************')
         self.logger.info('Start SNMP discovery process .....')
 
@@ -126,13 +122,18 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         config = inject.instance('config')
         system_description = self.snmp.get(('SNMPv2-MIB', 'sysDescr'))['sysDescr']
         match_str = re.sub('[\n\r]+', ' ', system_description.upper())
-        res = re.search('\s+(IOS[ -]XR|IOS-XE|CAT[ -]?OS|NX[ -]?OS|IOS)\s*', match_str)
+        res = re.search('\s+(ASA|IOS[ -]XR|IOS-XE|CAT[ -]?OS|NX[ -]?OS|IOS)\s*', match_str)
         if res:
             version = res.group(0).strip(' \s\r\n')
         if version and version in config.SUPPORTED_OS:
-            return True
+            return
+
         self.logger.info('System description from device: \'{0}\''.format(system_description))
-        return False
+
+        error_message = 'Incompatible driver! Please use correct resource driver for {0} operation system(s)'. \
+            format(str(tuple(config.SUPPORTED_OS)))
+        self.logger.error(error_message)
+        raise Exception(error_message)
 
     def _load_snmp_tables(self):
         """ Load all cisco required snmp tables

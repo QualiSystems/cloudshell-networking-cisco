@@ -12,7 +12,7 @@ from cloudshell.shell.core.context_utils import get_resource_name
 
 
 class CiscoConnectivityOperations(ConnectivityOperations):
-    def __init__(self, cli=None, logger=None, api=None, supported_os=list(), resource_name=None):
+    def __init__(self, cli=None, logger=None, api=None, resource_name=None):
         ConnectivityOperations.__init__(self)
         self._cli = cli
         self._logger = logger
@@ -48,6 +48,18 @@ class CiscoConnectivityOperations(ConnectivityOperations):
             except:
                 raise Exception('CiscoConnectivityOperations', 'Api handler is none or empty')
         return self._api
+
+    def send_config_command_list(self, command_list):
+        """Send list of config commands
+
+        :param command_list: list of commands
+        :return output from cli
+        :rtype: string
+        """
+
+        result = self.cli.send_command_list(command_list)
+        self.cli.exit_configuration_mode()
+        return result
 
     def _get_resource_full_name(self, port_resource_address, resource_details_map):
         """Recursively search for port name on the resource
@@ -212,9 +224,10 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         :rtype: string
         """
 
+        config = inject.instance('config')
         commands_list = get_commands_list(commands_dict)
         qnq = None
-        if 'NXOS' in self.supported_os:
+        if 'NXOS' in config.SUPPORTED_OS:
             for commands_list_item in commands_list:
                 if 'dot1q-tunnel' in commands_list_item:
                     qnq = commands_list_item
@@ -222,7 +235,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
             if qnq and qnq in commands_list:
                 commands_list.remove(qnq)
 
-        current_config = self._show_command('running-config interface {0}'.format(commands_dict['configure_interface']))
+        current_config = self.cli.send_command('show running-config interface {0}'.format(commands_dict['configure_interface']))
 
         for line in current_config.splitlines():
             if re.search('^\s*switchport\s+', line):
@@ -231,7 +244,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
                     line_to_remove = line
                 commands_list.insert(1, 'no {0}'.format(line_to_remove.strip(' ')))
 
-        output = self.cli.send_config_command_list(commands_list)
+        output = self.send_config_command_list(commands_list)
         if qnq:
             config_command = self.cli.send_config_command(qnq, expected_str='\(y/n\).*\?\s*\[(y|n|[Yy]es|[Nn]o)\]')
             if 'continue(' in config_command:
@@ -258,5 +271,5 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
         commands_list = get_commands_list(ordered_parameters_dict)
 
-        self.cli.send_config_command_list(commands_list)
+        self.send_config_command_list(commands_list)
         return 'Finished configuration of ethernet interface!'
