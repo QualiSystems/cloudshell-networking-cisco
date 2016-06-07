@@ -1,7 +1,7 @@
 from unittest import TestCase
 from mock import MagicMock
 import re
-from cloudshell.networking.cisco.cisco_handler_base import CiscoHandlerBase
+from cloudshell.networking.cisco.cisco_send_command_operations import CiscoHandlerBase
 
 __author__ = 'CoYe'
 
