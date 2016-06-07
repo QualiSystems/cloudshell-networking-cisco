@@ -281,7 +281,7 @@ class CiscoHandlerBase:
                 is_downloaded = (True, msg)
         return is_downloaded
 
-    def configure_replace(self, source_filename, timeout=30):
+    def configure_replace(self, source_filename, timeout=30, vrf=None):
         """Replace config on target device with specified one
 
         :param source_filename: full path to the file which will replace current running-config
@@ -746,7 +746,7 @@ class CiscoHandlerBase:
 
             if not self._check_replace_command():
                 raise Exception('Override running-config is not supported for this device')
-            self.configure_replace(source_filename=source_file, timeout=600)
+            self.configure_replace(source_filename=source_file, timeout=600, vrf=vrf)
             is_uploaded = (True, '')
         else:
             is_uploaded = self.copy(source_file=source_file, destination_file=destination_filename, vrf=vrf)
