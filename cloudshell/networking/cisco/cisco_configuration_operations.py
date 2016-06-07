@@ -154,12 +154,10 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :param retries: amount of retires to get response from device after it will be rebooted
         """
 
-        output = self.cli.send_command(command='reload', expected_str='\[yes/no\]:|[confirm]')
-
-        if re.search('\[yes/no\]:', output):
-            self.cli.send_command(command='yes', expected_str='[confirm]')
-
-        output = self.cli.send_command(command='', expected_str='.*', expected_map={})
+        expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}
+        self.cli.send_command(command='reload', expected_map=expected_map)
+        # output = self.cli.send_command(command='', expected_str='.*', expected_map={})
 
         retry = 0
         is_reloaded = False
