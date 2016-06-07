@@ -312,6 +312,8 @@ class CiscoHandlerBase:
 
         if re.search('\[yes/no\]:', output):
             self.send_command(command='yes', expected_str='[confirm]')
+        elif re.search('\[y/n\]:', output):
+            self.send_command(command='y', expected_str='[confirm]')
 
         output = self.send_command(command='', expected_str='.*', expected_map={})
 
