@@ -1,7 +1,7 @@
 from unittest import TestCase
 from mock import MagicMock
 import re
-from cloudshell.networking.cisco.cisco_send_command_operations import CiscoHandlerBase
+from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 
 __author__ = 'CoYe'
 
@@ -11,7 +11,8 @@ class TestCiscoHandlerBase(TestCase):
         self.snmp = MagicMock()
         self.api = MagicMock()
         self.logger = MagicMock()
-        return CiscoHandlerBase(cli=self.cli, logger=self.logger, api=self.api, snmp=self.snmp, resource_name='resource_name')
+        return CiscoConfigurationOperations(cli=self.cli, logger=self.logger, api=self.api,
+                                            resource_name='resource_name')
 
     def test_save_raises_exception(self):
         #output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'

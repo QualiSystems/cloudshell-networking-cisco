@@ -5,11 +5,6 @@ from cloudshell.networking.cisco.cisco_connectivity_operations import CiscoConne
 from cloudshell.networking.cisco.cisco_send_command_operations import CiscoSendCommandOperations
 from cloudshell.shell.core.context_utils import get_decrypted_password_by_attribute_name_wrapper
 
-CONNECTIVITY_OPERATIONS_CLASS = CiscoConnectivityOperations
-CONFIGURATION_OPERATIONS_CLASS = CiscoConfigurationOperations
-FIRMWARE_OPERATIONS_CLASS = CiscoConfigurationOperations
-AUTOLOAD_OPERATIONS_CLASS = CiscoGenericSNMPAutoload
-SEND_COMMAND_OPERATIONS_CLASS = CiscoSendCommandOperations
 
 DEFAULT_PROMPT = '.*>\s*$|.*#\s*$'
 ENABLE_PROMPT = '.*#\s*$'
@@ -41,3 +36,10 @@ def enter_enable_mode(session):
     result = session.hardware_expect('', re_string=DEFAULT_PROMPT + '|' + ENABLE_PROMPT)
     if not re.search(ENABLE_PROMPT, result):
         raise Exception('enter_enable_mode', 'Enable password is incorrect')
+
+
+CONNECTIVITY_OPERATIONS_CLASS = CiscoConnectivityOperations
+CONFIGURATION_OPERATIONS_CLASS = CiscoConfigurationOperations
+FIRMWARE_OPERATIONS_CLASS = CiscoConfigurationOperations
+AUTOLOAD_OPERATIONS_CLASS = CiscoGenericSNMPAutoload
+SEND_COMMAND_OPERATIONS_CLASS = CiscoSendCommandOperations
