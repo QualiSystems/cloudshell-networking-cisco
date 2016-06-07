@@ -49,7 +49,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
                 raise Exception('CiscoConnectivityOperations', 'Api handler is none or empty')
         return self._api
 
-    def send_config_command_list(self, command_list):
+    def send_config_command_list(self, command_list, expected_map=None):
         """Send list of config commands
 
         :param command_list: list of commands
@@ -57,7 +57,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         :rtype: string
         """
 
-        result = self.cli.send_command_list(command_list)
+        result = self.cli.send_command_list(command_list, expected_map=expected_map)
         self.cli.exit_configuration_mode()
         return result
 
@@ -224,18 +224,10 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         :rtype: string
         """
 
-        config = inject.instance('config')
         commands_list = get_commands_list(commands_dict)
-        qnq = None
-        if 'NXOS' in config.SUPPORTED_OS:
-            for commands_list_item in commands_list:
-                if 'dot1q-tunnel' in commands_list_item:
-                    qnq = commands_list_item
-                    break
-            if qnq and qnq in commands_list:
-                commands_list.remove(qnq)
 
-        current_config = self.cli.send_command('show running-config interface {0}'.format(commands_dict['configure_interface']))
+        current_config = self.cli.send_command(
+            'show running-config interface {0}'.format(commands_dict['configure_interface']))
 
         for line in current_config.splitlines():
             if re.search('^\s*switchport\s+', line):
@@ -244,19 +236,15 @@ class CiscoConnectivityOperations(ConnectivityOperations):
                     line_to_remove = line
                 commands_list.insert(1, 'no {0}'.format(line_to_remove.strip(' ')))
 
-        output = self.send_config_command_list(commands_list)
-        if qnq:
-            config_command = self.cli.send_config_command(qnq, expected_str='\(y/n\).*\?\s*\[(y|n|[Yy]es|[Nn]o)\]')
-            if 'continue(' in config_command:
-                self.cli.send_command('y')
+        expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}
+        output = self.send_config_command_list(commands_list, expected_map=expected_map)
 
         if re.search('[Cc]ommand rejected.*', output):
             error = 'Command rejected'
-            if re.search('[Cc]ommand rejected.*', output):
-                error = 'Command rejected'
-                for line in output.splitlines():
-                    if line.lower().startswith('command rejected'):
-                        error = line.strip(' \t\n\r')
+            for line in output.splitlines():
+                if line.lower().startswith('command rejected'):
+                    error = line.strip(' \t\n\r')
             raise Exception('Cisco OS', 'Failed to assign Vlan, {0}'.format(error))
 
         return 'Finished configuration of ethernet interface!'
