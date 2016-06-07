@@ -310,9 +310,9 @@ class CiscoHandlerBase:
 
         output = self.send_command(command='reload', expected_str='\[yes/no\]:|[confirm]')
 
-        if re.search('\[yes/no\]:', output):
+        if re.search('\[yes\/no\]:', output):  # ~~~IOS~~~~
             self.send_command(command='yes', expected_str='[confirm]')
-        elif re.search('\[y/n\]:', output):
+        elif re.search('\(y\/n\)', output):  # ~~~NXOS~~~
             self.send_command(command='y', expected_str='[confirm]')
 
         output = self.send_command(command='', expected_str='.*', expected_map={})
