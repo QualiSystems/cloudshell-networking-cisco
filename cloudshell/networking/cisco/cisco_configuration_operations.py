@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import traceback
 import inject
 import re
 import time
@@ -99,28 +100,28 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if vrf:
             copy_command_str += ' vrf {0}'.format(vrf)
 
-        error_expected_string = 'ERROR|[Ee]rror\s*:.*\n|(FAILED|[Ff]ailed)\n'  # \%?[Ee]rror.*\n|
         expected_map = OrderedDict()
         if host:
             expected_map[host] = lambda session: session.send_line('')
         expected_map['{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
 
-        output = self.cli.send_command(command=copy_command_str, expected_str=error_expected_string,
-                                       expected_map=expected_map)
+        output = self.cli.send_command(command=copy_command_str, expected_map=expected_map)
 
-        match_data = re.search(error_expected_string, output)
+        match_data = re.search('(ERROR|[Ee]rror).*', output, re.DOTALL)
         is_downloaded = _check_download_from_tftp(output)
 
         if is_downloaded is False or match_data:
             if match_data:
-                raise Exception('Cisco OS', match_data.group().replace('\n', '').replace('%', ''))
+                self.logger.error(match_data.group())
+                raise Exception('Cisco OS', 'Failed to copy {0} to {1}, Please see logs for additional info'.format(
+                    source_file, destination_file))
             else:
+                self.logger.error(is_downloaded[1])
                 raise Exception('Cisco OS', is_downloaded[1])
 
         if is_downloaded[1] == '':
             if re.search('(error|fail)', output.lower()):
-                msg = 'Failed to copy configuration.'
-                msg += '\n{}'.format(output)
+                msg = 'Failed to copy configuration, \n{0}'.format(output)
                 is_downloaded = (False, msg)
             else:
                 msg = 'Successfully copied configuration'
@@ -156,8 +157,12 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
         expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
                         '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}
-        self.cli.send_command(command='reload', expected_map=expected_map)
-        # output = self.cli.send_command(command='', expected_str='.*', expected_map={})
+        try:
+            self.cli.send_command(command='reload', expected_map=expected_map)
+        except Exception as e:
+            self.logger.error(traceback.format_exc())
+            output = self.cli.send_command('sh ver')
+        # output = self.cli.send_command(command='', expected_map={})
 
         retry = 0
         is_reloaded = False
