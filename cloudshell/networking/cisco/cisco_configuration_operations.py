@@ -157,12 +157,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
         expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
                         '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}
-        try:
-            self.cli.send_command(command='reload', expected_map=expected_map)
-        except Exception as e:
-            self.logger.error(traceback.format_exc())
-            output = self.cli.send_command('sh ver')
-        # output = self.cli.send_command(command='', expected_map={})
+        self.cli.send_command(command='reload', expected_map=expected_map)
 
         retry = 0
         is_reloaded = False
