@@ -9,4 +9,9 @@ before_install:
 install:
     - python setup.py install
 
-script: python setup.py sdist --format zip
+script: 
+- python setup.py sdist --format zip
+- python run_tests.py --with-coverage --cover-package=cloudshell
+
+after_success:
+    coveralls
