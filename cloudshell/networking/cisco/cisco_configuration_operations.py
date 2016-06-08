@@ -110,7 +110,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         match_data = re.search('(ERROR|[Ee]rror).*', output, re.DOTALL)
         is_downloaded = _check_download_from_tftp(output)
 
-        if is_downloaded is False or match_data:
+        if is_downloaded[0] is False or match_data:
             if match_data:
                 self.logger.error(match_data.group())
                 raise Exception('Cisco OS', 'Failed to copy {0} to {1}, Please see logs for additional info'.format(
