@@ -13,7 +13,7 @@ from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIV
 
 
 class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
-    def __init__(self, snmp_handler=None, logger=None):
+    def __init__(self, snmp_handler=None, logger=None, supported_os=None):
         """Basic init with injected snmp handler and logger
 
         :param snmp_handler:
@@ -27,6 +27,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         self._excluded_models = []
         self.module_list = []
         self.chassis_list = []
+        self.supported_os = supported_os
         self.port_list = []
         self.power_supply_list = []
         self.relative_path = {}
@@ -119,19 +120,21 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         """
 
         version = None
-        config = inject.instance('config')
+        if not self.supported_os:
+            config = inject.instance('config')
+            self.supported_os = config.SUPPORTED_OS
         system_description = self.snmp.get(('SNMPv2-MIB', 'sysDescr'))['sysDescr']
         match_str = re.sub('[\n\r]+', ' ', system_description.upper())
         res = re.search('\s+(ASA|IOS[ -]XR|IOS-XE|CAT[ -]?OS|NX[ -]?OS|IOS)\s*', match_str)
         if res:
             version = res.group(0).strip(' \s\r\n')
-        if version and version in config.SUPPORTED_OS:
+        if version and version in self.supported_os:
             return
 
         self.logger.info('System description from device: \'{0}\''.format(system_description))
 
         error_message = 'Incompatible driver! Please use correct resource driver for {0} operation system(s)'. \
-            format(str(tuple(config.SUPPORTED_OS)))
+            format(str(tuple(self.supported_os)))
         self.logger.error(error_message)
         raise Exception(error_message)
 

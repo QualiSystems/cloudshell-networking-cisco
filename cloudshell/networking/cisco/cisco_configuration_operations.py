@@ -15,29 +15,6 @@ from cloudshell.shell.core.context_utils import get_resource_name
 def _get_time_stamp():
     return time.strftime("%d%m%y-%H%M%S", time.localtime())
 
-
-def _check_download_from_tftp(output):
-    """Verify if file was successfully uploaded
-
-    :param output: output from cli
-    :return True or False, and success or error message
-    :rtype tuple
-    """
-
-    status_match = re.search('\[OK - [0-9]* bytes\]', output)
-    is_success = (status_match is not None)
-    message = ''
-    if not is_success:
-        match_error = re.search('%', output, re.IGNORECASE)
-        if match_error:
-            message = output[match_error.end():]
-            message = message.split('\n')[0]
-        else:
-            is_success = True
-
-    return is_success, message
-
-
 # def _is_valid_copy_filesystem(filesystem):
 #     return not re.match('bootflash$|tftp$|ftp$|harddisk$|nvram$|pram$|flash$|localhost$', filesystem) is None
 
@@ -80,6 +57,14 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         return self._cli
 
     def copy(self, source_file='', destination_file='', vrf=None, timeout=600, retries=5):
+        """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem
+
+        :param source_file: source file.
+        :param destination_file: destination file.
+
+        :return tuple(True or False, 'Success or Error message')
+        """
+        
         host = None
 
         if '://' in source_file:
@@ -107,26 +92,32 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
         output = self.cli.send_command(command=copy_command_str, expected_map=expected_map)
 
-        match_data = re.search('(ERROR|[Ee]rror).*', output, re.DOTALL)
-        is_downloaded = _check_download_from_tftp(output)
+        return self._check_download_from_tftp(output)
 
-        if is_downloaded[0] is False or match_data:
-            if match_data:
-                self.logger.error(match_data.group())
-                raise Exception('Cisco OS', 'Failed to copy {0} to {1}, Please see logs for additional info'.format(
-                    source_file, destination_file))
-            else:
-                self.logger.error(is_downloaded[1])
-                raise Exception('Cisco OS', is_downloaded[1])
+    def _check_download_from_tftp(self, output):
+        """Verify if file was successfully uploaded
 
-        if is_downloaded[1] == '':
-            if re.search('(error|fail)', output.lower()):
-                msg = 'Failed to copy configuration, \n{0}'.format(output)
-                is_downloaded = (False, msg)
-            else:
-                msg = 'Successfully copied configuration'
-                is_downloaded = (True, msg)
-        return is_downloaded
+        :param output: output from cli
+        :return True or False, and success or error message
+        :rtype tuple
+        """
+
+        status_match = re.search('copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output)
+        is_success = (status_match is not None)
+        message = 'Copy failed. Please see logs for additional info'
+        if not is_success:
+            match_error = re.search('%', output, re.IGNORECASE)
+            if match_error:
+                message = output[match_error.end():]
+                message = message.split('\n')[0]
+
+        error_match = re.search('(ERROR|[Ee]rror).*', output)
+        if error_match:
+            self.logger.error(error_match.group())
+            if is_success is True:
+                message = 'Copy completed with an errors. Please see logs for additional info'
+
+        return is_success, message
 
     def configure_replace(self, source_filename, timeout=30):
         """Replace config on target device with specified one
