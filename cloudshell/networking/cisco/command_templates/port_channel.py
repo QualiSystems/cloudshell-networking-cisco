@@ -2,7 +2,7 @@ __author__ = 'g8y3e'
 
 from cloudshell.networking.utils import *
 from cloudshell.networking.cisco.command_templates.cisco_interface \
-    import CiscoInterface, ParametersService, CommandTemplate
+    import CiscoInterface, CommandTemplateValidator, CommandTemplate
 
 class PortChannel(CiscoInterface):
     COMMANDS_TEMPLATE = {
@@ -29,7 +29,7 @@ class PortChannel(CiscoInterface):
                 if 'allow_trunk_vlan' in command:
                     prepared_commands.append('switchport')
 
-                prepared_commands.append(ParametersService.get_validate_list(command_tamplate, value))
+                prepared_commands.append(CommandTemplateValidator.get_validate_list(command_tamplate, value))
 
         return prepared_commands
 
