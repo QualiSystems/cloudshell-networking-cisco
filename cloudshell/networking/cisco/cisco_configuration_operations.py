@@ -104,6 +104,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if host:
             expected_map[host] = lambda session: session.send_line('')
         expected_map['{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
+        expected_map['\(y\/n\)'] = lambda session: session.send_line('y')  # if asked to overwrite file
 
         output = self.cli.send_command(command=copy_command_str, expected_str=error_expected_string,
                                        expected_map=expected_map)
