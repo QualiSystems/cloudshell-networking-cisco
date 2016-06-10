@@ -88,7 +88,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         expected_map = OrderedDict()
         if host:
             expected_map[host] = lambda session: session.send_line('')
-        expected_map['{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
+        expected_map[r'{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
         # expected_map['\(y\/n\)'] = lambda session: session.send_line('y')
         # expected_map['\(.*\)'] = lambda session: session.send_line('y')
 
@@ -104,7 +104,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :rtype tuple
         """
 
-        status_match = re.search('copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output)
+        status_match = re.search(r'copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output)
         is_success = (status_match is not None)
         message = 'Copy failed. Please see logs for additional info'
         if not is_success:
@@ -113,7 +113,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 message = output[match_error.end():]
                 message = message.split('\n')[0]
 
-        error_match = re.search('(ERROR|[Ee]rror).*', output)
+        error_match = re.search(r'(ERROR|[Ee]rror).*', output)
         if error_match:
             self.logger.error(error_match.group())
             if is_success is True:
@@ -135,7 +135,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             '\[[Nn]o\]|\[[Yy]es\]:': lambda session: session.send_line('yes')
         }
         output = self.cli.send_command(command=command, expected_map=expected_map, timeout=timeout)
-        match_error = re.search('[Ee]rror:', output)
+        match_error = re.search(r'[Ee]rror:', output)
         if match_error is not None:
             error_str = output[match_error.end() + 1:]
             error_str = error_str[:error_str.find('\n')]
@@ -148,9 +148,9 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :param retries: amount of retires to get response from device after it will be rebooted
         """
 
-        expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
-                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
-                        '\(y\/n\)': lambda session: session.send_line('y')}
+        expected_map = {r'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+                        r'[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
+                        r'\(y\/n\)': lambda session: session.send_line('y')}
         self.cli.send_command(command='reload', expected_map=expected_map)
         session_type = self.cli.get_session_type()
 
