@@ -89,6 +89,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if host:
             expected_map[host] = lambda session: session.send_line('')
         expected_map['{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
+        # expected_map['\(y\/n\)'] = lambda session: session.send_line('y')
+        # expected_map['\(.*\)'] = lambda session: session.send_line('y')
 
         output = self.cli.send_command(command=copy_command_str, expected_map=expected_map)
 
@@ -139,7 +141,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             error_str = error_str[:error_str.find('\n')]
             raise Exception('Cisco IOS', 'Configure replace error: ' + error_str)
 
-    def reload(self, sleep_timeout=60, retries=5):
+    def reload(self, sleep_timeout=60, retries=15):
         """Reload device
 
         :param sleep_timeout: period of time, to wait for device to get back online
@@ -147,8 +149,18 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         """
 
         expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
-                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}
+                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
+                        '\(y\/n\)': lambda session: session.send_line('y')}
         self.cli.send_command(command='reload', expected_map=expected_map)
+        session_type = self.cli.get_session_type()
+
+        if not session_type == 'CONSOLE':
+            self._logger.info('Session type {}, close session'.format(session_type))
+            self.cli.destroy_threaded_session()
+
+        self.logger.info('Wait 20 seconds for device to reload.....')
+        time.sleep(20)
+        # output = self.cli.send_command(command='', expected_str='.*', expected_map={})
 
         retry = 0
         is_reloaded = False
@@ -157,6 +169,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
             time.sleep(sleep_timeout)
             try:
+                self.logger.debug('Trying to send command to device ... (retry {} of {}'.format(retry, retries))
                 output = self.cli.send_command(command='', expected_str='(?<![#\n])[#>] *$', expected_map={}, timeout=5,
                                                is_need_default_prompt=False)
                 if len(output) == 0:
@@ -166,6 +179,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 break
             except Exception as e:
                 self.logger.error('CiscoHandlerBase', 'Reload receives error: {0}'.format(e.message))
+                self.logger.debuf('Wait {} seconds and retry ...'.format(sleep_timeout/2))
+                time.sleep(sleep_timeout/2)
                 pass
 
         return is_reloaded
