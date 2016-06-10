@@ -114,3 +114,22 @@ class TestCiscoHandlerBase(TestCase):
                                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
+
+    def test_save_cisco_custom_output(self):
+        resource_name = 'Very_long name with Spaces'
+        config_type = 'running'
+        output = """C6504e-1-CE7#copy running-config tftp:
+        Address or name of remote host []? 10.10.10.10
+        Destination filename [c6504e-1-ce7-confg]? 6504e1
+        !!
+        [OK - 1811552 bytes]
+        1811552 bytes copied in 53.511 secs (34180 bytes/sec)
+        C6504e-1-CE7#"""
+        handler = self._get_handler()
+        handler.resource_name = resource_name
+        responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
+        handler.cli.send_command = MagicMock(return_value=output)
+        responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+                                                config_type, 'management')
+        self.assertIsNotNone(responce)
+        self.assertTrue(re.search(responce_template, responce))
