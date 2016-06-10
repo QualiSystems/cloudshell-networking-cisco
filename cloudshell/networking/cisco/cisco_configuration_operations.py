@@ -89,7 +89,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if host:
             expected_map[host] = lambda session: session.send_line('')
         expected_map[r'{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
-        # expected_map['\(y\/n\)'] = lambda session: session.send_line('y')
+        expected_map['\(y/n\)'] = lambda session: session.send_line('y')
+        expected_map['\([Yy]es/[Nn]o\)'] = lambda session: session.send_line('yes')
         # expected_map['\(.*\)'] = lambda session: session.send_line('y')
 
         output = self.cli.send_command(command=copy_command_str, expected_map=expected_map)
