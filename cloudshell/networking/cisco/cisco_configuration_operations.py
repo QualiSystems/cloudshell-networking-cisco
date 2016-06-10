@@ -1,5 +1,4 @@
 from collections import OrderedDict
-import traceback
 import inject
 import re
 import time
@@ -14,6 +13,29 @@ from cloudshell.shell.core.context_utils import get_resource_name
 
 def _get_time_stamp():
     return time.strftime("%d%m%y-%H%M%S", time.localtime())
+
+
+def _check_download_from_tftp(output):
+    """Verify if file was successfully uploaded
+
+    :param output: output from cli
+    :return True or False, and success or error message
+    :rtype tuple
+    """
+
+    status_match = re.search('\[OK - [0-9]* bytes\]', output)
+    is_success = (status_match is not None)
+    message = ''
+    if not is_success:
+        match_error = re.search('%', output, re.IGNORECASE)
+        if match_error:
+            message = output[match_error.end():]
+            message = message.split('\n')[0]
+        else:
+            is_success = True
+
+    return is_success, message
+
 
 # def _is_valid_copy_filesystem(filesystem):
 #     return not re.match('bootflash$|tftp$|ftp$|harddisk$|nvram$|pram$|flash$|localhost$', filesystem) is None
@@ -57,14 +79,6 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         return self._cli
 
     def copy(self, source_file='', destination_file='', vrf=None, timeout=600, retries=5):
-        """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem
-
-        :param source_file: source file.
-        :param destination_file: destination file.
-
-        :return tuple(True or False, 'Success or Error message')
-        """
-        
         host = None
 
         if '://' in source_file:
@@ -85,42 +99,36 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if vrf:
             copy_command_str += ' vrf {0}'.format(vrf)
 
+        error_expected_string = 'ERROR|[Ee]rror\s*:.*\n|(FAILED|[Ff]ailed)\n'  # \%?[Ee]rror.*\n|
         expected_map = OrderedDict()
+
+        expected_map['\(y\/n\)'] = lambda session: session.send_line('y')
+        expected_map['{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('y')
         if host:
             expected_map[host] = lambda session: session.send_line('')
-        expected_map[r'{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
-        expected_map['\(y/n\)'] = lambda session: session.send_line('y')
-        expected_map['\([Yy]es/[Nn]o\)'] = lambda session: session.send_line('yes')
-        # expected_map['\(.*\)'] = lambda session: session.send_line('y')
 
-        output = self.cli.send_command(command=copy_command_str, expected_map=expected_map)
+        output = self.cli.send_command(command=copy_command_str, expected_str=error_expected_string,
+                                       expected_map=expected_map)
+        #self._logger.info(output)
+        match_data = re.search(error_expected_string, output)
+        is_downloaded = _check_download_from_tftp(output)
 
-        return self._check_download_from_tftp(output)
+        if is_downloaded is False or match_data:
+            if match_data:
+                raise Exception('Cisco OS', match_data.group().replace('\n', '').replace('%', ''))
+            else:
+                raise Exception('Cisco OS', is_downloaded[1])
 
-    def _check_download_from_tftp(self, output):
-        """Verify if file was successfully uploaded
-
-        :param output: output from cli
-        :return True or False, and success or error message
-        :rtype tuple
-        """
-
-        status_match = re.search(r'copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output)
-        is_success = (status_match is not None)
-        message = 'Copy failed. Please see logs for additional info'
-        if not is_success:
-            match_error = re.search('%', output, re.IGNORECASE)
-            if match_error:
-                message = output[match_error.end():]
-                message = message.split('\n')[0]
-
-        error_match = re.search(r'(ERROR|[Ee]rror).*', output)
-        if error_match:
-            self.logger.error(error_match.group())
-            if is_success is True:
-                message = 'Copy completed with an errors. Please see logs for additional info'
-
-        return is_success, message
+        if is_downloaded[1] == '':
+            if re.search('(error|fail)', output.lower()):
+                msg = 'Failed to copy configuration.'
+                msg += '\n{}'.format(output)
+                is_downloaded = (False, msg)
+            else:
+                msg = 'Successfully copied configuration'
+                self._logger.info(msg)
+                is_downloaded = (True, msg)
+        return is_downloaded
 
     def configure_replace(self, source_filename, timeout=30):
         """Replace config on target device with specified one
@@ -133,10 +141,13 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             raise Exception('Cisco IOS', "Config replace method doesn't have source filename!")
         command = 'configure replace ' + source_filename
         expected_map = {
-            '\[[Nn]o\]|\[[Yy]es\]:': lambda session: session.send_line('yes')
+            '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+            '\(y\/n\)': lambda session: session.send_line('y'),
+            '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
+            'overwritte': lambda session: session.send_line('yes')
         }
         output = self.cli.send_command(command=command, expected_map=expected_map, timeout=timeout)
-        match_error = re.search(r'[Ee]rror:', output)
+        match_error = re.search('[Ee]rror:', output)
         if match_error is not None:
             error_str = output[match_error.end() + 1:]
             error_str = error_str[:error_str.find('\n')]
@@ -149,15 +160,20 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :param retries: amount of retires to get response from device after it will be rebooted
         """
 
-        expected_map = {r'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
-                        r'[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
-                        r'\(y\/n\)': lambda session: session.send_line('y')}
-        self.cli.send_command(command='reload', expected_map=expected_map)
-        session_type = self.cli.get_session_type()
+        expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+                        '\(y\/n\)|continue': lambda session: session.send_line('y'),
+                        'reload': lambda session: session.send_line(''),
+                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')
+                        }
+        try:
+            self.cli.send_command(command='reload', expected_map=expected_map, timeout=3)
 
-        if not session_type == 'CONSOLE':
-            self._logger.info('Session type {}, close session'.format(session_type))
-            self.cli.destroy_threaded_session()
+        except Exception as e:
+            session_type = self.cli.get_session_type()
+
+            if not session_type == 'CONSOLE':
+                self._logger.info('Session type {}, close session'.format(session_type))
+                self.cli.destroy_threaded_session()
 
         self.logger.info('Wait 20 seconds for device to reload.....')
         time.sleep(20)
@@ -180,7 +196,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 break
             except Exception as e:
                 self.logger.error('CiscoHandlerBase', 'Reload receives error: {0}'.format(e.message))
-                self.logger.debuf('Wait {} seconds and retry ...'.format(sleep_timeout/2))
+                self.logger.debug('Wait {} seconds and retry ...'.format(sleep_timeout/2))
                 time.sleep(sleep_timeout/2)
                 pass
 
