@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import traceback
 import inject
 import re
 import time
@@ -13,29 +14,6 @@ from cloudshell.shell.core.context_utils import get_resource_name
 
 def _get_time_stamp():
     return time.strftime("%d%m%y-%H%M%S", time.localtime())
-
-
-def _check_download_from_tftp(output):
-    """Verify if file was successfully uploaded
-
-    :param output: output from cli
-    :return True or False, and success or error message
-    :rtype tuple
-    """
-
-    status_match = re.search('\[OK - [0-9]* bytes\]', output)
-    is_success = (status_match is not None)
-    message = ''
-    if not is_success:
-        match_error = re.search('%', output, re.IGNORECASE)
-        if match_error:
-            message = output[match_error.end():]
-            message = message.split('\n')[0]
-        else:
-            is_success = True
-
-    return is_success, message
-
 
 # def _is_valid_copy_filesystem(filesystem):
 #     return not re.match('bootflash$|tftp$|ftp$|harddisk$|nvram$|pram$|flash$|localhost$', filesystem) is None
@@ -79,6 +57,14 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         return self._cli
 
     def copy(self, source_file='', destination_file='', vrf=None, timeout=600, retries=5):
+        """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem
+
+        :param source_file: source file.
+        :param destination_file: destination file.
+
+        :return tuple(True or False, 'Success or Error message')
+        """
+        
         host = None
 
         if '://' in source_file:
@@ -102,10 +88,12 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         error_expected_string = 'ERROR|[Ee]rror\s*:.*\n|(FAILED|[Ff]ailed)\n'  # \%?[Ee]rror.*\n|
         expected_map = OrderedDict()
 
-        expected_map['\(y\/n\)'] = lambda session: session.send_line('y')
-        expected_map['{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('y')
         if host:
             expected_map[host] = lambda session: session.send_line('')
+        expected_map[r'{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
+        expected_map['\(y/n\)'] = lambda session: session.send_line('y')
+        expected_map['\([Yy]es/[Nn]o\)'] = lambda session: session.send_line('yes')
+        # expected_map['\(.*\)'] = lambda session: session.send_line('y')
 
         output = self.cli.send_command(command=copy_command_str, expected_str=error_expected_string,
                                        expected_map=expected_map)
@@ -147,7 +135,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             'overwritte': lambda session: session.send_line('yes')
         }
         output = self.cli.send_command(command=command, expected_map=expected_map, timeout=timeout)
-        match_error = re.search('[Ee]rror:', output)
+        match_error = re.search(r'[Ee]rror:', output)
         if match_error is not None:
             error_str = output[match_error.end() + 1:]
             error_str = error_str[:error_str.find('\n')]
