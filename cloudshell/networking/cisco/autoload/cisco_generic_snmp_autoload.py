@@ -100,15 +100,15 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
         self.logger.info('*******************************************')
         self.logger.info('Discover completed. The following Structure have been loaded:' +
-                          '\nModel, Name, Relative Path, Uniqe Id')
+                         '\nModel, Name, Relative Path, Uniqe Id')
 
         for resource in self.resources:
             self.logger.info('{0},\t\t{1},\t\t{2},\t\t{3}'.format(resource.model, resource.name,
-                                                                   resource.relative_address, resource.unique_identifier))
+                                                                  resource.relative_address, resource.unique_identifier))
         self.logger.info('------------------------------')
         for attribute in self.attributes:
             self.logger.info('{0},\t\t{1},\t\t{2}'.format(attribute.relative_address, attribute.attribute_name,
-                                                           attribute.attribute_value))
+                                                          attribute.attribute_value))
 
         self.logger.info('*******************************************')
         self.logger.info('SNMP discovery Completed')
