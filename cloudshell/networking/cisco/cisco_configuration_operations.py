@@ -58,13 +58,11 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
     def copy(self, source_file='', destination_file='', vrf=None, timeout=600, retries=5):
         """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem
-
         :param source_file: source file.
         :param destination_file: destination file.
-
         :return tuple(True or False, 'Success or Error message')
         """
-        
+
         host = None
 
         if '://' in source_file:
@@ -99,7 +97,6 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
     def _check_download_from_tftp(self, output):
         """Verify if file was successfully uploaded
-
         :param output: output from cli
         :return True or False, and success or error message
         :rtype tuple
@@ -130,10 +127,13 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         """
 
         if not source_filename:
-            raise Exception('Cisco IOS', "Config replace method doesn't have source filename!")
+            raise Exception('Cisco IOS', "No source filename provided for config replace method!")
         command = 'configure replace ' + source_filename
         expected_map = {
-            '\[[Nn]o\]|\[[Yy]es\]:': lambda session: session.send_line('yes')
+            '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+            '\(y\/n\)': lambda session: session.send_line('y'),
+            '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
+            'overwritte': lambda session: session.send_line('yes')
         }
         output = self.cli.send_command(command=command, expected_map=expected_map, timeout=timeout)
         match_error = re.search(r'[Ee]rror:', output)
@@ -149,15 +149,20 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :param retries: amount of retires to get response from device after it will be rebooted
         """
 
-        expected_map = {r'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
-                        r'[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
-                        r'\(y\/n\)': lambda session: session.send_line('y')}
-        self.cli.send_command(command='reload', expected_map=expected_map)
-        session_type = self.cli.get_session_type()
+        expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+                        '\(y\/n\)|continue': lambda session: session.send_line('y'),
+                        'reload': lambda session: session.send_line(''),
+                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')
+                        }
+        try:
+            self.cli.send_command(command='reload', expected_map=expected_map, timeout=3)
 
-        if not session_type == 'CONSOLE':
-            self._logger.info('Session type {}, close session'.format(session_type))
-            self.cli.destroy_threaded_session()
+        except Exception as e:
+            session_type = self.cli.get_session_type()
+
+            if not session_type == 'CONSOLE':
+                self._logger.info('Session type {}, close session'.format(session_type))
+                self.cli.destroy_threaded_session()
 
         self.logger.info('Wait 20 seconds for device to reload.....')
         time.sleep(20)
@@ -180,7 +185,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 break
             except Exception as e:
                 self.logger.error('CiscoHandlerBase', 'Reload receives error: {0}'.format(e.message))
-                self.logger.debuf('Wait {} seconds and retry ...'.format(sleep_timeout/2))
+                self.logger.debug('Wait {} seconds and retry ...'.format(sleep_timeout/2))
                 time.sleep(sleep_timeout/2)
                 pass
 
