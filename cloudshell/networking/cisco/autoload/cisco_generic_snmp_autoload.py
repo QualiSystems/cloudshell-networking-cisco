@@ -13,6 +13,9 @@ from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIV
 
 
 class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
+    IF_ENTITY = "ifDescr"
+    ENTITY_PHYSICAL = "entPhysicalDescr"
+
     def __init__(self, snmp_handler=None, logger=None, supported_os=None):
         """Basic init with injected snmp handler and logger
 
@@ -20,7 +23,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         :param logger:
         :return:
         """
-        self.if_entity = "Descr"
+
         self._snmp = snmp_handler
         self._logger = logger
         self.exclusion_list = []
@@ -146,8 +149,8 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         """
 
         self.logger.info('Start loading MIB tables:')
-        self.if_table = self.snmp.get_table('IF-MIB', "if{0}".format(self.if_entity))
-        self.logger.info('if{0} table loaded'.format(self.if_entity))
+        self.if_table = self.snmp.get_table('IF-MIB', self.IF_ENTITY)
+        self.logger.info('{0} table loaded'.format(self.IF_ENTITY))
         self.entity_table = self._get_entity_table()
         if len(self.entity_table.keys()) < 1:
             raise Exception('Cannot load entPhysicalTable. Autoload cannot continue')
@@ -230,7 +233,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
             elif temp_entity_table['entPhysicalClass'] == 'port':
                 if not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalName'], re.IGNORECASE) \
                   and not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalDescr'], re.IGNORECASE):
-                    port_id = self._get_mapping(index, temp_entity_table['entPhysical{0}'.format(self.if_entity)])
+                    port_id = self._get_mapping(index, temp_entity_table[self.ENTITY_PHYSICAL])
                     if port_id and port_id in self.if_table and port_id not in self.port_mapping.values():
                         self.port_mapping[index] = port_id
                         self.port_list.append(index)
@@ -418,11 +421,10 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         if not self.if_table:
             return
         port_channel_dic = {index: port for index, port in self.if_table.iteritems() if
-                            'channel' in port['if{0}'.format(self.if_entity)] and
-                            '.' not in port['if{0}'.format(self.if_entity)]}
+                            'channel' in port[self.IF_ENTITY] and '.' not in port[self.IF_ENTITY]}
         self.logger.info('Start loading Port Channels')
         for key, value in port_channel_dic.iteritems():
-            interface_model = value['if{0}'.format(self.if_entity)]
+            interface_model = value[self.IF_ENTITY]
             match_object = re.search(r'\d+$', interface_model)
             if match_object:
                 interface_id = 'PC{0}'.format(match_object.group(0))
@@ -447,7 +449,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         result = ''
         for key, value in self.port_channel_ports.iteritems():
             if str(item_id) in value['dot3adAggPortAttachedAggID']:
-                result += self.if_table[key]['if{0}'.format(self.if_entity)].replace('/', '-').replace(' ', '')+'; '
+                result += self.if_table[key][self.IF_ENTITY].replace('/', '-').replace(' ', '') + '; '
         return result.strip(' \t\n\r')
 
     def _get_ports_attributes(self):
@@ -461,7 +463,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
             if_table_port_attr = {'ifType': 'str', 'ifPhysAddress': 'str', 'ifMtu': 'int', 'ifSpeed': 'int'}
             if_table = self.if_table[self.port_mapping[port]].copy()
             if_table.update(self.snmp.get_properties('IF-MIB', self.port_mapping[port], if_table_port_attr))
-            interface_name = self.if_table[self.port_mapping[port]]['if{0}'.format(self.if_entity)].replace("'", '')
+            interface_name = self.if_table[self.port_mapping[port]][self.IF_ENTITY].replace("'", '')
             if interface_name == '':
                 interface_name = self.entity_table[port]['entPhysicalName']
             if interface_name == '':
@@ -642,7 +644,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
             self.logger.error(e.message)
             if_table_re = "/".join(re.findall('\d+', port_descr))
             for interface in self.if_table.values():
-                if re.search(r"{0}".format(if_table_re), interface['if{0}'.format(self.if_entity)]):
+                if re.search(if_table_re, interface[self.IF_ENTITY]):
                     port_id = int(interface['suffix'])
                     break
         return port_id
