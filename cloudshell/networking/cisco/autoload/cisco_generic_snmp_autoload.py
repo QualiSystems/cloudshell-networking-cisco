@@ -597,7 +597,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                     result = '{0} through {1}'.format(value['cdpCacheDeviceId'], value['cdpCacheDevicePort'])
         if result == '' and self.lldp_remote_table:
             for key, value in self.lldp_local_table.iteritems():
-                interface_name = self.if_table[interface_id]['ifDescr']
+                interface_name = self.if_table[interface_id][self.IF_ENTITY]
                 if interface_name == '':
                     break
                 if 'lldpLocPortDesc' in value and interface_name in value['lldpLocPortDesc']:
