@@ -121,7 +121,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
         return is_success, message
 
-    def configure_replace(self, source_filename, timeout=30):
+    def configure_replace(self, source_filename, timeout=30, vrf=None):
         """Replace config on target device with specified one
 
         :param source_filename: full path to the file which will replace current running-config
@@ -315,7 +315,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             self.logger.info('Save complete')
             return '{0},'.format(destination_filename)
         else:
-            self.logger.info('is_uploaded = {}'.format(is_uploaded))
+            # self.logger.info('is_uploaded = {}'.format(is_uploaded))
             self.logger.info('Save failed with an error: {0}'.format(is_uploaded[1]))
             raise Exception(is_uploaded[1])
 
@@ -355,7 +355,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
             if not self._check_replace_command():
                 raise Exception('Override running-config is not supported for this device')
-            self.configure_replace(source_filename=source_file, timeout=600)
+            self.configure_replace(source_filename=source_file, timeout=600, vrf=vrf)
             is_uploaded = (True, '')
         else:
             is_uploaded = self.copy(source_file=source_file, destination_file=destination_filename, vrf=vrf)
