@@ -89,9 +89,10 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         expected_map[r'{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
         expected_map['\(y/n\)'] = lambda session: session.send_line('y')
         expected_map['\([Yy]es/[Nn]o\)'] = lambda session: session.send_line('yes')
-        # expected_map['\(.*\)'] = lambda session: session.send_line('y')
+        expected_map['bytes'] = lambda session: session.send_line('')
 
-        output = self.cli.send_command(command=copy_command_str, expected_map=expected_map)
+        output = self.cli.send_command(command=copy_command_str, expected_map=expected_map, timeout=60)
+        output += self.cli.send_command('')
 
         return self._check_download_from_tftp(output)
 
@@ -101,25 +102,26 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :return True or False, and success or error message
         :rtype tuple
         """
-
+        is_success = True
         status_match = re.search(r'copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output)
-        is_success = (status_match is not None)
-        message = 'Copy failed. Please see logs for additional info'
-        if not is_success:
+        message = ''
+        if not status_match:
             match_error = re.search('%', output, re.IGNORECASE)
             if match_error:
-                message = output[match_error.end():]
-                message = message.split('\n')[0]
+                message = 'Copy failed. Please see logs for additional info'
+                message += output[match_error.end():]
+                message += message.split('\n')[0]
+                is_success = False
 
         error_match = re.search(r'(ERROR|[Ee]rror).*', output)
         if error_match:
             self.logger.error(error_match.group())
-            if is_success is True:
-                message = 'Copy completed with an errors. Please see logs for additional info'
+            is_success = False
+            message = 'Copy completed with errors. Please see log for additional info.'
 
         return is_success, message
 
-    def configure_replace(self, source_filename, timeout=30):
+    def configure_replace(self, source_filename, timeout=30, vrf=None):
         """Replace config on target device with specified one
 
         :param source_filename: full path to the file which will replace current running-config
@@ -313,6 +315,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             self.logger.info('Save complete')
             return '{0},'.format(destination_filename)
         else:
+            # self.logger.info('is_uploaded = {}'.format(is_uploaded))
             self.logger.info('Save failed with an error: {0}'.format(is_uploaded[1]))
             raise Exception(is_uploaded[1])
 
@@ -352,7 +355,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
             if not self._check_replace_command():
                 raise Exception('Override running-config is not supported for this device')
-            self.configure_replace(source_filename=source_file, timeout=600)
+            self.configure_replace(source_filename=source_file, timeout=600, vrf=vrf)
             is_uploaded = (True, '')
         else:
             is_uploaded = self.copy(source_file=source_file, destination_file=destination_filename, vrf=vrf)
