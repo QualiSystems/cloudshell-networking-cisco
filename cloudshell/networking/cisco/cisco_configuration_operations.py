@@ -1,9 +1,9 @@
-from collections import OrderedDict
-import traceback
 import inject
 import re
 import time
+import traceback
 
+from collections import OrderedDict
 from cloudshell.networking.networking_utils import validateIP
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
 from cloudshell.networking.operations.interfaces.configuration_operations_interface import \
@@ -113,7 +113,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 message += message.split('\n')[0]
                 is_success = False
 
-        error_match = re.search(r'(ERROR|[Ee]rror).*', output)
+        error_match = re.search(r"error", output, re.IGNORECASE)
         if error_match:
             self.logger.error(error_match.group())
             is_success = False
@@ -375,7 +375,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         """
 
         output = self.cli.send_command('configure replace')
-        if re.search('invalid (input|command)', output.lower()):
+        if re.search(r'invalid (input|command)', output.lower()):
             return False
         return True
 
@@ -412,7 +412,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if position != -1:
             size_str = output[(position + len(find_str)):]
 
-            size_match = re.match('[0-9]*', size_str)
+            size_match = re.match(r'[0-9]*', size_str)
             if size_match:
                 return int(size_match.group())
             else:
