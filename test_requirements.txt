@@ -16,5 +16,9 @@ mock
 teamcity-messages
 nose
 nose-exclude
-cloudshell-networking>=2.0, <2.1
+cloudshell-cli>=2.1, <2.2
+cloudshell-snmp>=2.1, <2.2
+cloudshell-core>=2.1, <2.2
+cloudshell-shell-core>=2.1, <2.2
+cloudshell-networking>=2.1, <2.2
 
