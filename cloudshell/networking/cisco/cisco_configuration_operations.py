@@ -35,7 +35,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             try:
                 self._logger = inject.instance('logger')
             except:
-                raise Exception('Cisco OS', 'Logger is none or empty')
+                raise Exception('Cisco OS', 'Failed to get logger.')
         return self._logger
 
     @property
@@ -44,7 +44,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             try:
                 self._api = inject.instance('api')
             except:
-                raise Exception('Cisco OS', 'Api handler is none or empty')
+                raise Exception('Cisco OS', 'Failed to get api handler')
         return self._api
 
     @property
@@ -53,11 +53,12 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             try:
                 self._cli = inject.instance('cli_service')
             except:
-                raise Exception('Cisco OS', 'Cli Service is none or empty')
+                raise Exception('Cisco OS', 'Failed to get cli_service.')
         return self._cli
 
     def copy(self, source_file='', destination_file='', vrf=None, timeout=600, retries=5):
         """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem
+
         :param source_file: source file.
         :param destination_file: destination file.
         :return tuple(True or False, 'Success or Error message')
@@ -77,7 +78,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             filename = destination_file
 
         if host and not validateIP(host):
-            raise Exception('Cisco OS', 'Copy method: remote host ip is not valid!')
+            raise Exception('Cisco OS', 'Copy method: \'{}\' is not valid remote ip.'.format(host))
 
         copy_command_str = 'copy {0} {1}'.format(source_file, destination_file)
         if vrf:
@@ -108,16 +109,17 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if not status_match:
             match_error = re.search('%', output, re.IGNORECASE)
             if match_error:
-                message = 'Copy failed. Please see logs for additional info'
+                message = 'Command Copy failed.'
                 message += output[match_error.end():]
                 message += message.split('\n')[0]
                 is_success = False
 
         error_match = re.search(r"error", output, re.IGNORECASE)
         if error_match:
-            self.logger.error(error_match.group())
+            message = 'Command Copy completed with errors.\n'
+            message += error_match.group()
+            self.logger.error(message)
             is_success = False
-            message = 'Copy completed with errors. Please see log for additional info.'
 
         return is_success, message
 
@@ -139,10 +141,12 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         }
         output = self.cli.send_command(command=command, expected_map=expected_map, timeout=timeout)
         match_error = re.search(r'[Ee]rror:', output)
+
         if match_error is not None:
-            error_str = output[match_error.end() + 1:]
-            error_str = error_str[:error_str.find('\n')]
-            raise Exception('Cisco IOS', 'Configure replace error: ' + error_str)
+            error_str = output[match_error.end() + 1:] + '\n'
+            error_str += error_str[:error_str.find('\n')]
+
+            raise Exception('Cisco IOS', 'Configure replace completed with error: ' + error_str)
 
     def reload(self, sleep_timeout=60, retries=15):
         """Reload device
@@ -157,16 +161,17 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                         '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')
                         }
         try:
+            self.logger.info('Send \'reload\' to device...')
             self.cli.send_command(command='reload', expected_map=expected_map, timeout=3)
 
         except Exception as e:
             session_type = self.cli.get_session_type()
 
             if not session_type == 'CONSOLE':
-                self._logger.info('Session type {}, close session'.format(session_type))
+                self._logger.info('Session type is \'{}\', closing session...'.format(session_type))
                 self.cli.destroy_threaded_session()
 
-        self.logger.info('Wait 20 seconds for device to reload.....')
+        self.logger.info('Wait 20 seconds for device to reload...')
         time.sleep(20)
         # output = self.cli.send_command(command='', expected_str='.*', expected_map={})
 
@@ -186,7 +191,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 is_reloaded = True
                 break
             except Exception as e:
-                self.logger.error('CiscoHandlerBase', 'Reload receives error: {0}'.format(e.message))
+                self.logger.error('CiscoHandlerBase', e.message)
                 self.logger.debug('Wait {} seconds and retry ...'.format(sleep_timeout/2))
                 time.sleep(sleep_timeout/2)
                 pass
@@ -214,12 +219,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                                 Example: isr4400-universalk9.03.10.00.S.153-3.S-ext.SPA.bin\n\n \
                                 Current path: " + file_path)
 
-            # if not validateIP(remote_host):
-            #     raise Exception('Cisco IOS', "Not valid remote host IP address!")
         free_memory_size = self._get_free_memory_size('bootflash')
-
-        # if size_of_firmware > free_memory_size:
-        #    raise Exception('Cisco ISR 4K', "Not enough memory for firmware!")
 
         is_downloaded = self.copy(source_file=remote_host,
                                   destination_file='bootflash:/' + file_path, timeout=600, retries=2)
@@ -247,7 +247,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             is_boot_firmware = output.find(firmware_full_name) != -1
 
         if not is_boot_firmware:
-            raise Exception('Cisco IOS', "Can't add firmware '" + firmware_full_name + "' dor boot!")
+            raise Exception('Cisco IOS', "Can't add firmware '" + firmware_full_name + "' for boot!")
 
         self.cli.send_command(command='exit')
         output = self.cli.send_command(command='copy run start',
@@ -257,9 +257,9 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
         is_firmware_installed = output_version.find(firmware_full_name)
         if is_firmware_installed != -1:
-            return 'Finished updating firmware!'
+            return 'Update firmware completed successfully!'
         else:
-            raise Exception('Cisco IOS', 'Firmware update was unsuccessful!')
+            raise Exception('Cisco IOS', 'Update firmware failed!')
 
     def _get_resource_attribute(self, resource_full_path, attribute_name):
         """Get resource attribute by provided attribute_name
@@ -290,8 +290,9 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             source_filename = source_filename.lower() + '-config'
         if ('startup' not in source_filename) and ('running' not in source_filename):
             raise Exception('Cisco OS', "Source filename must be 'startup' or 'running'!")
+
         if destination_host == '':
-            raise Exception('Cisco OS', "Destination host is empty")
+            raise Exception('Cisco OS', "Destination host can\'t be empty.")
 
         system_name = re.sub('\s+', '_', self.resource_name)
         if len(system_name) > 23:
@@ -304,7 +305,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if len(destination_host) <= 0:
             destination_host = self._get_resource_attribute(self.resource_name, 'Backup Location')
             if len(destination_host) <= 0:
-                raise Exception('Folder path and Backup Location is empty')
+                raise Exception('Folder path and Backup Location are empty.')
+
         if destination_host.endswith('/'):
             destination_file = destination_host + destination_filename
         else:
@@ -312,11 +314,11 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
         is_uploaded = self.copy(destination_file=destination_file, source_file=source_filename, vrf=vrf)
         if is_uploaded[0] is True:
-            self.logger.info('Save complete')
+            self.logger.info('Save configuration completed.')
             return '{0},'.format(destination_filename)
         else:
             # self.logger.info('is_uploaded = {}'.format(is_uploaded))
-            self.logger.info('Save failed with an error: {0}'.format(is_uploaded[1]))
+            self.logger.info('Save configuration failed with errors: {0}'.format(is_uploaded[1]))
             raise Exception(is_uploaded[1])
 
     def restore_configuration(self, source_file, config_type, restore_method='override', vrf=None):
@@ -328,23 +330,22 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         """
 
         if not re.search('append|override', restore_method.lower()):
-            raise Exception('Cisco OS', "Restore method is wrong! Should be Append or Override")
+            raise Exception('Cisco OS', "Restore method '{}' is wrong! Use 'Append' or 'Override'".format(restore_method))
 
         if '-config' not in config_type:
             config_type = config_type.lower() + '-config'
 
-        self.logger.info('Start restoring device configuration from {}'.format(source_file))
+        self.logger.info('Restore device configuration from {}'.format(source_file))
 
         match_data = re.search('startup-config|running-config', config_type)
         if not match_data:
-            raise Exception('Cisco OS', "Configuration type is empty or wrong")
+            msg = "Configuration type '{}' is wrong, use 'startup-config' or 'running-config'.".format(config_type)
+            raise Exception('Cisco OS', msg)
 
         destination_filename = match_data.group()
 
         if source_file == '':
-            raise Exception('Cisco OS', "Path is empty")
-
-        # source_file = source_file.replace('127.0.0.1/', 'localhost/')
+            raise Exception('Cisco OS', "Source Path is empty.")
 
         if (restore_method.lower() == 'override') and (destination_filename == 'startup-config'):
             self.cli.send_command(command='del ' + destination_filename,
@@ -354,7 +355,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         elif (restore_method.lower() == 'override') and (destination_filename == 'running-config'):
 
             if not self._check_replace_command():
-                raise Exception('Override running-config is not supported for this device')
+                raise Exception('Overriding running-config is not supported for this device.')
+
             self.configure_replace(source_filename=source_file, timeout=600, vrf=vrf)
             is_uploaded = (True, '')
         else:
@@ -366,7 +368,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         is_downloaded = (True, '')
 
         if is_downloaded[0] is True:
-            return 'Finished restore configuration!'
+            return 'Restore configuration completed.'
         else:
             raise Exception('Cisco OS', is_downloaded[1])
 
