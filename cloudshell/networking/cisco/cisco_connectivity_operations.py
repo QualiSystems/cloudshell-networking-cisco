@@ -133,7 +133,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
         interface_config_actions['configure_interface'] = port_name
         interface_config_actions['no_shutdown'] = []
-        if supported_os and 'NXOS' in supported_os:
+        if supported_os and re.search(r"({0})".format("|".join(supported_os)), "NXOS"):
             interface_config_actions['switchport'] = []
         if 'trunk' in port_mode and vlan_range == '':
             interface_config_actions['switchport_mode_trunk'] = []
@@ -141,11 +141,11 @@ class CiscoConnectivityOperations(ConnectivityOperations):
             interface_config_actions['switchport_mode_trunk'] = []
             interface_config_actions['trunk_allow_vlan'] = [vlan_range]
         elif 'access' in port_mode and vlan_range != '':
-            if not qnq or qnq is False:
+            if not qnq:
                 self.logger.info('qnq is {0}'.format(qnq))
                 interface_config_actions['switchport_mode_access'] = []
             interface_config_actions['access_allow_vlan'] = [vlan_range]
-        if qnq and qnq is True:
+        if qnq:
             if not self._does_interface_support_qnq(port_name):
                 raise Exception('interface does not support QnQ')
             interface_config_actions['qnq'] = []
@@ -188,7 +188,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         """
 
         self.logger.info('Validate incoming parameters for vlan configuration:')
-        if len(port) < 1:
+        if not port:
             raise Exception('CiscoHandlerBase: validate_vlan_methods_incoming_parameters ', 'Port list can\'t be empty.')
 
         if vlan_range == '' and port_mode == 'access':
@@ -235,8 +235,8 @@ class CiscoConnectivityOperations(ConnectivityOperations):
             'show running-config interface {0}'.format(commands_dict['configure_interface']))
 
         for line in current_config.splitlines():
-            if re.search('^\s*switchport\s+', line):
-                line_to_remove = re.sub('\s+\d+[-\d+,]+', '', line)
+            if re.search(r'^\s*switchport\s+', line):
+                line_to_remove = re.sub(r'\s+\d+[-\d+,]+', '', line)
                 if not line_to_remove:
                     line_to_remove = line
                 commands_list.insert(1, 'no {0}'.format(line_to_remove.strip(' ')))
@@ -245,7 +245,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
                         '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}
         output = self.send_config_command_list(commands_list, expected_map=expected_map)
 
-        if re.search('[Cc]ommand rejected.*', output):
+        if re.search(r'[Cc]ommand rejected.*', output):
             error = 'Command rejected'
             for line in output.splitlines():
                 if line.lower().startswith('command rejected'):
