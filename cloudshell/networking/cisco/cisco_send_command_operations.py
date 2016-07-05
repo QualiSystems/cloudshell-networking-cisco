@@ -61,7 +61,7 @@ class CiscoSendCommandOperations(SendCommandInterface):
                 raise Exception('Cisco OS', 'Failed to get cli_service.')
         return self._cli
 
-    def send_command(self, command, expected_str=None, expected_map=None, timeout=30, retries=10,
+    def send_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
                      is_need_default_prompt=True, session=None):
         """Send command using cli service
 
@@ -87,7 +87,7 @@ class CiscoSendCommandOperations(SendCommandInterface):
                                              is_need_default_prompt=is_need_default_prompt)
         return response
 
-    def send_config_command(self, command, expected_str=None, expected_map=None, timeout=30, retries=10,
+    def send_config_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
                             is_need_default_prompt=True):
         """Send list of config commands to the session
 
