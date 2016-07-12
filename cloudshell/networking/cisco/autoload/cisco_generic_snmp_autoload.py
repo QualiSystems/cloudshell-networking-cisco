@@ -643,8 +643,12 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
             ent_alias_mapping_identifier = self.snmp.get(('ENTITY-MIB', 'entAliasMappingIdentifier', port_index, 0))
             port_id = int(ent_alias_mapping_identifier['entAliasMappingIdentifier'].split('.')[-1])
         except Exception as e:
-            self.logger.error(e.message)
-            if_table_re = "/".join(re.findall('\d+', port_descr))
+            try:
+                err_message = e.message._Integer__namedValues.valToNameIdx[e.message._value]
+            except:
+                err_message = str(e.message)
+            self.logger.error("Error during port mapping: {}".format(err_message))
+            if_table_re = "/".join(re.findall(r'\d+', port_descr))
             for interface in self.if_table.values():
                 if re.search(if_table_re, interface[self.IF_ENTITY]):
                     port_id = int(interface['suffix'])
