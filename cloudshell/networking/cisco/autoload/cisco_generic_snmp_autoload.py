@@ -36,7 +36,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         self.relative_path = {}
         self.port_mapping = {}
         self.entity_table_black_list = ['alarm', 'fan', 'sensor']
-        self.port_exclude_pattern = r'serial|stack|engine|management|mgmt'
+        self.port_exclude_pattern = r'serial|stack|engine|management|mgmt|voice|foreign'
         self.module_exclude_pattern = r'cevsfp'
         self.resources = list()
         self.attributes = list()
@@ -109,7 +109,8 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
         for resource in self.resources:
             self.logger.info('{0},\t\t{1},\t\t{2},\t\t{3}'.format(resource.model, resource.name,
-                                                                  resource.relative_address, resource.unique_identifier))
+                                                                  resource.relative_address,
+                                                                  resource.unique_identifier))
         self.logger.info('------------------------------')
         for attribute in self.attributes:
             self.logger.info('{0},\t\t{1},\t\t{2}'.format(attribute.relative_address, attribute.attribute_name,
@@ -234,7 +235,8 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                 self.chassis_list.append(index)
             elif temp_entity_table['entPhysicalClass'] == 'port':
                 if not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalName'], re.IGNORECASE) \
-                  and not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalDescr'], re.IGNORECASE):
+                        and not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalDescr'],
+                                          re.IGNORECASE):
                     port_id = self._get_mapping(index, temp_entity_table[self.ENTITY_PHYSICAL])
                     if port_id and port_id in self.if_table and port_id not in self.port_mapping.values():
                         self.port_mapping[index] = port_id
@@ -281,9 +283,24 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                 self.module_list.remove(module)
         for port in port_list:
             if port not in self.exclusion_list:
-                self.relative_path[port] = self.get_relative_path(port) + '/' + self._get_resource_id(port)
+                self.relative_path[port] = self._get_port_relative_path(
+                    self.get_relative_path(port) + '/' + self._get_resource_id(port))
             else:
                 self.port_list.remove(port)
+
+    def _get_port_relative_path(self, relative_id):
+        if relative_id in self.relative_path.values():
+            if '/' in relative_id:
+                ids = relative_id.split('/')
+                ids[-1] = str(int(ids[-1]) + 1000)
+                result = '/'.join(ids)
+            else:
+                result = str(int(relative_id.split()[-1]) + 1000)
+            if relative_id in self.relative_path.values():
+                result = self._get_port_relative_path(result)
+        else:
+            result = relative_id
+        return result
 
     def _add_resource(self, resource):
         """Add object data to resources and attributes lists
@@ -389,6 +406,19 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
             self.logger.info('Module {} added'.format(self.entity_table[module]['entPhysicalDescr']))
         self.logger.info('Load modules completed.')
 
+    def _filter_power_port_list(self):
+        """Get power supply relative path
+
+        :return: string relative path
+        """
+
+        power_supply_list = list(self.power_supply_list)
+        for power_port in power_supply_list:
+            parent_index = int(self.entity_table[power_port]['entPhysicalContainedIn'])
+            if 'powerSupply' in self.entity_table[parent_index]['entPhysicalClass']:
+                if parent_index in self.power_supply_list:
+                    self.power_supply_list.remove(power_port)
+
     def _get_power_ports(self):
         """Get attributes for power ports provided in self.power_supply_list
 
@@ -396,6 +426,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         """
 
         self.logger.info('Load Power Ports:')
+        self._filter_power_port_list()
         for port in self.power_supply_list:
             port_id = self.entity_table[port]['entPhysicalParentRelPos']
             parent_index = int(self.entity_table[port]['entPhysicalContainedIn'])
@@ -521,6 +552,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
             if parent_id not in raw_entity_table or parent_id in self.exclusion_list:
                 self.exclusion_list.append(element)
 
+
     def _get_ip_interface_details(self, port_index):
         """Get IP address details for provided port
 
@@ -532,12 +564,12 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         if self.ip_v4_table and len(self.ip_v4_table) > 1:
             for key, value in self.ip_v4_table.iteritems():
                 if 'ipAdEntIfIndex' in value and int(value['ipAdEntIfIndex']) == port_index:
-                    interface_details['IPv4 Address'] = key
+                    interface_details['ipv4_address'] = key
                 break
         if self.ip_v6_table and len(self.ip_v6_table) > 1:
             for key, value in self.ip_v6_table.iteritems():
                 if 'ipAdEntIfIndex' in value and int(value['ipAdEntIfIndex']) == port_index:
-                    interface_details['IPv6 Address'] = key
+                    interface_details['ipv6_address'] = key
                 break
         return interface_details
 
@@ -644,6 +676,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
             port_id = int(ent_alias_mapping_identifier['entAliasMappingIdentifier'].split('.')[-1])
         except Exception as e:
             self.logger.error(e.message)
+
             if_table_re = "/".join(re.findall('\d+', port_descr))
             for interface in self.if_table.values():
                 if re.search(if_table_re, interface[self.IF_ENTITY]):
