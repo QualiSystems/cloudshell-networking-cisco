@@ -3,9 +3,15 @@ from mock import MagicMock
 import re
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 
-__author__ = 'CoYe'
 
 class TestCiscoHandlerBase(TestCase):
+    output = ''
+
+    def return_output(self, *args, **kwargs):
+        result = self.output
+        self.output = ''
+        return result
+
     def _get_handler(self):
         self.cli = MagicMock()
         self.snmp = MagicMock()
@@ -31,6 +37,23 @@ class TestCiscoHandlerBase(TestCase):
         except Exception as e:
             self.assertIsNotNone(e)
             self.assertTrue(output.replace('%', '') in e.message)
+
+    def test_save_raises_exception_when_cannot_save_file_error_message(self):
+        output = '''sw9003-vpp-10-3# copy running-config tftp://10.87.42.120
+        Enter destination filename: [sw9003-vpp-10-3-running-config] 123123
+        Enter vrf (If no input, current vrf 'default' is considered):
+        Trying to connect to tftp server......
+        Connection to Server Established.
+        TFTP put operation failed:Access violation'''
+        self.output = output
+        handler = self._get_handler()
+        handler.cli.send_command = MagicMock
+        handler.cli.send_command = self.return_output
+        try:
+            handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running')
+        except Exception as e:
+            self.assertIsNotNone(e)
+            self.assertTrue('failed:Access violation' in e.message)
 
     def test_save_cisco_nexus_5k_customer_report(self):
         resource_name = 'Very_long name with Spaces'
@@ -1440,11 +1463,18 @@ ERROR: VLAN with the same name exists
 ERROR : cli_process_vlan_config_exit(283), command name GCP_user_vlan_1555 FAILED
 Cannot run commands in the mode at this moment. Please try again.
 Copy complete, now saving to disk (please wait)..."""
+        self.output = output
         handler = self._get_handler()
+        handler.cli.send_command = MagicMock
+        handler.cli.send_command = self.return_output
         handler.resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        handler.cli.send_command = MagicMock(return_value=output)
-        responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
-                                              config_type, 'management')
-        self.assertIsNotNone(responce)
-        self.assertTrue(re.search(responce_template, responce))
+        try:
+            responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+                                                  config_type, 'management')
+        except Exception as e:
+            self.assertIsNotNone(e)
+            self.assertIsNot('', e.message)
+
+        # self.assertIsNotNone(responce)
+        # self.assertTrue(re.search(responce_template, responce))

@@ -114,7 +114,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 message += message.split('\n')[0]
                 is_success = False
 
-        error_match = re.search(r"error", output, re.IGNORECASE)
+        error_match = re.search(r"(error|fail).*", output, re.IGNORECASE)
         if error_match:
             message = 'Command Copy completed with errors.\n'
             message += error_match.group()
