@@ -30,8 +30,10 @@ class TestCiscoHandlerBase(TestCase):
     def test_save_raises_exception_error_message(self):
         # output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         output = '%Error opening tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
+        self.output = output
         handler = self._get_handler()
-        handler.cli.send_command = MagicMock(return_value=output)
+        handler.cli.send_command = MagicMock
+        handler.cli.send_command = self.return_output
         try:
             handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running')
         except Exception as e:
@@ -53,7 +55,7 @@ class TestCiscoHandlerBase(TestCase):
             handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running')
         except Exception as e:
             self.assertIsNotNone(e)
-            self.assertTrue('failed:Access violation' in e.message)
+            self.assertTrue('Copy Command failed. TFTP put operation failed:Access violation' in e.message)
 
     def test_save_cisco_nexus_5k_customer_report(self):
         resource_name = 'Very_long name with Spaces'
@@ -1469,12 +1471,7 @@ Copy complete, now saving to disk (please wait)..."""
         handler.cli.send_command = self.return_output
         handler.resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        try:
-            responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+        responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                                   config_type, 'management')
-        except Exception as e:
-            self.assertIsNotNone(e)
-            self.assertIsNot('', e.message)
-
-        # self.assertIsNotNone(responce)
-        # self.assertTrue(re.search(responce_template, responce))
+        self.assertIsNotNone(responce)
+        self.assertTrue(re.search(responce_template, responce))
