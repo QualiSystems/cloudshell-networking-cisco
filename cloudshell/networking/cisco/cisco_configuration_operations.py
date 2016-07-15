@@ -104,22 +104,20 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :rtype tuple
         """
         is_success = True
-        status_match = re.search(r'copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output)
+        status_match = re.search(r'\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output)
         message = ''
         if not status_match:
-            match_error = re.search('%', output, re.IGNORECASE)
-            if match_error:
-                message = 'Command Copy failed.'
-                message += output[match_error.end():]
-                message += message.split('\n')[0]
-                is_success = False
-
-        error_match = re.search(r"error", output, re.IGNORECASE)
-        if error_match:
-            message = 'Command Copy completed with errors.\n'
-            message += error_match.group()
-            self.logger.error(message)
             is_success = False
+            match_error = re.search('%.*|TFTP put operation failed.*', output, re.IGNORECASE)
+            message = 'Copy Command failed. '
+            if match_error:
+                self.logger.error(message)
+                message += match_error.group().replace('%', '')
+            else:
+                error_match = re.search(r"error.*\n|fail.*\n", output, re.IGNORECASE)
+                if error_match:
+                    self.logger.error(message)
+                    message += match_error.group()
 
         return is_success, message
 
@@ -136,6 +134,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         expected_map = {
             '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
             '\(y\/n\)': lambda session: session.send_line('y'),
+            '[\[\(][Nn]o[\)\]]': lambda session: session.send_line('y'),
+            '[\[\(][Yy]es[\)\]]': lambda session: session.send_line('y'),
             '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
             'overwritte': lambda session: session.send_line('yes')
         }
