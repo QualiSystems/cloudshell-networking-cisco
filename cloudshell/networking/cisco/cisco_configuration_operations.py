@@ -134,6 +134,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         expected_map = {
             '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
             '\(y\/n\)': lambda session: session.send_line('y'),
+            '[\[\(][Nn]o[\)\]]': lambda session: session.send_line('y'),
+            '[\[\(][Yy]es[\)\]]': lambda session: session.send_line('y'),
             '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
             'overwritte': lambda session: session.send_line('yes')
         }
