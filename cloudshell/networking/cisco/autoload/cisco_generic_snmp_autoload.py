@@ -26,7 +26,6 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         :return:
         """
 
-        self._snmp_handler = snmp_handler
         self._snmp = snmp_handler
         self._logger = logger
         self.exclusion_list = []
@@ -54,9 +53,9 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
     @property
     def snmp(self):
-        if not self._snmp_handler:
+        if not self._snmp:
             self._snmp = inject.instance(SNMP_HANDLER)
-        return self._snmp_handler
+        return self._snmp
 
     def load_cisco_mib(self):
         path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'mibs'))
