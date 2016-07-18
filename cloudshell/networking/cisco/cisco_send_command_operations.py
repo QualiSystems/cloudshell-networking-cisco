@@ -8,7 +8,7 @@ from cloudshell.shell.core.context_utils import get_resource_name
 
 
 class CiscoSendCommandOperations(SendCommandInterface):
-    def __init__(self, resource_name=None, cli=None, logger=None, api=None, snmp_handler=None):
+    def __init__(self, resource_name=None, cli=None, logger=None, api=None):
         """Create CiscoIOSHandlerBase
 
         :param cli: CliService object
@@ -23,17 +23,10 @@ class CiscoSendCommandOperations(SendCommandInterface):
         self._cli = cli
         self._logger = logger
         self._api = api
-        self._snmp_handler = snmp_handler
         try:
             self.resource_name = resource_name or get_resource_name()
         except Exception:
             raise Exception('CiscoHandlerBase', 'Failed to get resource_name.')
-
-    @property
-    def snmp_handler(self):
-        if not self._snmp_handler:
-            self._snmp_handler = inject.instance(SNMP_HANDLER)
-        return self._snmp_handler
 
     @property
     def logger(self):
