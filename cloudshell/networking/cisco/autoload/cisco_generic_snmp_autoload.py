@@ -481,7 +481,9 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
         result = ''
         for key, value in self.port_channel_ports.iteritems():
-            if str(item_id) in value['dot3adAggPortAttachedAggID']:
+            if str(item_id) in value['dot3adAggPortAttachedAggID'] \
+                    and key in self.if_table \
+                    and self.IF_ENTITY in self.if_table[key]:
                 result += self.if_table[key][self.IF_ENTITY].replace('/', '-').replace(' ', '') + '; '
         return result.strip(' \t\n\r')
 
@@ -551,7 +553,6 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
             if parent_id not in raw_entity_table or parent_id in self.exclusion_list:
                 self.exclusion_list.append(element)
-
 
     def _get_ip_interface_details(self, port_index):
         """Get IP address details for provided port
