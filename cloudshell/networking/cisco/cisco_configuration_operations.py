@@ -1,9 +1,10 @@
+import time
+from collections import OrderedDict
+
+from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE
+from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
 import inject
 import re
-import time
-import traceback
-
-from collections import OrderedDict
 from cloudshell.networking.networking_utils import validateIP
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
 from cloudshell.networking.operations.interfaces.configuration_operations_interface import \
@@ -15,15 +16,16 @@ from cloudshell.shell.core.context_utils import get_resource_name
 def _get_time_stamp():
     return time.strftime("%d%m%y-%H%M%S", time.localtime())
 
+
 # def _is_valid_copy_filesystem(filesystem):
 #     return not re.match('bootflash$|tftp$|ftp$|harddisk$|nvram$|pram$|flash$|localhost$', filesystem) is None
 
 
 class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOperationsInterface):
     def __init__(self, cli=None, logger=None, api=None, resource_name=None):
-        self._cli = cli
         self._logger = logger
         self._api = api
+        self._cli = cli
         try:
             self.resource_name = resource_name or get_resource_name()
         except Exception:
@@ -31,29 +33,24 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
     @property
     def logger(self):
-        if self._logger is None:
-            try:
-                self._logger = inject.instance('logger')
-            except:
-                raise Exception('Cisco OS', 'Failed to get logger.')
-        return self._logger
+        if self._logger:
+            logger = self._logger
+        else:
+            logger = inject.instance(LOGGER)
+        return logger
 
     @property
     def api(self):
-        if self._api is None:
-            try:
-                self._api = inject.instance('api')
-            except:
-                raise Exception('Cisco OS', 'Failed to get api handler')
-        return self._api
+        if self._api:
+            api = self._api
+        else:
+            api = inject.instance(API)
+        return api
 
     @property
     def cli(self):
         if self._cli is None:
-            try:
-                self._cli = inject.instance('cli_service')
-            except:
-                raise Exception('Cisco OS', 'Failed to get cli_service.')
+            self._cli = inject.instance(CLI_SERVICE)
         return self._cli
 
     def copy(self, source_file='', destination_file='', vrf=None, timeout=600, retries=5):
@@ -168,7 +165,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             session_type = self.cli.get_session_type()
 
             if not session_type == 'CONSOLE':
-                self._logger.info('Session type is \'{}\', closing session...'.format(session_type))
+                self.logger.info('Session type is \'{}\', closing session...'.format(session_type))
                 self.cli.destroy_threaded_session()
 
         self.logger.info('Wait 20 seconds for device to reload...')
@@ -192,8 +189,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 break
             except Exception as e:
                 self.logger.error('CiscoHandlerBase', e.message)
-                self.logger.debug('Wait {} seconds and retry ...'.format(sleep_timeout/2))
-                time.sleep(sleep_timeout/2)
+                self.logger.debug('Wait {} seconds and retry ...'.format(sleep_timeout / 2))
+                time.sleep(sleep_timeout / 2)
                 pass
 
         return is_reloaded
@@ -330,7 +327,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         """
 
         if not re.search('append|override', restore_method.lower()):
-            raise Exception('Cisco OS', "Restore method '{}' is wrong! Use 'Append' or 'Override'".format(restore_method))
+            raise Exception('Cisco OS',
+                            "Restore method '{}' is wrong! Use 'Append' or 'Override'".format(restore_method))
 
         if '-config' not in config_type:
             config_type = config_type.lower() + '-config'

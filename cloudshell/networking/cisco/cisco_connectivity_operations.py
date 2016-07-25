@@ -1,3 +1,5 @@
+from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE
+from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
 import inject
 from collections import OrderedDict
 import re
@@ -24,30 +26,25 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
     @property
     def logger(self):
-        if self._logger is None:
-            try:
-                self._logger = inject.instance('logger')
-            except:
-                raise Exception('CiscoConnectivityOperations', 'Failed to get logger.')
-        return self._logger
+        if self._logger:
+            logger = self._logger
+        else:
+            logger = inject.instance(LOGGER)
+        return logger
+
+    @property
+    def api(self):
+        if self._api:
+            api = self._api
+        else:
+            api = inject.instance(API)
+        return api
 
     @property
     def cli(self):
         if self._cli is None:
-            try:
-                self._cli = inject.instance('cli_service')
-            except:
-                raise Exception('CiscoConnectivityOperations', 'Failed to get cli_service.')
+            self._cli = inject.instance(CLI_SERVICE)
         return self._cli
-
-    @property
-    def api(self):
-        if self._api is None:
-            try:
-                self._api = inject.instance('api')
-            except:
-                raise Exception('CiscoConnectivityOperations', 'Failed to get api handler.')
-        return self._api
 
     def send_config_command_list(self, command_list, expected_map=None):
         """Send list of config commands

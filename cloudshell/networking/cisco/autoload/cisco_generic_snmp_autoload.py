@@ -1,3 +1,5 @@
+from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER
+from cloudshell.configuration.cloudshell_snmp_binding_keys import SNMP_HANDLER
 import re
 import os
 
@@ -43,20 +45,16 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
     @property
     def logger(self):
-        if self._logger is None:
-            try:
-                self._logger = inject.instance('logger')
-            except:
-                raise Exception('CiscoAutoload', 'Failed to get logger.')
-        return self._logger
+        if self._logger:
+            logger = self._logger
+        else:
+            logger = inject.instance(LOGGER)
+        return logger
 
     @property
     def snmp(self):
-        if self._snmp is None:
-            try:
-                self._snmp = inject.instance('snmp_handler')
-            except:
-                raise Exception('CiscoAutoload', 'Failed to get snmp handler.')
+        if not self._snmp:
+            self._snmp = inject.instance(SNMP_HANDLER)
         return self._snmp
 
     def load_cisco_mib(self):
