@@ -293,9 +293,6 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             if not destination_host:
                 raise Exception('Cisco OS', "Backup location or path is empty")
 
-        # if destination_host == '':
-        #     raise Exception('Cisco OS', "Destination host can\'t be empty.")
-
         system_name = re.sub('\s+', '_', self.resource_name)
         if len(system_name) > 23:
             system_name = system_name[:23]
