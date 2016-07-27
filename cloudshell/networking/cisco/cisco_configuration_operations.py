@@ -10,7 +10,7 @@ from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoF
 from cloudshell.networking.operations.interfaces.configuration_operations_interface import \
     ConfigurationOperationsInterface
 from cloudshell.networking.operations.interfaces.firmware_operations_interface import FirmwareOperationsInterface
-from cloudshell.shell.core.context_utils import get_resource_name
+from cloudshell.shell.core.context_utils import get_resource_name, get_attribute_by_name
 
 
 def _get_time_stamp():
@@ -288,8 +288,13 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if ('startup' not in source_filename) and ('running' not in source_filename):
             raise Exception('Cisco OS', "Source filename must be 'startup' or 'running'!")
 
-        if destination_host == '':
-            raise Exception('Cisco OS', "Destination host can\'t be empty.")
+        if not destination_host:
+            destination_host = get_attribute_by_name('Backup Location')
+            if not destination_host:
+                raise Exception('Cisco OS', "Backup location or path is empty")
+
+        # if destination_host == '':
+        #     raise Exception('Cisco OS', "Destination host can\'t be empty.")
 
         system_name = re.sub('\s+', '_', self.resource_name)
         if len(system_name) > 23:
