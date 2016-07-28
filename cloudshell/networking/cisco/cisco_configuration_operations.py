@@ -62,32 +62,37 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         """
 
         host = None
+        expected_map = OrderedDict()
 
         if '://' in source_file:
             source_file_data_list = re.sub('/+', '/', source_file).split('/')
             host = source_file_data_list[1]
-            filename = source_file_data_list[-1]
+            expected_map[r'[^/]{}'.format(source_file_data_list[-1])] = lambda session: session.send_line('')
+            expected_map[r'[^/]{}'.format(destination_file)] = lambda session: session.send_line('')
         elif '://' in destination_file:
             destination_file_data_list = re.sub('/+', '/', destination_file).split('/')
             host = destination_file_data_list[1]
-            filename = destination_file_data_list[-1]
+            expected_map[r'[^/]{}'.format(destination_file_data_list[-1])] = lambda session: session.send_line('')
+            expected_map[r'[^/]{}'.format(source_file)] = lambda session: session.send_line('')
         else:
-            filename = destination_file
+            expected_map[r'[^/]{}'.format(destination_file)] = lambda session: session.send_line('')
+            expected_map[r'[^/]{}'.format(source_file)] = lambda session: session.send_line('')
 
         if host and not validateIP(host):
             raise Exception('Cisco OS', 'Copy method: \'{}\' is not valid remote ip.'.format(host))
 
         copy_command_str = 'copy {0} {1}'.format(source_file, destination_file)
         if vrf:
-            copy_command_str += ' vrf {0}'.format(vrf)
+            copy_command_str += ' vrf {}'.format(vrf)
 
-        expected_map = OrderedDict()
         if host:
-            expected_map[host] = lambda session: session.send_line('')
-        expected_map[r'{0}|\s+[Vv][Rr][Ff]\s+|\[confirm\]|\?'.format(filename)] = lambda session: session.send_line('')
-        expected_map['\(y/n\)'] = lambda session: session.send_line('y')
-        expected_map['\([Yy]es/[Nn]o\)'] = lambda session: session.send_line('yes')
-        expected_map['bytes'] = lambda session: session.send_line('')
+            expected_map[r"[^/]{}".format(host)] = lambda session: session.send_line('')
+        expected_map[r'\s+[Vv][Rr][Ff]\s+'] = lambda session: session.send_line('')
+        expected_map[r'\[confirm\]'] = lambda session: session.send_line('')
+        expected_map[r'\(y/n\)'] = lambda session: session.send_line('y')
+        expected_map[r'\([Yy]es/[Nn]o\)'] = lambda session: session.send_line('yes')
+        expected_map[r'\?'] = lambda session: session.send_line('')
+        expected_map[r'bytes'] = lambda session: session.send_line('')
 
         output = self.cli.send_command(command=copy_command_str, expected_map=expected_map, timeout=60)
         output += self.cli.send_command('')
