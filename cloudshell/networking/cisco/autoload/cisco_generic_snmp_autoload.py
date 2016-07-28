@@ -38,8 +38,8 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         self.relative_path = {}
         self.port_mapping = {}
         self.entity_table_black_list = ['alarm', 'fan', 'sensor']
-        self.port_exclude_pattern = r'serial|stack|engine|management|mgmt|voice|foreign'
-        self.module_exclude_pattern = r'cevsfp'
+        self.port_exclude_pattern = r'serial|stack|engine|management|mgmt|voice|foreign'#|Power Shelf|CPU|Power Shelf|powerSupply'
+        self.module_exclude_pattern = r'cevsfp'#|Power Shelf|CPU|powerSupply'
         self.resources = list()
         self.attributes = list()
 
@@ -222,6 +222,8 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                     index_entity_class = 'powerSupply'
                 if index_entity_class:
                     temp_entity_table['entPhysicalClass'] = index_entity_class
+            elif 'powershelf' in temp_entity_table['entPhysicalVendorType'].lower():
+                temp_entity_table['entPhysicalClass'] = 'container'
             else:
                 temp_entity_table['entPhysicalClass'] = temp_entity_table['entPhysicalClass'].replace("'", "")
 
@@ -240,6 +242,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                         self.port_mapping[index] = port_id
                         self.port_list.append(index)
             elif temp_entity_table['entPhysicalClass'] == 'powerSupply':
+                # if not re.search(r'.*?Power Shelf.*?',  temp_entity_table['entPhysicalName'], re.IGNORECASE):
                 self.power_supply_list.append(index)
 
         self._filter_entity_table(result_dict)
@@ -417,6 +420,14 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                 if parent_index in self.power_supply_list:
                     self.power_supply_list.remove(power_port)
 
+    def _get_power_supply_parent_id(self, port):
+        parent_id = int(self.entity_table[port]['entPhysicalContainedIn'])
+        result = ''
+        if parent_id in self.entity_table.keys() and 'entPhysicalClass' in self.entity_table[parent_id]:
+            if self.entity_table[parent_id]['entPhysicalClass'] == 'container':
+                result = self._get_power_supply_parent_id(parent_id) + self.entity_table[parent_id]['entPhysicalParentRelPos']
+        return result
+
     def _get_power_ports(self):
         """Get attributes for power ports provided in self.power_supply_list
 
@@ -428,7 +439,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         for port in self.power_supply_list:
             port_id = self.entity_table[port]['entPhysicalParentRelPos']
             parent_index = int(self.entity_table[port]['entPhysicalContainedIn'])
-            parent_id = int(self.entity_table[parent_index]['entPhysicalParentRelPos'])
+            parent_id = self._get_power_supply_parent_id(port=port)
             chassis_id = self.get_relative_path(parent_index)
             relative_path = '{0}/PP{1}-{2}'.format(chassis_id, parent_id, port_id)
             port_name = 'PP{0}'.format(self.power_supply_list.index(port))
@@ -479,7 +490,9 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
         result = ''
         for key, value in self.port_channel_ports.iteritems():
-            if str(item_id) in value['dot3adAggPortAttachedAggID']:
+            if str(item_id) in value['dot3adAggPortAttachedAggID'] \
+                    and key in self.if_table \
+                    and self.IF_ENTITY in self.if_table[key]:
                 result += self.if_table[key][self.IF_ENTITY].replace('/', '-').replace(' ', '') + '; '
         return result.strip(' \t\n\r')
 
