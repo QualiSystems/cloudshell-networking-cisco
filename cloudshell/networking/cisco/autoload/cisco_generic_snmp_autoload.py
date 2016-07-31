@@ -563,7 +563,6 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
             if parent_id not in raw_entity_table or parent_id in self.exclusion_list:
                 self.exclusion_list.append(element)
 
-
     def _get_ip_interface_details(self, port_index):
         """Get IP address details for provided port
 
