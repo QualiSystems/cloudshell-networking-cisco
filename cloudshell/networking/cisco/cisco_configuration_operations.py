@@ -78,15 +78,18 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             expected_map[r'[^/]{}'.format(destination_file)] = lambda session: session.send_line('')
             expected_map[r'[^/]{}'.format(source_file)] = lambda session: session.send_line('')
 
-        if host and not validateIP(host):
-            raise Exception('Cisco OS', 'Copy method: \'{}\' is not valid remote ip.'.format(host))
+        if host:
+            if '@' in host:
+                host = host.split('@')[-1]
+        if not validateIP(host):
+            self.logger.error('Cisco OS, Copy method: \'{}\' is not valid remote ip.'.format(host))
 
         copy_command_str = 'copy {0} {1}'.format(source_file, destination_file)
         if vrf:
             copy_command_str += ' vrf {}'.format(vrf)
 
         if host:
-            expected_map[r"[^/]{}".format(host)] = lambda session: session.send_line('')
+            expected_map[r"[^/]{}(?!/)".format(host)] = lambda session: session.send_line('')
         expected_map[r'\s+[Vv][Rr][Ff]\s+'] = lambda session: session.send_line('')
         expected_map[r'\[confirm\]'] = lambda session: session.send_line('')
         expected_map[r'\(y/n\)'] = lambda session: session.send_line('y')
@@ -296,7 +299,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if not destination_host:
             destination_host = get_attribute_by_name('Backup Location')
             if not destination_host:
-                raise Exception('Cisco OS', "Backup location or path is empty")
+                raise Exception('Cisco OS', "Backup location attribute and Folder Path parameter are empty")
 
         system_name = re.sub('\s+', '_', self.resource_name)
         if len(system_name) > 23:
