@@ -1,7 +1,7 @@
 import time
 from collections import OrderedDict
 
-from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE
+from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE, CONNECTION_MANAGER
 from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
 import inject
 import re
@@ -63,36 +63,46 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
         host = None
         expected_map = OrderedDict()
+        expected_map[r'\[confirm\]'] = lambda session: session.send_line('')
+        expected_map[r'\(y/n\)'] = lambda session: session.send_line('y')
+        expected_map[r'[Oo]verwrit+e'] = lambda session: session.send_line('y')
+        expected_map[r'\([Yy]es/[Nn]o\)'] = lambda session: session.send_line('yes')
+        expected_map[r'\?'] = lambda session: session.send_line('')
+        expected_map[r'bytes'] = lambda session: session.send_line('')
+        expected_map[r'\s+[Vv][Rr][Ff]\s+'] = lambda session: session.send_line('')
 
         if '://' in source_file:
             source_file_data_list = re.sub('/+', '/', source_file).split('/')
             host = source_file_data_list[1]
+            destination_file_name = destination_file.split(':')[-1].split('/')[-1]
             expected_map[r'[^/]{}'.format(source_file_data_list[-1])] = lambda session: session.send_line('')
-            expected_map[r'[^/]{}'.format(destination_file)] = lambda session: session.send_line('')
+            expected_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session: session.send_line('')
         elif '://' in destination_file:
             destination_file_data_list = re.sub('/+', '/', destination_file).split('/')
             host = destination_file_data_list[1]
+            source_file_name = source_file.split(':')[-1].split('/')[-1]
             expected_map[r'[^/]{}'.format(destination_file_data_list[-1])] = lambda session: session.send_line('')
-            expected_map[r'[^/]{}'.format(source_file)] = lambda session: session.send_line('')
+            expected_map[r'[^/]{}'.format(source_file_name)] = lambda session: session.send_line('')
         else:
-            expected_map[r'[^/]{}'.format(destination_file)] = lambda session: session.send_line('')
-            expected_map[r'[^/]{}'.format(source_file)] = lambda session: session.send_line('')
+            destination_file_name = destination_file.split(':')[-1].split('/')[-1]
+            source_file_name = source_file.split(':')[-1].split('/')[-1]
+            expected_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session: session.send_line('')
+            expected_map[r'[\[\(]{}[\)\]]'.format(source_file_name)] = lambda session: session.send_line('')
 
-        if host and not validateIP(host):
-            raise Exception('Cisco OS', 'Copy method: \'{}\' is not valid remote ip.'.format(host))
+        if host:
+            if '@' in host:
+                storage_data = re.search(r'^(?P<user>\S+):(?P<password>\S+)@(?P<host>\S+)', host)
+                if storage_data:
+                    host = storage_data.groupdict()['host']
+                    password = storage_data.groupdict()['password']
+                    expected_map[r'[Pp]assword:'.format(source_file)] = lambda session: session.send_line(password)
+                else:
+                    host = host.split('@')[-1]
+            expected_map[r"[^/]{}(?!/)".format(host)] = lambda session: session.send_line('')
 
         copy_command_str = 'copy {0} {1}'.format(source_file, destination_file)
         if vrf:
             copy_command_str += ' vrf {}'.format(vrf)
-
-        if host:
-            expected_map[r"[^/]{}".format(host)] = lambda session: session.send_line('')
-        expected_map[r'\s+[Vv][Rr][Ff]\s+'] = lambda session: session.send_line('')
-        expected_map[r'\[confirm\]'] = lambda session: session.send_line('')
-        expected_map[r'\(y/n\)'] = lambda session: session.send_line('y')
-        expected_map[r'\([Yy]es/[Nn]o\)'] = lambda session: session.send_line('yes')
-        expected_map[r'\?'] = lambda session: session.send_line('')
-        expected_map[r'bytes'] = lambda session: session.send_line('')
 
         output = self.cli.send_command(command=copy_command_str, expected_map=expected_map, timeout=60)
         output += self.cli.send_command('')
@@ -119,7 +129,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 error_match = re.search(r"error.*\n|fail.*\n", output, re.IGNORECASE)
                 if error_match:
                     self.logger.error(message)
-                    message += match_error.group()
+                    message += error_match.group()
 
         return is_success, message
 
@@ -139,7 +149,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             '[\[\(][Nn]o[\)\]]': lambda session: session.send_line('y'),
             '[\[\(][Yy]es[\)\]]': lambda session: session.send_line('y'),
             '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
-            'overwritte': lambda session: session.send_line('yes')
+            'overwrit+e': lambda session: session.send_line('yes')
         }
         output = self.cli.send_command(command=command, expected_map=expected_map, timeout=timeout)
         match_error = re.search(r'[Ee]rror:', output)
@@ -157,11 +167,11 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :param retries: amount of retires to get response from device after it will be rebooted
         """
 
-        expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
-                        '\(y\/n\)|continue': lambda session: session.send_line('y'),
-                        'reload': lambda session: session.send_line(''),
-                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')
-                        }
+        expected_map = OrderedDict({'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+                                    '\(y/n\)|continue': lambda session: session.send_line('y'),
+                                    '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')
+                                    # 'reload': lambda session: session.send_line('')
+                                    })
         try:
             self.logger.info('Send \'reload\' to device...')
             self.cli.send_command(command='reload', expected_map=expected_map, timeout=3)
@@ -172,6 +182,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             if not session_type == 'CONSOLE':
                 self.logger.info('Session type is \'{}\', closing session...'.format(session_type))
                 self.cli.destroy_threaded_session()
+                connection_manager = inject.instance(CONNECTION_MANAGER)
+                connection_manager.decrement_sessions_count()
 
         self.logger.info('Wait 20 seconds for device to reload...')
         time.sleep(20)
@@ -296,7 +308,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if not destination_host:
             destination_host = get_attribute_by_name('Backup Location')
             if not destination_host:
-                raise Exception('Cisco OS', "Backup location or path is empty")
+                raise Exception('Cisco OS', "Backup location attribute and Folder Path parameter are empty")
 
         system_name = re.sub('\s+', '_', self.resource_name)
         if len(system_name) > 23:
@@ -367,15 +379,10 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         else:
             is_uploaded = self.copy(source_file=source_file, destination_file=destination_filename, vrf=vrf)
 
-        if is_uploaded[0] is False:
-            raise Exception('Cisco OS', is_uploaded[1])
-
-        is_downloaded = (True, '')
-
-        if is_downloaded[0] is True:
+        if is_uploaded[0] is True:
             return 'Restore configuration completed.'
         else:
-            raise Exception('Cisco OS', is_downloaded[1])
+            raise Exception('Cisco OS', is_uploaded[1])
 
     def _check_replace_command(self):
         """Checks whether replace command exist on device or not
