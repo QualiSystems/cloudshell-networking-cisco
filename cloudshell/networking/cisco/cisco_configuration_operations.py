@@ -74,23 +74,18 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if '://' in source_file:
             source_file_data_list = re.sub('/+', '/', source_file).split('/')
             host = source_file_data_list[1]
+            destination_file_name = destination_file.split(':')[-1].split('/')[-1]
             expected_map[r'[^/]{}'.format(source_file_data_list[-1])] = lambda session: session.send_line('')
-            expected_map[r'[^/]{}'.format(destination_file)] = lambda session: session.send_line('')
+            expected_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session: session.send_line('')
         elif '://' in destination_file:
             destination_file_data_list = re.sub('/+', '/', destination_file).split('/')
             host = destination_file_data_list[1]
+            source_file_name = source_file.split(':')[-1].split('/')[-1]
             expected_map[r'[^/]{}'.format(destination_file_data_list[-1])] = lambda session: session.send_line('')
-            expected_map[r'[^/]{}'.format(source_file)] = lambda session: session.send_line('')
+            expected_map[r'[^/]{}'.format(source_file_name)] = lambda session: session.send_line('')
         else:
-            destination_file_name = destination_file
-            source_file_name = source_file
-            destination_file_name_match = re.search('(?<=[:/])[^/]\S+', destination_file, re.IGNORECASE)
-            source_file_name_match = re.search('(?<=[:/])[^/]\S+', source_file, re.IGNORECASE)
-            if destination_file_name_match:
-                destination_file_name = destination_file_name_match.group()
-            if source_file_name_match:
-                source_file_name = source_file_name_match.group()
-
+            destination_file_name = destination_file.split(':')[-1].split('/')[-1]
+            source_file_name = source_file.split(':')[-1].split('/')[-1]
             expected_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session: session.send_line('')
             expected_map[r'[\[\(]{}[\)\]]'.format(source_file_name)] = lambda session: session.send_line('')
 
@@ -179,7 +174,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                                     })
         try:
             self.logger.info('Send \'reload\' to device...')
-            self.cli.send_command(command='reload', expected_map=expected_map, timeout=3, )
+            self.cli.send_command(command='reload', expected_map=expected_map, timeout=3)
 
         except Exception as e:
             session_type = self.cli.get_session_type()
