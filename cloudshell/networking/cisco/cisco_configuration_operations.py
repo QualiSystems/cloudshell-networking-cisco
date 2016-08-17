@@ -1,7 +1,7 @@
 import time
 from collections import OrderedDict
 
-from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE
+from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE, CONNECTION_MANAGER
 from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
 import inject
 import re
@@ -75,8 +75,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             expected_map[r'[^/]{}'.format(destination_file_data_list[-1])] = lambda session: session.send_line('')
             expected_map[r'[^/]{}'.format(source_file)] = lambda session: session.send_line('')
         else:
-            expected_map[r'[^/]{}'.format(destination_file)] = lambda session: session.send_line('')
-            expected_map[r'[^/]{}'.format(source_file)] = lambda session: session.send_line('')
+            expected_map[r'[^:]{}'.format(destination_file)] = lambda session: session.send_line('')
+            expected_map[r'[^:]{}'.format(source_file)] = lambda session: session.send_line('')
 
         if host:
             if '@' in host:
@@ -103,7 +103,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         return self._check_download_from_tftp(output)
 
     def _check_download_from_tftp(self, output):
-        """Verify if file was successfully uploaded
+        """Check output for success messages, otherwise return False
+
         :param output: output from cli
         :return True or False, and success or error message
         :rtype tuple
@@ -119,10 +120,10 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                 self.logger.error(message)
                 message += match_error.group().replace('%', '')
             else:
-                error_match = re.search(r"error.*\n|fail.*\n", output, re.IGNORECASE)
+                error_match = re.search(r"error.*|fail.*\n", output, re.IGNORECASE)
                 if error_match:
                     self.logger.error(message)
-                    message += match_error.group()
+                    message += error_match.group()
 
         return is_success, message
 
@@ -160,14 +161,14 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :param retries: amount of retires to get response from device after it will be rebooted
         """
 
-        expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
-                        '\(y\/n\)|continue': lambda session: session.send_line('y'),
-                        'reload': lambda session: session.send_line(''),
-                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')
-                        }
+        expected_map = OrderedDict({'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+                                    '\(y/n\)|continue': lambda session: session.send_line('y'),
+                                    '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')
+                                    # 'reload': lambda session: session.send_line('')
+                                    })
         try:
             self.logger.info('Send \'reload\' to device...')
-            self.cli.send_command(command='reload', expected_map=expected_map, timeout=3)
+            self.cli.send_command(command='reload', expected_map=expected_map, timeout=3, )
 
         except Exception as e:
             session_type = self.cli.get_session_type()
@@ -175,6 +176,8 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             if not session_type == 'CONSOLE':
                 self.logger.info('Session type is \'{}\', closing session...'.format(session_type))
                 self.cli.destroy_threaded_session()
+                connection_manager = inject.instance(CONNECTION_MANAGER)
+                connection_manager.decrement_sessions_count()
 
         self.logger.info('Wait 20 seconds for device to reload...')
         time.sleep(20)
@@ -370,15 +373,10 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         else:
             is_uploaded = self.copy(source_file=source_file, destination_file=destination_filename, vrf=vrf)
 
-        if is_uploaded[0] is False:
-            raise Exception('Cisco OS', is_uploaded[1])
-
-        is_downloaded = (True, '')
-
-        if is_downloaded[0] is True:
+        if is_uploaded[0] is True:
             return 'Restore configuration completed.'
         else:
-            raise Exception('Cisco OS', is_downloaded[1])
+            raise Exception('Cisco OS', is_uploaded[1])
 
     def _check_replace_command(self):
         """Checks whether replace command exist on device or not
