@@ -116,15 +116,16 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :rtype tuple
         """
         is_success = True
-        status_match = re.search(r'\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output)
+        status_match = re.search(r'\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output,
+                                 re.IGNORECASE)
         message = ''
         if not status_match:
             is_success = False
-            match_error = re.search('%.*|TFTP put operation failed.*', output, re.IGNORECASE)
+            match_error = re.search('%.*|TFTP put operation failed.*|sysmgr.*not supported.*\n', output, re.IGNORECASE)
             message = 'Copy Command failed. '
             if match_error:
                 self.logger.error(message)
-                message += match_error.group().replace('%', '')
+                message += re.sub('^%|\\n', '', match_error.group())
             else:
                 error_match = re.search(r"error.*\n|fail.*\n", output, re.IGNORECASE)
                 if error_match:
@@ -365,8 +366,12 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             raise Exception('Cisco OS', "Source Path is empty.")
 
         if (restore_method.lower() == 'override') and (destination_filename == 'startup-config'):
-            self.cli.send_command(command='del ' + destination_filename,
-                                  expected_map={'\?|[confirm]': lambda session: session.send_line('')})
+            self.cli.send_command(command='del nvram:' + destination_filename,
+                                  expected_map=OrderedDict(
+                                      {'[Dd]elete [Ff]ilename '.format(destination_filename): lambda
+                                          session: session.send_line(destination_filename),
+                                       '[confirm]': lambda session: session.send_line(''),
+                                       '\?': lambda session: session.send_line('')}))
 
             is_uploaded = self.copy(source_file=source_file, destination_file=destination_filename, vrf=vrf)
         elif (restore_method.lower() == 'override') and (destination_filename == 'running-config'):
