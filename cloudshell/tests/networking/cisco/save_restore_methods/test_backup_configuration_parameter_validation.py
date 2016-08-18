@@ -5,7 +5,7 @@ from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConf
 
 __author__ = 'CoYe'
 
-class TestCiscoConfigurationOperationsParameterValidation(TestCase):
+class TestCiscoHandlerBase(TestCase):
     def _get_handler(self):
         self.output = """C6504e-1-CE7#copy running-config tftp:
         Address or name of remote host []? 10.10.10.10
@@ -34,12 +34,20 @@ class TestCiscoConfigurationOperationsParameterValidation(TestCase):
         self.assertIsNotNone(handler.save_configuration('tftp://10.10.10.10//////CloudShell/Configs/Gold/Test1/',
                                                           'RUNNING'))
 
-    # def test_save_validates_destination_host_host_parameter(self):
+    def test_save_validates_destination_host_host_parameter(self):
+        handler = self._get_handler()
+        handler.cli.send_command = MagicMock(return_value=self.output)
+        self.assertRaises(Exception, handler.save_configuration, 'tftp://10.10.1as0.10//////CloudShell/Configs/Gold/Test1/',
+                          'running')
+        self.assertRaises(Exception, handler.save_configuration, 'tftp://10.10.1120.10//////CloudShell/Configs/Gold/Test1/',
+                          'running')
+        self.assertRaises(Exception, handler.save_configuration, 'tftp://10.10.10//////CloudShell/Configs/Gold/Test1/',
+                          'running')
+
+    # ToDo define how tftp:// should be verified
+    # def test_save_validates_destination_host_filesystem_parameter(self):
     #     handler = self._get_handler()
     #     handler.cli.send_command = MagicMock(return_value=self.output)
-    #     self.assertRaises(Exception, handler.save_configuration, 'tftp://10.10.1as0.10//////CloudShell/Configs/Gold/Test1/',
+    #     self.assertRaises(Exception, handler.save_configuration, 'tftasdp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
     #                       'running')
-    #     self.assertRaises(Exception, handler.save_configuration, 'tftp://10.10.1120.10//////CloudShell/Configs/Gold/Test1/',
-    #                       'running')
-    #     self.assertRaises(Exception, handler.save_configuration, 'tftp://10.10.10//////CloudShell/Configs/Gold/Test1/',
-    #                       'running')
+
