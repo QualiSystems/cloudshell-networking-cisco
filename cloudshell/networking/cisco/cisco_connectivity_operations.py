@@ -19,10 +19,12 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         self._cli = cli
         self._logger = logger
         self._api = api
-        try:
-            self.resource_name = get_resource_name()
-        except Exception:
-            raise Exception('CiscoHandlerBase', 'Failed to get ResourceName.')
+        self.resource_name = resource_name
+        if not self.resource_name:
+            try:
+                self.resource_name = get_resource_name()
+            except Exception:
+                raise Exception('CiscoConnectivityOperations', 'Failed to get ResourceName.')
 
     @property
     def logger(self):

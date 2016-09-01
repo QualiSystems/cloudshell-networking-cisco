@@ -1,7 +1,6 @@
 from unittest import TestCase
 from mock import MagicMock
-import re
-from cloudshell.networking.cisco.cisco_send_command_operations import CiscoHandlerBase
+from cloudshell.networking.cisco.cisco_connectivity_operations import CiscoConnectivityOperations
 
 
 class TestCiscoHandlerBase(TestCase):
@@ -10,8 +9,7 @@ class TestCiscoHandlerBase(TestCase):
         self.snmp = MagicMock()
         self.api = MagicMock()
         self.logger = MagicMock()
-        return CiscoHandlerBase(cli=self.cli, logger=self.logger, api=self.api, snmp=self.snmp,
-                                resource_name='resource_name')
+        return CiscoConnectivityOperations(cli=self.cli, logger=self.logger, api=self.api, resource_name='resource_nam')
 
     def test_apply_connectivity_changes_validates_request_parameter(self):
         request = """{
