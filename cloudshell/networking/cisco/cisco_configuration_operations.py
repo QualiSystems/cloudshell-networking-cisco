@@ -5,10 +5,9 @@ from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE, CO
 from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
 import inject
 import re
-from cloudshell.networking.networking_utils import validateIP
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
-from cloudshell.networking.operations.interfaces.configuration_operations_interface import \
-    ConfigurationOperationsInterface
+from cloudshell.networking.networking_utils import UrlParser
+from cloudshell.networking.operations.configuration_operations import ConfigurationOperations
 from cloudshell.networking.operations.interfaces.firmware_operations_interface import FirmwareOperationsInterface
 from cloudshell.shell.core.context_utils import get_resource_name, get_attribute_by_name
 
@@ -21,15 +20,12 @@ def _get_time_stamp():
 #     return not re.match('bootflash$|tftp$|ftp$|harddisk$|nvram$|pram$|flash$|localhost$', filesystem) is None
 
 
-class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOperationsInterface):
+class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsInterface):
     def __init__(self, cli=None, logger=None, api=None, resource_name=None):
         self._logger = logger
         self._api = api
         self._cli = cli
-        try:
-            self.resource_name = resource_name or get_resource_name()
-        except Exception:
-            raise Exception('CiscoHandlerBase', 'ResourceName is empty or None')
+        self._resource_name = resource_name
 
     @property
     def logger(self):
@@ -38,6 +34,15 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         else:
             logger = inject.instance(LOGGER)
         return logger
+
+    @property
+    def resource_name(self):
+        if not self._resource_name:
+            try:
+                self._resource_name = get_resource_name()
+            except Exception:
+                raise Exception('CiscoConfigurationOperations', 'ResourceName is empty or None')
+        return self._resource_name
 
     @property
     def api(self):
@@ -213,7 +218,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
         return is_reloaded
 
-    def update_firmware(self, remote_host, file_path, size_of_firmware=200000000):
+    def load_firmware(self, path, vrf_management_name=None):
         """Update firmware version on device by loading provided image, performs following steps:
 
             1. Copy bin file from remote tftp server.
@@ -221,35 +226,38 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             3. Set downloaded bin file as boot file and then reboot device.
             4. Check if firmware was successfully installed.
 
-        :param remote_host: host with firmware
-        :param file_path: relative path on remote host
-        :param size_of_firmware: size in bytes
+        :param path: host with firmware
+        :param vrf_management_name: relative path on remote host
         :return: status / exception
         """
 
-        firmware_obj = CiscoFirmwareData(file_path)
-        if firmware_obj.get_name() is None:
-            raise Exception('Cisco IOS', "Invalid firmware name!\n \
-                                Firmware file must have: title, extension.\n \
-                                Example: isr4400-universalk9.03.10.00.S.153-3.S-ext.SPA.bin\n\n \
-                                Current path: " + file_path)
+        filename = ''
+        firmware_obj = None
+        url = UrlParser.parse_url(path)
+        if UrlParser.FILENAME in url and url[UrlParser.FILENAME]:
+            filename = url[UrlParser.FILENAME]
+            firmware_obj = CiscoFirmwareData(filename)
+            if firmware_obj.get_name() is None:
+                raise Exception('Cisco OS', "Invalid firmware name!\n \
+                                    Firmware file must have: title, extension.\n \
+                                    Example: isr4400-universalk9.03.10.00.S.153-3.S-ext.SPA.bin\n\n \
+                                    Current path: " + filename)
 
         free_memory_size = self._get_free_memory_size('bootflash')
 
-        is_downloaded = self.copy(source_file=remote_host,
-                                  destination_file='bootflash:/' + file_path, timeout=600, retries=2)
+        is_downloaded = self.copy(source_file=path,
+                                  destination_file='bootflash:/' + filename, timeout=600, retries=2)
 
         if not is_downloaded[0]:
-            raise Exception('Cisco IOS', "Failed to download firmware from " + remote_host +
-                            file_path + "!\n" + is_downloaded[1])
+            raise Exception('Cisco OS', "Failed to download firmware from " + path +
+                            filename + "!\n" + is_downloaded[1])
 
         self.cli.send_command(command='configure terminal', expected_str='(config)#')
         self._remove_old_boot_system_config()
-        output = self.cli.send_command('do show run | include boot')
+        # output = self.cli.send_command('do show run | include boot')
 
         is_boot_firmware = False
-        firmware_full_name = firmware_obj.get_name() + \
-                             '.' + firmware_obj.get_extension()
+        firmware_full_name = firmware_obj.get_name() + '.' + firmware_obj.get_extension()
 
         retries = 5
         while (not is_boot_firmware) and (retries > 0):
@@ -262,19 +270,18 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             is_boot_firmware = output.find(firmware_full_name) != -1
 
         if not is_boot_firmware:
-            raise Exception('Cisco IOS', "Can't add firmware '" + firmware_full_name + "' for boot!")
+            raise Exception('Cisco OS', "Can't add firmware '" + firmware_full_name + "' for boot!")
 
         self.cli.send_command(command='exit')
-        output = self.cli.send_command(command='copy run start',
-                                       expected_map={'\?': lambda session: session.send_line('')})
-        is_reloaded = self.reload()
+        self.copy('run', 'startup', vrf=vrf_management_name)
+        self.reload()
         output_version = self.cli.send_command(command='show version | include image file')
 
         is_firmware_installed = output_version.find(firmware_full_name)
         if is_firmware_installed != -1:
             return 'Update firmware completed successfully!'
         else:
-            raise Exception('Cisco IOS', 'Update firmware failed!')
+            raise Exception('Cisco OS', 'Update firmware failed!')
 
     def _get_resource_attribute(self, resource_full_path, attribute_name):
         """Get resource attribute by provided attribute_name
@@ -291,7 +298,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             raise Exception(e.message)
         return result
 
-    def save_configuration(self, destination_host, source_filename, vrf=None):
+    def save(self, destination_host, source_filename, vrf=None):
         """Backup 'startup-config' or 'running-config' from device to provided file_system [ftp|tftp]
         Also possible to backup config to localhost
         :param destination_host:  tftp/ftp server where file be saved
@@ -338,7 +345,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             self.logger.info('Save configuration failed with errors: {0}'.format(is_uploaded[1]))
             raise Exception(is_uploaded[1])
 
-    def restore_configuration(self, source_file, config_type, restore_method='override', vrf=None):
+    def restore(self, source_file, config_type, restore_method='override', vrf=None):
         """Restore configuration on device from provided configuration file
         Restore configuration from local file system or ftp/tftp server into 'running-config' or 'startup-config'.
         :param source_file: relative path to the file on the remote host tftp://server/sourcefile
