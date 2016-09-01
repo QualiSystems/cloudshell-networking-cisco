@@ -685,7 +685,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
             if_table_re = "/".join(re.findall('\d+', port_descr))
             for interface in self.if_table.values():
-                if re.search(if_table_re, interface[self.IF_ENTITY]):
+                if interface[self.IF_ENTITY].endswith(if_table_re):
                     port_id = int(interface['suffix'])
                     break
         return port_id
