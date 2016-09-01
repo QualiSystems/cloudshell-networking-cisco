@@ -242,7 +242,6 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                         self.port_mapping[index] = port_id
                         self.port_list.append(index)
             elif temp_entity_table['entPhysicalClass'] == 'powerSupply':
-                # if not re.search(r'.*?Power Shelf.*?',  temp_entity_table['entPhysicalName'], re.IGNORECASE):
                 self.power_supply_list.append(index)
 
         self._filter_entity_table(result_dict)
@@ -421,11 +420,8 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                     self.power_supply_list.remove(power_port)
 
     def _get_power_supply_parent_id(self, port):
-        parent_id = int(self.entity_table[port]['entPhysicalContainedIn'])
-        result = ''
-        if parent_id in self.entity_table.keys() and 'entPhysicalClass' in self.entity_table[parent_id]:
-            if self.entity_table[parent_id]['entPhysicalClass'] == 'container':
-                result = self._get_power_supply_parent_id(parent_id) + self.entity_table[parent_id]['entPhysicalParentRelPos']
+        parent_index = int(self.entity_table[port]['entPhysicalContainedIn'])
+        result = int(self.entity_table[parent_index]['entPhysicalParentRelPos'])
         return result
 
     def _get_power_ports(self):
