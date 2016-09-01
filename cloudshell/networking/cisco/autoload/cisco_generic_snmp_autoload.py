@@ -222,6 +222,8 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                     index_entity_class = 'powerSupply'
                 if index_entity_class:
                     temp_entity_table['entPhysicalClass'] = index_entity_class
+            elif 'powershelf' in temp_entity_table['entPhysicalVendorType'].lower():
+                temp_entity_table['entPhysicalClass'] = 'container'
             else:
                 temp_entity_table['entPhysicalClass'] = temp_entity_table['entPhysicalClass'].replace("'", "")
 
@@ -417,6 +419,11 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
                 if parent_index in self.power_supply_list:
                     self.power_supply_list.remove(power_port)
 
+    def _get_power_supply_parent_id(self, port):
+        parent_index = int(self.entity_table[port]['entPhysicalContainedIn'])
+        result = int(self.entity_table[parent_index]['entPhysicalParentRelPos'])
+        return result
+
     def _get_power_ports(self):
         """Get attributes for power ports provided in self.power_supply_list
 
@@ -428,7 +435,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         for port in self.power_supply_list:
             port_id = self.entity_table[port]['entPhysicalParentRelPos']
             parent_index = int(self.entity_table[port]['entPhysicalContainedIn'])
-            parent_id = int(self.entity_table[parent_index]['entPhysicalParentRelPos'])
+            parent_id = self._get_power_supply_parent_id(port=port)
             chassis_id = self.get_relative_path(parent_index)
             relative_path = '{0}/PP{1}-{2}'.format(chassis_id, parent_id, port_id)
             port_name = 'PP{0}'.format(self.power_supply_list.index(port))
@@ -678,7 +685,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
             if_table_re = "/".join(re.findall('\d+', port_descr))
             for interface in self.if_table.values():
-                if re.search(if_table_re, interface[self.IF_ENTITY]):
+                if interface[self.IF_ENTITY].endswith(if_table_re):
                     port_id = int(interface['suffix'])
                     break
         return port_id
