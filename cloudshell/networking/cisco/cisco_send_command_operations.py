@@ -23,7 +23,10 @@ class CiscoSendCommandOperations(SendCommandInterface):
         self._cli = cli
         self._logger = logger
         self._api = api
-        self._resource_name = resource_name
+        try:
+            self.resource_name = resource_name or get_resource_name()
+        except Exception:
+            raise Exception('CiscoHandlerBase', 'Failed to get resource_name.')
 
     @property
     def logger(self):
@@ -46,15 +49,6 @@ class CiscoSendCommandOperations(SendCommandInterface):
         if self._cli is None:
             self._cli = inject.instance(CLI_SERVICE)
         return self._cli
-
-    @property
-    def resource_name(self):
-        if not self._resource_name:
-            try:
-                self._resource_name = get_resource_name()
-            except Exception:
-                raise Exception(self.__class__.__name__, 'ResourceName is empty or None')
-        return self._resource_name
 
     def send_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
                      is_need_default_prompt=True, session=None):
