@@ -20,4 +20,5 @@ VLAN_COMMANDS_TEMPLATES = {
     'priority': CommandTemplate('priority {0}', ['[0-9]+'], ['Wrong priority number!']),
     'track': CommandTemplate('track {0} decrement {1}', [r'[0-9]+', r'[0-9]+'],
                              ['Wrong track number!', 'Wrong track decrement number!'])
+
 }
