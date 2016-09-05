@@ -38,7 +38,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         self.relative_path = {}
         self.port_mapping = {}
         self.entity_table_black_list = ['alarm', 'fan', 'sensor']
-        self.port_exclude_pattern = r'serial|stack|engine|management|mgmt|voice|foreign'
+        self.port_exclude_pattern = r'serial|stack|engine|management|mgmt|voice|foreign|cpu'
         self.module_exclude_pattern = r'cevsfp'
         self.resources = list()
         self.attributes = list()
