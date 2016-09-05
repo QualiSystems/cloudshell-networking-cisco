@@ -26,10 +26,7 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
         self._logger = logger
         self._api = api
         self._cli = cli
-        try:
-            self.resource_name = resource_name or get_resource_name()
-        except Exception:
-            raise Exception('CiscoHandlerBase', 'ResourceName is empty or None')
+        self._resource_name = resource_name
 
     @property
     def logger(self):
@@ -52,6 +49,15 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
         if self._cli is None:
             self._cli = inject.instance(CLI_SERVICE)
         return self._cli
+
+    @property
+    def resource_name(self):
+        if not self._resource_name:
+            try:
+                self._resource_name = get_resource_name()
+            except Exception:
+                raise Exception(self.__class__.__name__, 'ResourceName is empty or None')
+        return self._resource_name
 
     def copy(self, source_file='', destination_file='', vrf=None, timeout=600, retries=5):
         """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem
