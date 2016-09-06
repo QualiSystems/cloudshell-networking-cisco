@@ -303,7 +303,7 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
         is_uploaded = self.copy(source_file=source_filename, destination_file=destination_file, vrf=vrf_management_name)
         if is_uploaded[0] is True:
             self.logger.info('Save configuration completed.')
-            return '{0},'.format(destination_filename)
+            return destination_filename
         else:
             # self.logger.info('is_uploaded = {}'.format(is_uploaded))
             self.logger.info('Save configuration failed with errors: {0}'.format(is_uploaded[1]))
