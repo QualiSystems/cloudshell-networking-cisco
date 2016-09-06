@@ -188,3 +188,16 @@ class TestCiscoHandlerBase(TestCase):
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
+
+    def test_orchestration_save_should_save_default_config(self):
+        request = """
+        {
+            "custom_params": {
+                "folder_path" : "tftp://10.0.0.1/folder1",
+                "vrf_management_name": "network-1"
+                }
+        }"""
+        handler = self._get_handler()
+        handler.cli.send_command = MagicMock(return_value='Copy complete, now saving to disk (please wait)...')
+        json_string = handler.orchestration_save(custom_params=request)
+        print json_string
