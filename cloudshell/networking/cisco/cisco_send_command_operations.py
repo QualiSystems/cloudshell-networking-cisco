@@ -26,7 +26,7 @@ class CiscoSendCommandOperations(SendCommandInterface):
         try:
             self.resource_name = resource_name or get_resource_name()
         except Exception:
-            raise Exception('CiscoHandlerBase', 'Failed to get resource_name.')
+            raise Exception('CiscoSendCommandOperations', 'Failed to get resource_name.')
 
     @property
     def logger(self):
