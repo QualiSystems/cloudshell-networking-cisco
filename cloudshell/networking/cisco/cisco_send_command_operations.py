@@ -26,7 +26,7 @@ class CiscoSendCommandOperations(SendCommandInterface):
         try:
             self.resource_name = resource_name or get_resource_name()
         except Exception:
-            raise Exception('CiscoHandlerBase', 'Failed to get resource_name.')
+            raise Exception('CiscoSendCommandOperations', 'Failed to get resource_name.')
 
     @property
     def logger(self):
@@ -86,8 +86,9 @@ class CiscoSendCommandOperations(SendCommandInterface):
         :rtype: string
         """
 
-        return self.cli.send_config_command(command, expected_str, expected_map, timeout, retries,
-                                            is_need_default_prompt)
+        return self.cli.send_config_command(command=command, expected_str=expected_str, expected_map=expected_map,
+                                            timeout=timeout, retries=retries,
+                                            is_need_default_prompt=is_need_default_prompt)
 
 
 

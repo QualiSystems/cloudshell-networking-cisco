@@ -43,6 +43,12 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         self.resources = list()
         self.attributes = list()
 
+    def enable_snmp(self):
+        pass
+
+    def disable_snmp(self):
+        pass
+
     @property
     def logger(self):
         if self._logger:
