@@ -3,11 +3,11 @@ from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, 
 from cloudshell.configuration.cloudshell_snmp_binding_keys import SNMP_HANDLER
 import inject
 
-from cloudshell.networking.operations.interfaces.send_command_interface import SendCommandInterface
+from cloudshell.networking.operations.interfaces.run_command_interface import RunCommandInterface
 from cloudshell.shell.core.context_utils import get_resource_name
 
 
-class CiscoSendCommandOperations(SendCommandInterface):
+class CiscoSendCommandOperations(RunCommandInterface):
     def __init__(self, resource_name=None, cli=None, logger=None, api=None):
         """Create CiscoIOSHandlerBase
 
@@ -50,7 +50,7 @@ class CiscoSendCommandOperations(SendCommandInterface):
             self._cli = inject.instance(CLI_SERVICE)
         return self._cli
 
-    def send_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
+    def run_custom_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
                      is_need_default_prompt=True, session=None):
         """Send command using cli service
 
@@ -76,7 +76,7 @@ class CiscoSendCommandOperations(SendCommandInterface):
                                              is_need_default_prompt=is_need_default_prompt)
         return response
 
-    def send_config_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
+    def run_custom_config_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
                             is_need_default_prompt=True):
         """Send list of config commands to the session
 
