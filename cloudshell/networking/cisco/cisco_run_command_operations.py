@@ -1,6 +1,5 @@
 from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE
 from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
-from cloudshell.configuration.cloudshell_snmp_binding_keys import SNMP_HANDLER
 import inject
 
 from cloudshell.networking.operations.interfaces.run_command_interface import RunCommandInterface
