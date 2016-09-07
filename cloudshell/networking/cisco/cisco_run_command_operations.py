@@ -106,8 +106,8 @@ class CiscoRunCommandOperations(RunCommandInterface):
         :rtype: string
         """
 
-        self.run_custom_command(command, expected_str=expected_str, expected_map=expected_map, timeout=timeout,
-                                retries=retries, is_need_default_prompt=is_need_default_prompt, session=session)
+        return self.run_custom_command(command, expected_str=expected_str, expected_map=expected_map, timeout=timeout,
+                                       retries=retries, is_need_default_prompt=is_need_default_prompt, session=session)
 
     def send_config_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
                             is_need_default_prompt=True):
