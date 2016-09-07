@@ -7,7 +7,7 @@ from cloudshell.networking.operations.interfaces.send_command_interface import S
 from cloudshell.shell.core.context_utils import get_resource_name
 
 
-class CiscoSendCommandOperations(SendCommandInterface):
+class CiscoRunCommandOperations(SendCommandInterface):
     def __init__(self, resource_name=None, cli=None, logger=None, api=None):
         """Create CiscoIOSHandlerBase
 
