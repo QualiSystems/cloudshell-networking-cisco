@@ -50,25 +50,25 @@ class CiscoRunCommandOperations(RunCommandInterface):
             self._cli = inject.instance(CLI_SERVICE)
         return self._cli
 
-    def run_custom_config_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
+    def run_custom_config_command(self, custom_command, expected_str=None, expected_map=None, timeout=None, retries=None,
                                   is_need_default_prompt=True):
         """Send list of config commands to the session
 
-        :param command: list of commands to send
+        :param custom_command: list of commands to send
 
         :return session returned output
         :rtype: string
         """
 
-        return self.cli.send_config_command(command=command, expected_str=expected_str, expected_map=expected_map,
+        return self.cli.send_config_command(command=custom_command, expected_str=expected_str, expected_map=expected_map,
                                             timeout=timeout, retries=retries,
                                             is_need_default_prompt=is_need_default_prompt)
 
-    def run_custom_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
+    def run_custom_command(self, custom_command, expected_str=None, expected_map=None, timeout=None, retries=None,
                            is_need_default_prompt=True, session=None):
         """Send command using cli service
 
-        :param command: command to send
+        :param custom_command: command to send
         :param expected_str: optional, custom expected string, if you expect something different from default prompts
         :param expected_map: optional, custom expected map, if you expect some actions in progress of the command
         :param timeout: optional, custom timeout
@@ -81,20 +81,20 @@ class CiscoRunCommandOperations(RunCommandInterface):
         """
 
         if session:
-            response = self.cli.send_command(command=command, expected_str=expected_str, expected_map=expected_map,
+            response = self.cli.send_command(command=custom_command, expected_str=expected_str, expected_map=expected_map,
                                              timeout=timeout, retries=retries,
                                              is_need_default_prompt=is_need_default_prompt, session=session)
         else:
-            response = self.cli.send_command(command=command, expected_str=expected_str, expected_map=expected_map,
+            response = self.cli.send_command(command=custom_command, expected_str=expected_str, expected_map=expected_map,
                                              timeout=timeout, retries=retries,
                                              is_need_default_prompt=is_need_default_prompt)
         return response
 
-    def send_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
+    def send_command(self, custom_command, expected_str=None, expected_map=None, timeout=None, retries=None,
                      is_need_default_prompt=True, session=None):
         """Send command using cli service
 
-        :param command: command to send
+        :param custom_command: command to send
         :param expected_str: optional, custom expected string, if you expect something different from default prompts
         :param expected_map: optional, custom expected map, if you expect some actions in progress of the command
         :param timeout: optional, custom timeout
@@ -106,19 +106,19 @@ class CiscoRunCommandOperations(RunCommandInterface):
         :rtype: string
         """
 
-        return self.run_custom_command(command, expected_str=expected_str, expected_map=expected_map, timeout=timeout,
+        return self.run_custom_command(custom_command, expected_str=expected_str, expected_map=expected_map, timeout=timeout,
                                        retries=retries, is_need_default_prompt=is_need_default_prompt, session=session)
 
-    def send_config_command(self, command, expected_str=None, expected_map=None, timeout=None, retries=None,
+    def send_config_command(self, custom_command, expected_str=None, expected_map=None, timeout=None, retries=None,
                             is_need_default_prompt=True):
         """Send list of config commands to the session
 
-        :param command: list of commands to send
+        :param custom_command: list of commands to send
 
         :return session returned output
         :rtype: string
         """
 
-        return self.run_custom_config_command(command=command, expected_str=expected_str, expected_map=expected_map,
+        return self.run_custom_config_command(custom_command=custom_command, expected_str=expected_str, expected_map=expected_map,
                                               timeout=timeout, retries=retries,
                                               is_need_default_prompt=is_need_default_prompt)
