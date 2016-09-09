@@ -1,5 +1,6 @@
 import time
 from collections import OrderedDict
+from posixpath import join
 
 from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE
 from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
@@ -11,7 +12,7 @@ from cloudshell.networking.networking_utils import UrlParser
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
 from cloudshell.networking.operations.configuration_operations import ConfigurationOperations
 from cloudshell.networking.operations.interfaces.firmware_operations_interface import FirmwareOperationsInterface
-from cloudshell.shell.core.context_utils import get_resource_name, get_attribute_by_name
+from cloudshell.shell.core.context_utils import get_resource_name
 
 
 def _get_time_stamp():
@@ -184,6 +185,7 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
         :param vrf_management_name: VRF Name
         :return: status / exception
         """
+
         url = UrlParser.parse_url(path)
         required_keys = [UrlParser.FILENAME, UrlParser.HOSTNAME, UrlParser.SCHEME]
 
@@ -276,10 +278,8 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
         :param vrf_management_name: Virtual Routing and Forwarding management name
         :return: status message / exception
         """
-        if not folder_path:
-            folder_path = get_attribute_by_name('Backup Location')
-            if not folder_path:
-                raise Exception('Cisco OS', "Backup location attribute and Folder Path parameter are empty")
+
+        full_path = self.get_path(folder_path)
 
         configuration_type = self._validate_configuration_type(configuration_type)
 
@@ -290,22 +290,13 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
         destination_filename = '{0}-{1}-{2}'.format(system_name, configuration_type.lower(), _get_time_stamp())
         self.logger.info('destination filename is {0}'.format(destination_filename))
 
-        if len(folder_path) <= 0:
-            folder_path = self._get_resource_attribute(self.resource_name, 'Backup Location')
-            if len(folder_path) <= 0:
-                raise Exception('Folder path and Backup Location are empty.')
-
-        if folder_path.endswith('/'):
-            destination_file = folder_path + destination_filename
-        else:
-            destination_file = folder_path + '/' + destination_filename
+        destination_file = join(full_path, destination_filename)
 
         is_uploaded = self.copy(source_file=source_filename, destination_file=destination_file, vrf=vrf_management_name)
         if is_uploaded[0] is True:
             self.logger.info('Save configuration completed.')
             return destination_filename
         else:
-            # self.logger.info('is_uploaded = {}'.format(is_uploaded))
             self.logger.info('Save configuration failed with errors: {0}'.format(is_uploaded[1]))
             raise Exception(is_uploaded[1])
 
