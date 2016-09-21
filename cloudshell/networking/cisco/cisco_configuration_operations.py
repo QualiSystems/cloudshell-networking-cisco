@@ -12,7 +12,7 @@ from cloudshell.networking.networking_utils import UrlParser
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
 from cloudshell.networking.operations.configuration_operations import ConfigurationOperations
 from cloudshell.networking.operations.interfaces.firmware_operations_interface import FirmwareOperationsInterface
-from cloudshell.shell.core.context_utils import get_resource_name
+from cloudshell.shell.core.context_utils import get_resource_name, get_attribute_by_name
 
 
 def _get_time_stamp():
@@ -169,9 +169,9 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
 
             raise Exception('Cisco IOS', 'Configure replace completed with error: ' + error_str)
 
-    def reload(self):
-        state_operations = CiscoStateOperations()
-        return state_operations.reload()
+    def reload(self, sleep_timeout=60, retries=15):
+        state_operations = CiscoStateOperations(cli=self.cli, logger=self.logger, resource_name=self.resource_name)
+        return state_operations.reload(sleep_timeout=sleep_timeout, retries=retries)
 
     def load_firmware(self, path, vrf_management_name=None):
         """Update firmware version on device by loading provided image, performs following steps:
@@ -280,6 +280,8 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
         """
 
         full_path = self.get_path(folder_path)
+        if not vrf_management_name:
+            vrf_management_name = get_attribute_by_name('VRF Management Name')
 
         configuration_type = self._validate_configuration_type(configuration_type)
 
@@ -312,6 +314,9 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
         """
         configuration_type = self._validate_configuration_type(configuration_type)
         restore_method = self._validate_restore_method(restore_method)
+
+        if not vrf_management_name:
+            vrf_management_name = get_attribute_by_name('VRF Management Name')
 
         destination_filename = configuration_type
 
