@@ -5,6 +5,7 @@ import re
 import os
 
 import inject
+from cloudshell.configuration.cloudshell_snmp_binding_keys import SNMP_HANDLER
 from cloudshell.networking.operations.interfaces.autoload_operations_interface import AutoloadOperationsInterface
 from cloudshell.shell.core.context_utils import get_attribute_by_name
 
@@ -87,13 +88,11 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         self.snmp.update_mib_sources(path)
 
     def discover(self):
-        enable_snmp_resource_attribute = get_attribute_by_name('Enable SNMP')
-        if enable_snmp_resource_attribute:
-            self._enable_snmp = enable_snmp_resource_attribute.lower() == 'true'
-
-        disable_snmp_resource_attribute = get_attribute_by_name('Disable SNMP')
-        if disable_snmp_resource_attribute:
+        try:
+            self._enable_snmp = get_attribute_by_name('Enable SNMP').lower() == 'true'
             self._disable_snmp = get_attribute_by_name('Disable SNMP').lower() == 'true'
+        except:
+            pass
 
         if self._enable_snmp:
             self.enable_snmp()
