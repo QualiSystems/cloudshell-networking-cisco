@@ -51,12 +51,6 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         if not self.snmp_community:
             self.snmp_community = get_attribute_by_name('SNMP Read Community') or 'qualicommunity'
 
-    def enable_snmp(self):
-        pass
-
-    def disable_snmp(self):
-        pass
-
     @property
     def logger(self):
         if self._logger:
