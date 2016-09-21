@@ -1,16 +1,18 @@
 import time
 from collections import OrderedDict
+from posixpath import join
 
-from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE, CONNECTION_MANAGER
+from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE
 from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
 import inject
 import re
+from cloudshell.networking.cisco.cisco_state_operations import CiscoStateOperations
 from cloudshell.networking.networking_utils import validateIP
+from cloudshell.networking.networking_utils import UrlParser
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
-from cloudshell.networking.operations.interfaces.configuration_operations_interface import \
-    ConfigurationOperationsInterface
+from cloudshell.networking.operations.configuration_operations import ConfigurationOperations
 from cloudshell.networking.operations.interfaces.firmware_operations_interface import FirmwareOperationsInterface
-from cloudshell.shell.core.context_utils import get_resource_name, get_attribute_by_name
+from cloudshell.shell.core.context_utils import get_resource_name
 
 
 def _get_time_stamp():
@@ -21,15 +23,12 @@ def _get_time_stamp():
 #     return not re.match('bootflash$|tftp$|ftp$|harddisk$|nvram$|pram$|flash$|localhost$', filesystem) is None
 
 
-class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOperationsInterface):
+class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsInterface):
     def __init__(self, cli=None, logger=None, api=None, resource_name=None):
         self._logger = logger
         self._api = api
         self._cli = cli
-        try:
-            self.resource_name = resource_name or get_resource_name()
-        except Exception:
-            raise Exception('CiscoHandlerBase', 'ResourceName is empty or None')
+        self._resource_name = resource_name or get_resource_name()
 
     @property
     def logger(self):
@@ -52,6 +51,15 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         if self._cli is None:
             self._cli = inject.instance(CLI_SERVICE)
         return self._cli
+
+    @property
+    def resource_name(self):
+        if self._resource_name is None:
+            try:
+                self._resource_name = get_resource_name()
+            except:
+                raise Exception(self.__class__.__name__, 'Failed to get resource name.')
+        return self._resource_name
 
     def copy(self, source_file='', destination_file='', vrf=None, timeout=600, retries=5):
         """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem
@@ -161,59 +169,11 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
 
             raise Exception('Cisco IOS', 'Configure replace completed with error: ' + error_str)
 
-    def reload(self, sleep_timeout=60, retries=15):
-        """Reload device
+    def reload(self):
+        state_operations = CiscoStateOperations()
+        return state_operations.reload()
 
-        :param sleep_timeout: period of time, to wait for device to get back online
-        :param retries: amount of retires to get response from device after it will be rebooted
-        """
-
-        expected_map = OrderedDict({'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
-                                    '\(y/n\)|continue': lambda session: session.send_line('y'),
-                                    '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')
-                                    # 'reload': lambda session: session.send_line('')
-                                    })
-        try:
-            self.logger.info('Send \'reload\' to device...')
-            self.cli.send_command(command='reload', expected_map=expected_map, timeout=3)
-
-        except Exception as e:
-            session_type = self.cli.get_session_type()
-
-            if not session_type == 'CONSOLE':
-                self.logger.info('Session type is \'{}\', closing session...'.format(session_type))
-                self.cli.destroy_threaded_session()
-                connection_manager = inject.instance(CONNECTION_MANAGER)
-                connection_manager.decrement_sessions_count()
-
-        self.logger.info('Wait 20 seconds for device to reload...')
-        time.sleep(20)
-        # output = self.cli.send_command(command='', expected_str='.*', expected_map={})
-
-        retry = 0
-        is_reloaded = False
-        while retry < retries:
-            retry += 1
-
-            time.sleep(sleep_timeout)
-            try:
-                self.logger.debug('Trying to send command to device ... (retry {} of {}'.format(retry, retries))
-                output = self.cli.send_command(command='', expected_str='(?<![#\n])[#>] *$', expected_map={}, timeout=5,
-                                               is_need_default_prompt=False)
-                if len(output) == 0:
-                    continue
-
-                is_reloaded = True
-                break
-            except Exception as e:
-                self.logger.error('CiscoHandlerBase', e.message)
-                self.logger.debug('Wait {} seconds and retry ...'.format(sleep_timeout / 2))
-                time.sleep(sleep_timeout / 2)
-                pass
-
-        return is_reloaded
-
-    def update_firmware(self, remote_host, file_path, size_of_firmware=200000000):
+    def load_firmware(self, path, vrf_management_name=None):
         """Update firmware version on device by loading provided image, performs following steps:
 
             1. Copy bin file from remote tftp server.
@@ -221,35 +181,38 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             3. Set downloaded bin file as boot file and then reboot device.
             4. Check if firmware was successfully installed.
 
-        :param remote_host: host with firmware
-        :param file_path: relative path on remote host
-        :param size_of_firmware: size in bytes
+        :param path: full path to firmware file on ftp/tftp location
+        :param vrf_management_name: VRF Name
         :return: status / exception
         """
 
-        firmware_obj = CiscoFirmwareData(file_path)
+        url = UrlParser.parse_url(path)
+        required_keys = [UrlParser.FILENAME, UrlParser.HOSTNAME, UrlParser.SCHEME]
+
+        if not url or not all(key in url for key in required_keys):
+            raise Exception('Cisco IOS', 'Path is wrong or empty')
+
+        file_name = url[UrlParser.FILENAME]
+        firmware_obj = CiscoFirmwareData(path)
+
         if firmware_obj.get_name() is None:
             raise Exception('Cisco IOS', "Invalid firmware name!\n \
                                 Firmware file must have: title, extension.\n \
                                 Example: isr4400-universalk9.03.10.00.S.153-3.S-ext.SPA.bin\n\n \
-                                Current path: " + file_path)
+                                Current path: {}".format(file_name))
 
-        free_memory_size = self._get_free_memory_size('bootflash')
-
-        is_downloaded = self.copy(source_file=remote_host,
-                                  destination_file='bootflash:/' + file_path, timeout=600, retries=2)
+        is_downloaded = self.copy(source_file=path, destination_file='bootflash:/{}'.format(file_name),
+                                  timeout=600, retries=2)
 
         if not is_downloaded[0]:
-            raise Exception('Cisco IOS', "Failed to download firmware from " + remote_host +
-                            file_path + "!\n" + is_downloaded[1])
+            raise Exception('Cisco IOS', "Failed to download firmware from {}!\n {}".format(path, is_downloaded[1]))
 
         self.cli.send_command(command='configure terminal', expected_str='(config)#')
         self._remove_old_boot_system_config()
         output = self.cli.send_command('do show run | include boot')
 
         is_boot_firmware = False
-        firmware_full_name = firmware_obj.get_name() + \
-                             '.' + firmware_obj.get_extension()
+        firmware_full_name = firmware_obj.get_name() + '.' + firmware_obj.get_extension()
 
         retries = 5
         while (not is_boot_firmware) and (retries > 0):
@@ -267,6 +230,7 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         self.cli.send_command(command='exit')
         output = self.cli.send_command(command='copy run start',
                                        expected_map={'\?': lambda session: session.send_line('')})
+
         is_reloaded = self.reload()
         output_version = self.cli.send_command(command='show version | include image file')
 
@@ -291,81 +255,75 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             raise Exception(e.message)
         return result
 
-    def save_configuration(self, destination_host, source_filename, vrf=None):
+    def _validate_configuration_type(self, configuration_type):
+        configuration_type = configuration_type or "running"
+        if not re.search("startup|running", configuration_type, re.IGNORECASE):
+            raise Exception("Configuration type must be 'Running' or 'Startup'!")
+
+        return configuration_type.lower()
+
+    def _validate_restore_method(self, restore_method):
+        restore_method = restore_method or "override"
+        if not re.search('append|override', restore_method.lower()):
+            raise Exception("Cisco OS",
+                            "Restore method '{}' is wrong! Use 'Append' or 'Override'".format(restore_method))
+
+        return restore_method.lower()
+
+    def save(self, folder_path, configuration_type=None, vrf_management_name=None):
         """Backup 'startup-config' or 'running-config' from device to provided file_system [ftp|tftp]
         Also possible to backup config to localhost
-        :param destination_host:  tftp/ftp server where file be saved
-        :param source_filename: what file to backup
+        :param folder_path:  tftp/ftp server where file be saved
+        :param configuration_type: type of configuration that will be saved (StartUp or Running)
+        :param vrf_management_name: Virtual Routing and Forwarding management name
         :return: status message / exception
         """
 
-        if source_filename == '':
-            source_filename = 'running-config'
-        if '-config' not in source_filename:
-            source_filename = source_filename.lower() + '-config'
-        if ('startup' not in source_filename) and ('running' not in source_filename):
-            raise Exception('Cisco OS', "Source filename must be 'startup' or 'running'!")
+        full_path = self.get_path(folder_path)
 
-        if not destination_host:
-            destination_host = get_attribute_by_name('Backup Location')
-            if not destination_host:
-                raise Exception('Cisco OS', "Backup location attribute and Folder Path parameter are empty")
+        configuration_type = self._validate_configuration_type(configuration_type)
 
+        source_filename = '{}-config'.format(configuration_type.lower())
         system_name = re.sub('\s+', '_', self.resource_name)
-        if len(system_name) > 23:
-            system_name = system_name[:23]
+        system_name = system_name[:23]
 
-        destination_filename = '{0}-{1}-{2}'.format(system_name, source_filename.replace('-config', ''),
-                                                    _get_time_stamp())
+        destination_filename = '{0}-{1}-{2}'.format(system_name, configuration_type.lower(), _get_time_stamp())
         self.logger.info('destination filename is {0}'.format(destination_filename))
 
-        if len(destination_host) <= 0:
-            destination_host = self._get_resource_attribute(self.resource_name, 'Backup Location')
-            if len(destination_host) <= 0:
-                raise Exception('Folder path and Backup Location are empty.')
+        destination_file = join(full_path, destination_filename)
 
-        if destination_host.endswith('/'):
-            destination_file = destination_host + destination_filename
-        else:
-            destination_file = destination_host + '/' + destination_filename
-
-        is_uploaded = self.copy(destination_file=destination_file, source_file=source_filename, vrf=vrf)
+        is_uploaded = self.copy(source_file=source_filename, destination_file=destination_file, vrf=vrf_management_name)
         if is_uploaded[0] is True:
             self.logger.info('Save configuration completed.')
-            return '{0},'.format(destination_filename)
+            return destination_filename
         else:
-            # self.logger.info('is_uploaded = {}'.format(is_uploaded))
             self.logger.info('Save configuration failed with errors: {0}'.format(is_uploaded[1]))
             raise Exception(is_uploaded[1])
 
-    def restore_configuration(self, source_file, config_type, restore_method='override', vrf=None):
+    def restore(self, path, configuration_type=None, restore_method=None, vrf_management_name=None):
+        # def restore_configuration(self, source_file, config_type, restore_method='override', vrf=None):
         """Restore configuration on device from provided configuration file
         Restore configuration from local file system or ftp/tftp server into 'running-config' or 'startup-config'.
-        :param source_file: relative path to the file on the remote host tftp://server/sourcefile
+        :param path: relative path to the file on the remote host tftp://server/sourcefile
+        :param configuration_type: the configuration type to restore (StartUp or Running)
         :param restore_method: override current config or not
+        :param vrf_management_name: Virtual Routing and Forwarding management name
         :return:
         """
+        configuration_type = self._validate_configuration_type(configuration_type)
+        restore_method = self._validate_restore_method(restore_method)
 
-        if not re.search('append|override', restore_method.lower()):
-            raise Exception('Cisco OS',
-                            "Restore method '{}' is wrong! Use 'Append' or 'Override'".format(restore_method))
+        destination_filename = configuration_type
 
-        if '-config' not in config_type:
-            config_type = config_type.lower() + '-config'
+        if '-config' not in destination_filename:
+            destination_filename = "{}-config".format(destination_filename)
 
-        self.logger.info('Restore device configuration from {}'.format(source_file))
+        self.logger.info('Restore device configuration from {}'.format(path))
 
-        match_data = re.search('startup-config|running-config', config_type)
-        if not match_data:
-            msg = "Configuration type '{}' is wrong, use 'startup-config' or 'running-config'.".format(config_type)
-            raise Exception('Cisco OS', msg)
-
-        destination_filename = match_data.group()
-
-        if source_file == '':
+        if path == '':
             raise Exception('Cisco OS', "Source Path is empty.")
 
-        if (restore_method.lower() == 'override') and (destination_filename == 'startup-config'):
+        if (restore_method == 'override') and (destination_filename == 'startup-config'):
             self.cli.send_command(command='del nvram:' + destination_filename,
                                   expected_map=OrderedDict(
                                       {'[Dd]elete [Ff]ilename '.format(destination_filename): lambda
@@ -373,16 +331,16 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
                                        '[confirm]': lambda session: session.send_line(''),
                                        '\?': lambda session: session.send_line('')}))
 
-            is_uploaded = self.copy(source_file=source_file, destination_file=destination_filename, vrf=vrf)
-        elif (restore_method.lower() == 'override') and (destination_filename == 'running-config'):
+            is_uploaded = self.copy(source_file=path, destination_file=destination_filename, vrf=vrf_management_name)
+        elif (restore_method == 'override') and (destination_filename == 'running-config'):
 
             if not self._check_replace_command():
                 raise Exception('Overriding running-config is not supported for this device.')
 
-            self.configure_replace(source_filename=source_file, timeout=600, vrf=vrf)
+            self.configure_replace(source_filename=path, timeout=600, vrf=vrf_management_name)
             is_uploaded = (True, '')
         else:
-            is_uploaded = self.copy(source_file=source_file, destination_file=destination_filename, vrf=vrf)
+            is_uploaded = self.copy(source_file=path, destination_file=destination_filename, vrf=vrf_management_name)
 
         if is_uploaded[0] is True:
             return 'Restore configuration completed.'

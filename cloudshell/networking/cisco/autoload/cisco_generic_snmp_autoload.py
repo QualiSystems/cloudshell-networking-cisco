@@ -43,13 +43,19 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         self.relative_path = {}
         self.port_mapping = {}
         self.entity_table_black_list = ['alarm', 'fan', 'sensor']
-        self.port_exclude_pattern = r'serial|stack|engine|management|mgmt|voice|foreign'
+        self.port_exclude_pattern = r'serial|stack|engine|management|mgmt|voice|foreign|cpu'
         self.module_exclude_pattern = r'cevsfp'
         self.resources = list()
         self.attributes = list()
         self.snmp_community = snmp_community
         if not self.snmp_community:
             self.snmp_community = get_attribute_by_name('SNMP Read Community') or 'qualicommunity'
+
+    def enable_snmp(self):
+        pass
+
+    def disable_snmp(self):
+        pass
 
     @property
     def logger(self):

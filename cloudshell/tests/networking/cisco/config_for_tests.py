@@ -2,7 +2,7 @@ import re
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 from cloudshell.networking.cisco.cisco_connectivity_operations import CiscoConnectivityOperations
-from cloudshell.networking.cisco.cisco_send_command_operations import CiscoSendCommandOperations
+from cloudshell.networking.cisco.cisco_run_command_operations import CiscoRunCommandOperations
 from cloudshell.shell.core.context_utils import get_decrypted_password_by_attribute_name_wrapper
 
 
@@ -42,4 +42,4 @@ CONNECTIVITY_OPERATIONS_CLASS = CiscoConnectivityOperations
 CONFIGURATION_OPERATIONS_CLASS = CiscoConfigurationOperations
 FIRMWARE_OPERATIONS_CLASS = CiscoConfigurationOperations
 AUTOLOAD_OPERATIONS_CLASS = CiscoGenericSNMPAutoload
-SEND_COMMAND_OPERATIONS_CLASS = CiscoSendCommandOperations
+SEND_COMMAND_OPERATIONS_CLASS = CiscoRunCommandOperations
