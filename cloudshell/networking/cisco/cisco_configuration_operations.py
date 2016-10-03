@@ -61,6 +61,9 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
         :return tuple(True or False, 'Success or Error message')
         """
 
+        if not vrf:
+            vrf = get_attribute_by_name('VRF Management Name')
+
         host = None
         expected_map = OrderedDict()
 
@@ -143,13 +146,13 @@ class CiscoConfigurationOperations(ConfigurationOperationsInterface, FirmwareOpe
             'overwritte': lambda session: session.send_line('yes')
         }
         output = self.cli.send_command(command=command, expected_map=expected_map, timeout=timeout)
-        match_error = re.search(r'[Ee]rror:', output)
+        match_error = re.search(r'[Ee]rror.*$|[Rr]ollback\s*[Dd]one|(?<=%).*(not.*|in)valid.*(?=\n)', output)
 
-        if match_error is not None:
-            error_str = output[match_error.end() + 1:] + '\n'
-            error_str += error_str[:error_str.find('\n')]
-
-            raise Exception('Cisco IOS', 'Configure replace completed with error: ' + error_str)
+        if match_error:
+            error_str = match_error.group()
+            if 'rollback' in error_str.lower():
+                error_str = 'Restore failed, ' + error_str
+            raise Exception('Cisco OS', 'Configure replace completed with error: ' + error_str)
 
     def reload(self, sleep_timeout=60, retries=15):
         """Reload device

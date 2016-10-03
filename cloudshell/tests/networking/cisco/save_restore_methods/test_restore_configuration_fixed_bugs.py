@@ -5,7 +5,7 @@ from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConf
 
 __author__ = 'CoYe'
 
-class TestCiscoHandlerBase(TestCase):
+class CiscoConfigurationOperationsRestore(TestCase):
     def _get_handler(self):
         self.cli = MagicMock()
         self.snmp = MagicMock()

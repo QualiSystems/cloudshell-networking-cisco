@@ -5,7 +5,7 @@ from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConf
 
 __author__ = 'CoYe'
 
-class TestCiscoHandlerBase(TestCase):
+class CiscoConfigurationOperationsSaveValidation(TestCase):
     def _get_handler(self):
         self.output = """C6504e-1-CE7#copy running-config tftp:
         Address or name of remote host []? 10.10.10.10

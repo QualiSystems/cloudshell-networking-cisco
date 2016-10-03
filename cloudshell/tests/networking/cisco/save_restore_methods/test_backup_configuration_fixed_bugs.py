@@ -4,7 +4,7 @@ import re
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 
 
-class TestCiscoHandlerBase(TestCase):
+class TestCiscoConfigurationOperationsSave(TestCase):
     output = ''
 
     def return_output(self, *args, **kwargs):
