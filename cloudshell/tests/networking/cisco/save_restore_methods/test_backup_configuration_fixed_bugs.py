@@ -4,7 +4,7 @@ import re
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 
 
-class TestCiscoHandlerBase(TestCase):
+class TestCiscoConfigurationOperationsSave(TestCase):
     output = ''
 
     def return_output(self, *args, **kwargs):
@@ -25,7 +25,7 @@ class TestCiscoHandlerBase(TestCase):
         handler = self._get_handler()
         handler.cli.send_command = MagicMock(return_value=output)
         self.assertRaises(Exception, handler.save_configuration, 'tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
-                                                       'running')
+                                                       'running', vrf='vrf')
 
     def test_save_raises_exception_error_message(self):
         # output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
@@ -35,7 +35,7 @@ class TestCiscoHandlerBase(TestCase):
         handler.cli.send_command = MagicMock
         handler.cli.send_command = self.return_output
         try:
-            handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running')
+            handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running', vrf='vrf')
         except Exception as e:
             self.assertIsNotNone(e)
             self.assertTrue(output.replace('%', '') in e.message)
@@ -52,7 +52,7 @@ class TestCiscoHandlerBase(TestCase):
         handler.cli.send_command = MagicMock
         handler.cli.send_command = self.return_output
         try:
-            handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running')
+            handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running', vrf='vrf')
         except Exception as e:
             self.assertIsNotNone(e)
             self.assertTrue('Copy Command failed. TFTP put operation failed:Access violation' in e.message)
