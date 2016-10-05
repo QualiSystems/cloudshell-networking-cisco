@@ -20,7 +20,7 @@ class CiscoConfigurationOperationsRestore(TestCase):
         handler = self._get_handler()
         handler.cli.send_command = MagicMock(return_value=output)
         self.assertRaises(Exception, handler.save_configuration, 'tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
-                                                       'running')
+                                                       'running', vrf='vrf')
 
     def test_save_raises_exception_error_message(self):
         # output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
@@ -28,7 +28,7 @@ class CiscoConfigurationOperationsRestore(TestCase):
         handler = self._get_handler()
         handler.cli.send_command = MagicMock(return_value=output)
         try:
-            handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running')
+            handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running', vrf='vrf')
         except Exception as e:
             self.assertIsNotNone(e)
             self.assertTrue(output.replace('%', '') in e.message)

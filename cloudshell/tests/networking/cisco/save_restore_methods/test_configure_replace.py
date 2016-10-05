@@ -1,5 +1,6 @@
 from unittest import TestCase
 from mock import MagicMock
+import mock
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 
 
@@ -11,7 +12,7 @@ class CiscoConfigurationOperationsRestore(TestCase):
         self.api = MagicMock()
         self.logger = MagicMock()
         self.handler = CiscoConfigurationOperations(cli=self.cli, logger=self.logger, api=self.api,
-                                                    resource_name='resource_name')
+                                                resource_name='resource_name')
 
     def test_configure_replace_validates_error_output(self):
         output = """Command: configure replace ftp://admin:KPlab123@10.233.30.222/CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg
@@ -32,7 +33,7 @@ class CiscoConfigurationOperationsRestore(TestCase):
             37501#
             """
         self.cli.send_command = MagicMock(return_value=output)
-        self.assertRaises(Exception, self.handler.configure_replace, 'filename')
+        self.assertRaises(Exception, self.handler.configure_replace, 'filename', vrf='vrf')
 
     def test_configure_replace_validates_apply_error_output(self):
         output = """configure replace ftp://admin:KPlab123@10.233.30.222/CloudShell/config
@@ -51,4 +52,4 @@ class CiscoConfigurationOperationsRestore(TestCase):
             37501#
             """
         self.cli.send_command = MagicMock(return_value=output)
-        self.assertRaises(Exception, self.handler.configure_replace, 'filename')
+        self.assertRaises(Exception, self.handler.configure_replace, 'filename', vrf='vrf')
