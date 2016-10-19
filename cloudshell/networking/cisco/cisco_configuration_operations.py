@@ -28,7 +28,7 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
         self._logger = logger
         self._api = api
         self._cli = cli
-        self._resource_name = resource_name or get_resource_name()
+        self._resource_name = resource_name
 
     @property
     def logger(self):

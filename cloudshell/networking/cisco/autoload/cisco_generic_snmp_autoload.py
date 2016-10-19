@@ -5,7 +5,6 @@ import re
 import os
 
 import inject
-from cloudshell.configuration.cloudshell_snmp_binding_keys import SNMP_HANDLER
 from cloudshell.networking.operations.interfaces.autoload_operations_interface import AutoloadOperationsInterface
 from cloudshell.shell.core.context_utils import get_attribute_by_name
 
