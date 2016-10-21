@@ -119,7 +119,7 @@ class CiscoConfigurationOperations(ConfigurationOperations, FirmwareOperationsIn
 
     def _check_download_from_tftp(self, output):
         """Verify if file was successfully uploaded
-        :param output: output from cli
+        :param output: output from send_command_operations
         :return True or False, and success or error message
         :rtype tuple
         """

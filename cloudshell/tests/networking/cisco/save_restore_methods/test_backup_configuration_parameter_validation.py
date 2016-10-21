@@ -36,7 +36,7 @@ class TestCiscoConfigurationOperationsParameterValidation(TestCase):
 
         # def test_save_validates_destination_host_host_parameter(self):
         #     handler = self._get_handler()
-        #     handler.cli.send_command = MagicMock(return_value=self.output)
+        #     handler.send_command_operations.send_command = MagicMock(return_value=self.output)
         #     self.assertRaises(Exception, handler.save, 'tftp://10.10.1as0.10//////CloudShell/Configs/Gold/Test1/',
         #                       'running')
         #     self.assertRaises(Exception, handler.save, 'tftp://10.10.1120.10//////CloudShell/Configs/Gold/Test1/',

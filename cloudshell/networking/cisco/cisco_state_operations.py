@@ -82,7 +82,7 @@ class CiscoStateOperations(StateOperations):
 
         self.logger.info('Wait 20 seconds for device to reload...')
         time.sleep(20)
-        # output = self.cli.send_command(command='', expected_str='.*', expected_map={})
+        # output = self.send_command_operations.send_command(command='', expected_str='.*', expected_map={})
 
         retry = 0
         is_reloaded = False
