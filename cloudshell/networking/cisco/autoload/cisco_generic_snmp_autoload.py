@@ -1,12 +1,5 @@
-from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE
-from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER
-from cloudshell.configuration.cloudshell_snmp_binding_keys import SNMP_HANDLER
 import re
 import os
-
-import inject
-from cloudshell.networking.operations.interfaces.autoload_operations_interface import AutoloadOperationsInterface
-from cloudshell.shell.core.context_utils import get_attribute_by_name
 
 from cloudshell.shell.core.driver_context import AutoLoadDetails
 from cloudshell.snmp.quali_snmp import QualiMibTable
@@ -16,11 +9,11 @@ from cloudshell.networking.autoload.networking_autoload_resource_attributes impo
 from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
 
-class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
+class CiscoGenericSNMPAutoload(object):
     IF_ENTITY = "ifDescr"
     ENTITY_PHYSICAL = "entPhysicalDescr"
 
-    def __init__(self, snmp_handler=None, cli=None, logger=None, snmp_community=None, supported_os=None):
+    def __init__(self, snmp_handler, logger, supported_os):
         """Basic init with injected snmp handler and logger
 
         :param snmp_handler:
@@ -28,11 +21,8 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         :return:
         """
 
-        self._cli = cli
-        self._enable_snmp = True
-        self._disable_snmp = False
-        self._snmp = snmp_handler
-        self._logger = logger
+        self.snmp = snmp_handler
+        self.logger = logger
         self.exclusion_list = []
         self._excluded_models = []
         self.module_list = []
@@ -47,65 +37,12 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         self.module_exclude_pattern = r'cevsfp'
         self.resources = list()
         self.attributes = list()
-        self.snmp_community = snmp_community
-        if not self.snmp_community:
-            self.snmp_community = get_attribute_by_name('SNMP Read Community') or 'qualicommunity'
-
-    @property
-    def logger(self):
-        if self._logger:
-            logger = self._logger
-        else:
-            logger = inject.instance(LOGGER)
-        return logger
-
-    @property
-    def snmp(self):
-        if not self._snmp:
-            self._snmp = inject.instance(SNMP_HANDLER)
-        return self._snmp
-
-    @property
-    def cli(self):
-        if self._cli is None:
-            self._cli = inject.instance(CLI_SERVICE)
-        return self._cli
-
-    def enable_snmp(self):
-        existing_snmp_community = self.snmp_community in self.cli.send_command('show snmp communities').lower()
-
-        if not existing_snmp_community:
-            self.cli.send_config_command('snmp-server community {0} ro'.format(
-                self.snmp_community))
-        self.cli.commit()
-
-    def disable_snmp(self):
-        self.cli.send_config_command('no snmp-server community {0}'.format(self.snmp_community))
 
     def load_cisco_mib(self):
         path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'mibs'))
         self.snmp.update_mib_sources(path)
 
     def discover(self):
-        try:
-            self._enable_snmp = get_attribute_by_name('Enable SNMP').lower() == 'true'
-            self._disable_snmp = get_attribute_by_name('Disable SNMP').lower() == 'true'
-        except:
-            pass
-
-        if self._enable_snmp:
-            self.enable_snmp()
-        try:
-            result = self.get_autoload_details()
-        except Exception as e:
-            self.logger.error('Autoload failed: {0}'.format(e.message))
-            raise Exception('CiscoGenericSNMPAutoload', e.message)
-        finally:
-            if self._disable_snmp:
-                self.disable_snmp()
-        return result
-
-    def get_autoload_details(self):
         """General entry point for autoload,
         read device structure and attributes: chassis, modules, submodules, ports, port-channels and power supplies
 
@@ -168,9 +105,6 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
         """
 
         version = None
-        if not self.supported_os:
-            config = inject.instance('config')
-            self.supported_os = config.SUPPORTED_OS
         system_description = self.snmp.get(('SNMPv2-MIB', 'sysDescr'))['sysDescr']
         res = re.search(r"({0})".format("|".join(self.supported_os)),
                         system_description,
@@ -544,7 +478,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
 
         self.logger.info('Load Ports:')
         for port in self.port_list:
-            if_table_port_attr = {'ifType': 'str', 'ifPhysAddress': 'str', 'ifMtu': 'int', 'ifSpeed': 'int'}
+            if_table_port_attr = {'ifType': 'str', 'ifPhysAddress': 'str', 'ifMtu': 'int', 'ifHighSpeed': 'int'}
             if_table = self.if_table[self.port_mapping[port]].copy()
             if_table.update(self.snmp.get_properties('IF-MIB', self.port_mapping[port], if_table_port_attr))
             interface_name = self.if_table[self.port_mapping[port]][self.IF_ENTITY].replace("'", '')
@@ -556,7 +490,7 @@ class CiscoGenericSNMPAutoload(AutoloadOperationsInterface):
             attribute_map = {'l2_protocol_type': interface_type,
                              'mac': if_table[self.port_mapping[port]]['ifPhysAddress'],
                              'mtu': if_table[self.port_mapping[port]]['ifMtu'],
-                             'bandwidth': if_table[self.port_mapping[port]]['ifSpeed'],
+                             'bandwidth': if_table[self.port_mapping[port]]['ifHighSpeed'],
                              'description': self.snmp.get_property('IF-MIB', 'ifAlias', self.port_mapping[port]),
                              'adjacent': self._get_adjacent(self.port_mapping[port])}
             attribute_map.update(self._get_interface_details(self.port_mapping[port]))

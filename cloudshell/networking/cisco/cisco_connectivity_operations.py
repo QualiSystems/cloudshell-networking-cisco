@@ -1,4 +1,7 @@
 from collections import OrderedDict
+from cloudshell.networking.cisco.cisco_command_modes import get_session_type
+from cloudshell.networking.driver_helper import get_cli_connection_attributes
+from cloudshell.shell.core.context_utils import get_resource_name
 from cloudshell.networking.cisco.cisco_run_command_operations import CommandModeContainer
 
 from cloudshell.networking.networking_utils import *
@@ -32,14 +35,14 @@ def send_config_command_list(session, command_list, expected_map=None):
 
 
 class CiscoConnectivityOperations(ConnectivityOperations):
-    def __init__(self, cli, logger, api, resource_name, session_type, connection_attributes, supported_os):
+    def __init__(self, cli, logger, api, context, supported_os):
         ConnectivityOperations.__init__(self)
         self.cli = cli
         self._logger = logger
         self.api = api
-        self.resource_name = resource_name
-        self.session_type = session_type
-        self.connection_attributes = connection_attributes
+        self.resource_name = get_resource_name(context)
+        self.session_type = get_session_type(context)
+        self.connection_attributes = get_cli_connection_attributes(api, context)
         self.supported_os = supported_os
 
     @property
@@ -81,8 +84,9 @@ class CiscoConnectivityOperations(ConnectivityOperations):
                 self.configure_vlan(config_session, self.prepare_vlan_config_commands(vlan_range))
                 config_session.send_command('',
                                             action_map={
-                                                r'\(config\w*-.+\)#': lambda session: session.send_line('exit',
-                                                                                                        self.logger)})
+                                                r'\(config\w*-.+\)#': lambda session, logger: session.send_line('exit',
+                                                                                                                logger)}
+                                            )
 
             interface_config_actions = self.prepare_interface_config_commands(port_name=port_name, port_mode=port_mode,
                                                                               vlan_range=vlan_range, qnq=qnq)
@@ -93,11 +97,6 @@ class CiscoConnectivityOperations(ConnectivityOperations):
                     interface_config_actions['qnq'] = []
 
                 self.configure_vlan_on_interface(config_session, interface_config_actions)
-                config_session.send_command('',
-                                            action_map={
-                                                r'\(config\w*-.+\)#': lambda session: session.send_line('exit',
-                                                                                                        self.logger)
-                                            })
             result = session.send_command('show running-config interface {0}'.format(port_name))
             self.logger.info('Vlan configuration completed: \n{0}'.format(result))
 
