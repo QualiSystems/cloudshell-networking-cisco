@@ -4,8 +4,7 @@ from posixpath import join
 
 import re
 from cloudshell.cli.command_mode_helper import CommandModeHelper
-from cloudshell.networking.cisco.cisco_command_modes import get_session_type, EnableCommandMode, ConfigCommandMode
-from cloudshell.networking.cisco.cisco_run_command_operations import CommandModeContainer
+from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
 from cloudshell.networking.driver_helper import get_cli_connection_attributes
 from cloudshell.networking.operations.configuration_operations import ConfigurationOperations
 from cloudshell.shell.core.context_utils import get_attribute_by_name
@@ -65,7 +64,7 @@ class CiscoConfigurationOperations(ConfigurationOperations):
     def __init__(self, cli, api, logger, context):
         super(CiscoConfigurationOperations, self).__init__(logger, api, context)
         self._cli = cli
-        self._session_type = get_session_type(context)
+        self._session_type = get_session(context, None)
         self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
         self._connection_attributes = get_cli_connection_attributes(api, context)

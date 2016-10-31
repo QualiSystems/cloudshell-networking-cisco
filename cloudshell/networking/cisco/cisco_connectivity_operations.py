@@ -1,8 +1,8 @@
 from collections import OrderedDict
-from cloudshell.networking.cisco.cisco_command_modes import get_session_type
+from cloudshell.cli.command_mode_helper import CommandModeHelper
+from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
 from cloudshell.networking.driver_helper import get_cli_connection_attributes
 from cloudshell.shell.core.context_utils import get_resource_name
-from cloudshell.networking.cisco.cisco_run_command_operations import CommandModeContainer
 
 from cloudshell.networking.networking_utils import *
 from cloudshell.networking.operations.connectivity_operations import ConnectivityOperations
@@ -41,8 +41,9 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         self._logger = logger
         self.api = api
         self.resource_name = get_resource_name(context)
-        self.session_type = get_session_type(context)
-        self.connection_attributes = get_cli_connection_attributes(api, context)
+        self.session_type = get_session(context=context, api=api)
+        self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
+        self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
         self.supported_os = supported_os
 
     @property
@@ -77,10 +78,10 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         port_name = self.get_port_name(port)
         self.logger.info('Start vlan configuration: vlan {0}; interface {1}.'.format(vlan_range, port_name))
 
-        with self.cli.get_session(session_type=self.session_type, command_mode=CommandModeContainer.ENABLE_MODE,
-                                  connection_attrs=self.connection_attributes, logger=self.logger) as session:
+        with self.cli.get_session(new_sessions=self.session_type, command_mode=self._enable_mode,
+                                  logger=self.logger) as session:
 
-            with session.enter_mode(CommandModeContainer.CONFIG_MODE) as config_session:
+            with session.enter_mode(self._config_mode) as config_session:
                 self.configure_vlan(config_session, self.prepare_vlan_config_commands(vlan_range))
                 config_session.send_command('',
                                             action_map={
@@ -90,7 +91,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
             interface_config_actions = self.prepare_interface_config_commands(port_name=port_name, port_mode=port_mode,
                                                                               vlan_range=vlan_range, qnq=qnq)
-            with session.enter_mode(CommandModeContainer.CONFIG_MODE) as config_session:
+            with session.enter_mode(self._config_mode) as config_session:
                 if qnq:
                     if not _does_interface_support_qnq(config_session, port_name):
                         raise Exception('interface does not support QnQ')
@@ -113,8 +114,8 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         :rtype: string
         """
 
-        with self.cli.get_session(session_type=self.session_type, command_mode=CommandModeContainer.CONFIG_MODE,
-                                  connection_attrs=self.connection_attributes, logger=self.logger) as session:
+        with self.cli.get_session(new_sessions=self.session_type, command_mode=self._config_mode,
+                                  logger=self.logger) as session:
             self._load_vlan_command_templates()
             self.validate_vlan_methods_incoming_parameters(vlan_range, port, port_mode)
 

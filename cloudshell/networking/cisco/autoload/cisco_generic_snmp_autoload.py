@@ -3,8 +3,6 @@ import os
 
 from cloudshell.shell.core.driver_context import AutoLoadDetails
 from cloudshell.snmp.quali_snmp import QualiMibTable
-from cloudshell.networking.autoload.networking_autoload_resource_structure import Port, PortChannel, PowerPort, \
-    Chassis, Module
 from cloudshell.networking.autoload.networking_autoload_resource_attributes import NetworkingStandardRootAttributes
 from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
@@ -37,6 +35,12 @@ class CiscoGenericSNMPAutoload(object):
         self.module_exclude_pattern = r'cevsfp'
         self.resources = list()
         self.attributes = list()
+        self.port = None
+        self.power_port = None
+        self.port_channel = None
+        self.root_model = None
+        self.chassis = None
+        self.module = None
 
     def load_cisco_mib(self):
         path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'mibs'))
@@ -351,7 +355,7 @@ class CiscoGenericSNMPAutoload(object):
             if chassis_details_map['chassis_model'] == '':
                 chassis_details_map['chassis_model'] = self.entity_table[chassis]['entPhysicalDescr']
             relative_path = '{0}'.format(chassis_id)
-            chassis_object = Chassis(relative_path=relative_path, **chassis_details_map)
+            chassis_object = self.chassis(relative_path=relative_path, **chassis_details_map)
             self._add_resource(chassis_object)
             self.logger.info('Added ' + self.entity_table[chassis]['entPhysicalDescr'] + ' Chass')
         self.logger.info('Finished Loading Modules')
@@ -378,7 +382,7 @@ class CiscoGenericSNMPAutoload(object):
             else:
                 module_name = 'Sub Module {0}'.format(module_index)
                 model = 'Generic Sub Module'
-            module_object = Module(name=module_name, model=model, relative_path=module_id, **module_details_map)
+            module_object = self.module(name=module_name, model=model, relative_path=module_id, **module_details_map)
             self._add_resource(module_object)
 
             self.logger.info('Module {} added'.format(self.entity_table[module]['entPhysicalDescr']))
@@ -422,7 +426,7 @@ class CiscoGenericSNMPAutoload(object):
                             'version': self.snmp.get_property('ENTITY-MIB', 'entPhysicalHardwareRev', port),
                             'serial_number': self.snmp.get_property('ENTITY-MIB', 'entPhysicalSerialNum', port)
                             }
-            power_port_object = PowerPort(name=port_name, relative_path=relative_path, **port_details)
+            power_port_object = self.power_port(name=port_name, relative_path=relative_path, **port_details)
             self._add_resource(power_port_object)
 
             self.logger.info('Added ' + self.entity_table[port]['entPhysicalName'].strip(' \t\n\r') + ' Power Port')
@@ -450,7 +454,7 @@ class CiscoGenericSNMPAutoload(object):
             attribute_map = {'description': self.snmp.get_property('IF-MIB', 'ifAlias', key),
                              'associated_ports': self._get_associated_ports(key)}
             attribute_map.update(self._get_ip_interface_details(key))
-            port_channel = PortChannel(name=interface_model, relative_path=interface_id, **attribute_map)
+            port_channel = self.port_channel(name=interface_model, relative_path=interface_id, **attribute_map)
             self._add_resource(port_channel)
 
             self.logger.info('Added ' + interface_model + ' Port Channel')
@@ -495,7 +499,7 @@ class CiscoGenericSNMPAutoload(object):
                              'adjacent': self._get_adjacent(self.port_mapping[port])}
             attribute_map.update(self._get_interface_details(self.port_mapping[port]))
             attribute_map.update(self._get_ip_interface_details(self.port_mapping[port]))
-            port_object = Port(name=interface_name, relative_path=self.relative_path[port], **attribute_map)
+            port_object = self.port(name=interface_name, relative_path=self.relative_path[port], **attribute_map)
             self._add_resource(port_object)
             self.logger.info('Added ' + interface_name + ' Port')
         self.logger.info('Load port completed.')

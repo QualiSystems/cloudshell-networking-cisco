@@ -3,11 +3,8 @@ import time
 
 import inject
 from cloudshell.cli.command_mode_helper import CommandModeHelper
-from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE, CONNECTION_MANAGER
-from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode
 from cloudshell.networking.operations.state_operations import StateOperations
-from cloudshell.shell.core.context_utils import get_resource_name
 
 
 class CiscoStateOperations(StateOperations):

@@ -1,6 +1,6 @@
 import re
 from cloudshell.cli.command_mode_helper import CommandModeHelper
-from cloudshell.networking.cisco.cisco_command_modes import get_session_type, EnableCommandMode, ConfigCommandMode
+from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
 from cloudshell.networking.driver_helper import get_cli_connection_attributes, get_api
 from cloudshell.shell.core.context_utils import get_resource_name
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
@@ -31,14 +31,14 @@ def _remove_old_boot_system_config(session):
 
 
 class CiscoFirmwareOperations(FirmwareOperationsInterface):
-    def __init__(self, cli, logger, context):
+    def __init__(self, cli, logger, api, context):
         self._cli = cli
         self._logger = logger
+        self._api = api
         self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
         self._resource_name = get_resource_name(context)
-        self._session_type = get_session_type(context)
-        self._connection_attributes = get_cli_connection_attributes(context=context, api=get_api(context))
+        self._session_type = get_session(context=context, api=api)
 
     def load_firmware(self, path, vrf_management_name=None):
         """Update firmware version on device by loading provided image, performs following steps:
