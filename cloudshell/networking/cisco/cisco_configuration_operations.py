@@ -5,7 +5,6 @@ from posixpath import join
 import re
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
-from cloudshell.networking.driver_helper import get_cli_connection_attributes
 from cloudshell.networking.operations.configuration_operations import ConfigurationOperations
 from cloudshell.shell.core.context_utils import get_attribute_by_name
 
@@ -43,15 +42,15 @@ def configure_replace(current_session, logger, source_filename, timeout=30, vrf=
     if not source_filename:
         raise Exception('Cisco IOS', "No source filename provided for config replace method!")
     command = 'configure replace ' + source_filename
-    expected_map = {
-        '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
-        '\(y\/n\)': lambda session: session.send_line('y'),
-        '[\[\(][Nn]o[\)\]]': lambda session: session.send_line('y'),
-        '[\[\(][Yy]es[\)\]]': lambda session: session.send_line('y'),
-        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y'),
-        'overwrit+e': lambda session: session.send_line('yes')
+    action_map = {
+        '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),
+        '\(y\/n\)': lambda session, logger: session.send_line('y', logger),
+        '[\[\(][Nn]o[\)\]]': lambda session, logger: session.send_line('y', logger),
+        '[\[\(][Yy]es[\)\]]': lambda session, logger: session.send_line('y', logger),
+        '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger),
+        'overwrit+e': lambda session, logger: session.send_line('yes', logger)
     }
-    output = current_session.send_command(command=command, expected_map=expected_map, timeout=timeout)
+    output = current_session.send_command(command=command, action_map=action_map, timeout=timeout)
     match_error = re.search(r'[Ee]rror:', output)
     if match_error is not None:
         error_str = output[match_error.end() + 1:] + '\n'
@@ -64,10 +63,9 @@ class CiscoConfigurationOperations(ConfigurationOperations):
     def __init__(self, cli, api, logger, context):
         super(CiscoConfigurationOperations, self).__init__(logger, api, context)
         self._cli = cli
-        self._session_type = get_session(context, None)
+        self._session_type = get_session(api=api, context=context)
         self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
-        self._connection_attributes = get_cli_connection_attributes(api, context)
 
     def save(self, folder_path, configuration_type=None, vrf_management_name=None):
         """Backup 'startup-config' or 'running-config' from device to provided file_system [ftp|tftp]
@@ -92,8 +90,8 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         self._logger.info('destination filename is {0}'.format(destination_filename))
 
         destination_file = join(full_path, destination_filename)
-        with self._cli.get_session(session_type=self._session_type, command_mode=self._enable_mode,
-                                   connection_attrs=self._connection_attributes, logger=self._logger) as session:
+        with self._cli.get_session(new_sessions=self._session_type, command_mode=self._enable_mode,
+                                   logger=self._logger) as session:
             is_uploaded = self.copy(current_session=session, logger=self._logger, source_file=source_filename,
                                     destination_file=destination_file, vrf=vrf_management_name)
 
@@ -131,11 +129,11 @@ class CiscoConfigurationOperations(ConfigurationOperations):
 
         if path == '':
             raise Exception('Cisco OS', "Source Path is empty.")
-        with self._cli.get_session(session_type=self._session_type, command_mode=self._enable_mode,
-                                   connection_attrs=self._connection_attributes, logger=self._logger) as session:
+        with self._cli.get_session(new_sessions=self._session_type, command_mode=self._enable_mode,
+                                   logger=self._logger) as session:
             if (restore_method == 'override') and (destination_filename == 'startup-config'):
                 session.send_command(command='del nvram:' + destination_filename,
-                                     expected_map=OrderedDict(
+                                     action_map=OrderedDict(
                                          {'[Dd]elete [Ff]ilename '.format(destination_filename): lambda
                                              session, logger: session.send_line(destination_filename, logger),
                                           '[confirm]': lambda session, logger: session.send_line('', logger),
@@ -169,32 +167,31 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         """
 
         host = None
-        expected_map = OrderedDict()
-        expected_map[r'\[confirm\]'] = lambda session: session.send_line('')
-        expected_map[r'\(y/n\)'] = lambda session: session.send_line('y')
-        expected_map[r'[Oo]verwrit+e'] = lambda session: session.send_line('y')
-        expected_map[r'\([Yy]es/[Nn]o\)'] = lambda session: session.send_line('yes')
-        expected_map[r'\?'] = lambda session: session.send_line('')
-        expected_map[r'bytes'] = lambda session: session.send_line('')
-        expected_map[r'\s+[Vv][Rr][Ff]\s+'] = lambda session: session.send_line('')
+        action_map = OrderedDict()
+        action_map[r'\[confirm\]'] = lambda session, logger: session.send_line('', logger)
+        action_map[r'\(y/n\)'] = lambda session, logger: session.send_line('y', logger)
+        action_map[r'[Oo]verwrit+e'] = lambda session, logger: session.send_line('y', logger)
+        action_map[r'\([Yy]es/[Nn]o\)'] = lambda session, logger: session.send_line('yes', logger)
+        # action_map[r'bytes'] = lambda session, logger: session.send_line('', logger)
+        action_map[r'\s+[Vv][Rr][Ff]\s+'] = lambda session, logger: session.send_line('', logger)
 
         if '://' in source_file:
             source_file_data_list = re.sub('/+', '/', source_file).split('/')
             host = source_file_data_list[1]
             destination_file_name = destination_file.split(':')[-1].split('/')[-1]
-            expected_map[r'[^/]{}'.format(source_file_data_list[-1])] = lambda session: session.send_line('')
-            expected_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session: session.send_line('')
+            action_map[r'(?!/){}'.format(source_file_data_list[-1])] = lambda session, logger: session.send_line('', logger)
+            action_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session, logger: session.send_line('', logger)
         elif '://' in destination_file:
             destination_file_data_list = re.sub('/+', '/', destination_file).split('/')
             host = destination_file_data_list[1]
             source_file_name = source_file.split(':')[-1].split('/')[-1]
-            expected_map[r'[^/]{}'.format(destination_file_data_list[-1])] = lambda session: session.send_line('')
-            expected_map[r'[^/]{}'.format(source_file_name)] = lambda session: session.send_line('')
+            action_map[r'[\[\(]{}[\)\]]'.format(destination_file_data_list[-1])] = lambda session, logger: session.send_line('', logger)
+            action_map[r'(?!/){}'.format(source_file_name)] = lambda session, logger: session.send_line('', logger)
         else:
             destination_file_name = destination_file.split(':')[-1].split('/')[-1]
             source_file_name = source_file.split(':')[-1].split('/')[-1]
-            expected_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session: session.send_line('')
-            expected_map[r'[\[\(]{}[\)\]]'.format(source_file_name)] = lambda session: session.send_line('')
+            action_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session, logger: session.send_line('', logger)
+            action_map[r'[\[\(]{}[\)\]]'.format(source_file_name)] = lambda session, logger: session.send_line('', logger)
 
         if host:
             if '@' in host:
@@ -202,17 +199,19 @@ class CiscoConfigurationOperations(ConfigurationOperations):
                 if storage_data:
                     host = storage_data.groupdict()['host']
                     password = storage_data.groupdict()['password']
-                    expected_map[r'[Pp]assword:'.format(source_file)] = lambda session: session.send_line(password)
+                    action_map[r'[Pp]assword:'.format(source_file)] = lambda session, logger: session.send_line(
+                        password, logger)
                 else:
                     host = host.split('@')[-1]
-            expected_map[r"[^/]{}(?!/)".format(host)] = lambda session: session.send_line('')
+            action_map[r"(?!/){}(?!/)".format(host)] = lambda session, logger: session.send_line('', logger)
+
+        action_map[r'\?'] = lambda session, logger: session.send_line('', logger)
 
         copy_command_str = 'copy {0} {1}'.format(source_file, destination_file)
         if vrf:
             copy_command_str += ' vrf {}'.format(vrf)
 
-        output = current_session.send_command(command=copy_command_str, expected_map=expected_map, timeout=60)
-        output += current_session.send_command('')
+        output = current_session.send_command(command=copy_command_str, action_map=action_map, timeout=60)
 
         return CiscoConfigurationOperations._check_download_from_tftp(logger=logger, output=output)
 

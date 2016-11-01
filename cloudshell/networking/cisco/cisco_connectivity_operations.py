@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
-from cloudshell.networking.driver_helper import get_cli_connection_attributes
 from cloudshell.shell.core.context_utils import get_resource_name
 
 from cloudshell.networking.networking_utils import *
@@ -83,11 +82,6 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
             with session.enter_mode(self._config_mode) as config_session:
                 self.configure_vlan(config_session, self.prepare_vlan_config_commands(vlan_range))
-                config_session.send_command('',
-                                            action_map={
-                                                r'\(config\w*-.+\)#': lambda session, logger: session.send_line('exit',
-                                                                                                                logger)}
-                                            )
 
             interface_config_actions = self.prepare_interface_config_commands(port_name=port_name, port_mode=port_mode,
                                                                               vlan_range=vlan_range, qnq=qnq)

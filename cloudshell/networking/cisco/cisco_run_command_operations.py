@@ -17,7 +17,7 @@ class CiscoRunCommandOperations(RunCommandInterface):
         self.cli = cli
         self.logger = logger
         self.resource_name = get_resource_name(context)
-        self.session_type = get_session(api, context)
+        self.session_type = get_session(api=api, context=context)
         self._default_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
 
@@ -40,8 +40,8 @@ class CiscoRunCommandOperations(RunCommandInterface):
             mode = self._default_mode
 
         response = ''
-        with self.cli.get_session(self.session_type, mode,
-                                  self.logger) as default_session:
+        with self.cli.get_session(new_sessions=self.session_type, command_mode=mode,
+                                  logger=self.logger) as default_session:
             if isinstance(custom_command, str):
                 commands = [custom_command]
             elif isinstance(custom_command, tuple):

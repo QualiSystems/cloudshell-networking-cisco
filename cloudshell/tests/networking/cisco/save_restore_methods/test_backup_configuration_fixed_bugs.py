@@ -2,11 +2,19 @@ from unittest import TestCase
 from mock import MagicMock
 import re
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
+from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 from cloudshell.tests.networking.cisco.save_restore_methods.test_copy_output import TEST_COPY_OUTPUT
 
 
 class TestCiscoHandlerBase(TestCase):
     output = ''
+    context = ResourceCommandContext()
+    context.resource = ResourceContextDetails()
+    context.resource.name = 'dsada'
+    context.reservation = ReservationContextDetails()
+    context.reservation.reservation_id = 'c3b410cb-70bd-4437-ae32-15ea17c33a74'
+    context.resource.attributes = dict()
+    context.resource.name = '2950'
 
     def return_output(self, *args, **kwargs):
         result = self.output
@@ -18,7 +26,7 @@ class TestCiscoHandlerBase(TestCase):
         self.snmp = MagicMock()
         self.api = MagicMock()
         self.logger = MagicMock()
-        return CiscoConfigurationOperations(cli=self.cli, logger=self.logger, api=self.api, resource_name='resource_name')
+        return CiscoConfigurationOperations(cli=self.cli, logger=self.logger, api=self.api, context=self.context)
 
     def test_save_raises_exception(self):
         #output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'

@@ -13,13 +13,14 @@ class DefaultCommandMode(CommandMode):
 
     def __init__(self, context):
         self._context = context
-        CommandMode.__init__(self, EnableCommandMode.PROMPT, EnableCommandMode.ENTER_COMMAND,
-                             EnableCommandMode.EXIT_COMMAND)
+        CommandMode.__init__(self, DefaultCommandMode.PROMPT, DefaultCommandMode.ENTER_COMMAND,
+                             DefaultCommandMode.EXIT_COMMAND)
 
 
 class EnableCommandMode(CommandMode):
-    PROMPT = r'#\s*$'
-    ENTER_COMMAND = ''
+    PROMPT = r'(?:(?!\)).)#\s*$'
+    # PROMPT = r'#\s*$'
+    ENTER_COMMAND = 'enable'
     EXIT_COMMAND = ''
 
     def __init__(self, context):
@@ -34,7 +35,7 @@ class ConfigCommandMode(CommandMode):
 
     def __init__(self, context):
         exit_action_map = {
-            r'\(config\w*-.+\)#': lambda session, logger: session.send_line('exit', logger)}
+            self.PROMPT: lambda session, logger: session.send_line('exit', logger)}
         CommandMode.__init__(self, ConfigCommandMode.PROMPT,
                              ConfigCommandMode.ENTER_COMMAND,
                              ConfigCommandMode.EXIT_COMMAND,
@@ -58,7 +59,7 @@ def get_session(context, api):
     host = get_resource_address(context)
     username = get_attribute_by_name(context=context, attribute_name='User')
     port = get_attribute_by_name(context=context, attribute_name='CLI TCP Port')
-    password = decrypt_password_from_attribute(api, 'Password', context)
+    password = decrypt_password_from_attribute(api=api, password_attribute_name='Password', context=context)
     default_actions = DefaultActions(context, api).send_actions
     telnet_session = TelnetSession(host=host, port=port, username=username, password=password,
                                    on_session_start=default_actions)
@@ -82,6 +83,7 @@ class DefaultActions(object):
 
         self.enter_enable_mode(session=session, logger=logger)
         session.hardware_expect('terminal length 0', EnableCommandMode.PROMPT, logger)
+        session.hardware_expect('terminal width 200', EnableCommandMode.PROMPT, logger)
         session.hardware_expect('terminal no exec prompt timestamp', EnableCommandMode.PROMPT, logger)
         session.hardware_expect(ConfigCommandMode.ENTER_COMMAND, ConfigCommandMode.PROMPT, logger)
         session.hardware_expect('no logging console', ConfigCommandMode.PROMPT, logger)
@@ -89,12 +91,12 @@ class DefaultActions(object):
 
     def enter_enable_mode(self, session, logger):
         result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT), logger)
-        expect_map = {'[Pp]assword': lambda session: session.send_line(
-            decrypt_password_from_attribute(api=self._api,
-                                            password_attribute_name='Enable Password',
-                                            context=self._context))}
+        enable_password = decrypt_password_from_attribute(api=self._api,
+                                                          password_attribute_name='Enable Password',
+                                                          context=self._context)
+        expect_map = {'[Pp]assword': lambda session, logger: session.send_line(enable_password, logger)}
         if not re.search(EnableCommandMode.PROMPT, result):
-            session.hardware_expect('enable', DefaultCommandMode.PROMPT, action_map=expect_map, logger=logger)
+            session.hardware_expect('enable', EnableCommandMode.PROMPT, action_map=expect_map, logger=logger)
             result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
                                              logger)
             if not re.search(EnableCommandMode.PROMPT, result):
