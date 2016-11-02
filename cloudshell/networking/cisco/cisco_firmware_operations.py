@@ -1,7 +1,6 @@
 import re
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
-from cloudshell.networking.driver_helper import get_cli_connection_attributes, get_api
 from cloudshell.shell.core.context_utils import get_resource_name
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 from cloudshell.networking.cisco.cisco_state_operations import CiscoStateOperations
@@ -35,6 +34,7 @@ class CiscoFirmwareOperations(FirmwareOperationsInterface):
         self._cli = cli
         self._logger = logger
         self._api = api
+        self._context = context
         self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
         self._resource_name = get_resource_name(context)
@@ -69,8 +69,8 @@ class CiscoFirmwareOperations(FirmwareOperationsInterface):
                                 Current path: {}".format(file_name))
         firmware_full_name = firmware_obj.get_name() + '.' + firmware_obj.get_extension()
         output_version = ''
-        with self._cli.get_session(session_type=self._session_type, command_mode=self._enable_mode,
-                                   connection_attrs=self._connection_attributes, logger=self._logger) as session:
+        with self._cli.get_session(new_sessions=self._session_type, command_mode=self._enable_mode,
+                                   logger=self._logger) as session:
             is_downloaded = CiscoConfigurationOperations.copy(current_session=session, logger=self._logger,
                                                               source_file=path,
                                                               destination_file='bootflash:/{}'.format(file_name),
@@ -103,7 +103,9 @@ class CiscoFirmwareOperations(FirmwareOperationsInterface):
             session.send_command(command='copy run start',
                                            expected_map={'\?': lambda session: session.send_line('')})
 
-            # is_reloaded = self.reload(session, self.logger)
+        is_reloaded = self.reload()
+        with self._cli.get_session(new_sessions=self._session_type, command_mode=self._enable_mode,
+                                   logger=self._logger) as session:
             output_version = session.send_command(command='show version | include image file')
 
         is_firmware_installed = output_version.find(firmware_full_name)
@@ -112,9 +114,10 @@ class CiscoFirmwareOperations(FirmwareOperationsInterface):
         else:
             raise Exception('CiscoFirmwareOperations', 'Update firmware failed!')
 
-    @staticmethod
-    def reload(session, logger, sleep_timeout=60, retries=15):
-        return CiscoStateOperations.reload(session, logger=logger, sleep_timeout=sleep_timeout, retries=retries)
+    def reload(self, sleep_timeout=60, retries=15):
+        state_operations = CiscoStateOperations(cli=self._cli, api=self._api,
+                                                context=self._context, logger=self._logger)
+        return state_operations.reload(sleep_timeout=sleep_timeout, retries=retries)
 
     # def _get_free_memory_size(self, partition):
     #     """Get available memory size on provided partition

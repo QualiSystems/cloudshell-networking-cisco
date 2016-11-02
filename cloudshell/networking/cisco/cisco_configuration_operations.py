@@ -69,6 +69,13 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
 
     def save_configuration(self, folder_path, configuration_type=None, vrf_management_name=None):
+        """Proxy method for Save command, to modify output according to networking standard
+
+        :param folder_path:  tftp/ftp server where file be saved
+        :param configuration_type: type of configuration that will be saved (StartUp or Running)
+        :param vrf_management_name: Virtual Routing and Forwarding management nam
+        :return:
+        """
         response = self.save(folder_path, configuration_type, vrf_management_name)
         return response.identifier.split('/')[-1]
 

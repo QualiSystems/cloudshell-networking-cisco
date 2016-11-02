@@ -35,6 +35,15 @@ def send_config_command_list(session, command_list, expected_map=None):
 
 class CiscoConnectivityOperations(ConnectivityOperations):
     def __init__(self, cli, logger, api, context, supported_os):
+        """
+        Handle add/remove vlan flows
+
+        :param cli:
+        :param logger:
+        :param api:
+        :param context:
+        :param supported_os:
+        """
         ConnectivityOperations.__init__(self)
         self.cli = cli
         self._logger = logger
