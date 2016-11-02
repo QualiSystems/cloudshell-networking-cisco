@@ -7,6 +7,7 @@ from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
 from cloudshell.networking.operations.configuration_operations import ConfigurationOperations
 from cloudshell.shell.core.context_utils import get_attribute_by_name
+from cloudshell.shell.core.interfaces.save_restore import OrchestrationSavedArtifact
 
 
 def _get_time_stamp():
@@ -67,6 +68,10 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
 
+    def save_configuration(self, folder_path, configuration_type=None, vrf_management_name=None):
+        response = self.save(folder_path, configuration_type, vrf_management_name)
+        return response.identifier.split('/')[-1]
+
     def save(self, folder_path, configuration_type=None, vrf_management_name=None):
         """Backup 'startup-config' or 'running-config' from device to provided file_system [ftp|tftp]
         Also possible to backup config to localhost
@@ -97,7 +102,9 @@ class CiscoConfigurationOperations(ConfigurationOperations):
 
         if is_uploaded[0] is True:
             self._logger.info('Save configuration completed.')
-            return destination_filename
+            identifier = destination_file
+            artifact_type = full_path.split(':')[0]
+            return OrchestrationSavedArtifact(identifier=identifier, artifact_type=artifact_type)
         else:
             self._logger.info('Save configuration failed with errors: {0}'.format(is_uploaded[1]))
             raise Exception(is_uploaded[1])

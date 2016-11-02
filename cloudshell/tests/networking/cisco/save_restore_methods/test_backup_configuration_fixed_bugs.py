@@ -1,47 +1,43 @@
 from unittest import TestCase
-from mock import MagicMock
+from mock import MagicMock, patch
 import re
+import cloudshell.cli.session.telnet_session
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 from cloudshell.tests.networking.cisco.save_restore_methods.test_copy_output import TEST_COPY_OUTPUT
 
 
-class TestCiscoHandlerBase(TestCase):
-    output = ''
-    context = ResourceCommandContext()
-    context.resource = ResourceContextDetails()
-    context.resource.name = 'dsada'
-    context.reservation = ReservationContextDetails()
-    context.reservation.reservation_id = 'c3b410cb-70bd-4437-ae32-15ea17c33a74'
-    context.resource.attributes = dict()
-    context.resource.name = '2950'
-
-    def return_output(self, *args, **kwargs):
-        result = self.output
-        self.output = ''
-        return result
-
-    def _get_handler(self):
-        self.cli = MagicMock()
-        self.snmp = MagicMock()
-        self.api = MagicMock()
-        self.logger = MagicMock()
-        return CiscoConfigurationOperations(cli=self.cli, logger=self.logger, api=self.api, context=self.context)
+class TestCiscoConfigurationOperations(TestCase):
+    def _get_handler(self, output):
+        cli = MagicMock()
+        session = MagicMock()
+        session.send_command.return_value = output
+        cliservice = MagicMock()
+        cliservice.__enter__.return_value = session
+        cli.get_session.return_value = cliservice
+        #cli.return_value.get_session.return_value = session
+        api = MagicMock()
+        logger = MagicMock()
+        context = ResourceCommandContext()
+        context.resource = ResourceContextDetails()
+        context.resource.name = 'resource_name'
+        context.reservation = ReservationContextDetails()
+        context.reservation.reservation_id = 'c3b410cb-70bd-4437-ae32-15ea17c33a74'
+        context.resource.attributes = dict()
+        context.resource.attributes['CLI Connection Type'] = 'Telnet'
+        context.resource.attributes['Sessions Concurrency Limit'] = '1'
+        return CiscoConfigurationOperations(cli=cli, logger=logger, api=api, context=context)
 
     def test_save_raises_exception(self):
         #output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         output = '%Error opening tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
-        handler = self._get_handler()
-        handler.cli.send_command = MagicMock(return_value=output)
+        handler = self._get_handler(output)
         self.assertRaises(Exception, handler.save, 'tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/')
 
     def test_save_raises_exception_error_message(self):
         # output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         output = '%Error opening tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
-        self.output = output
-        handler = self._get_handler()
-        handler.cli.send_command = MagicMock
-        handler.cli.send_command = self.return_output
+        handler = self._get_handler(output)
         try:
             handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/')
         except Exception as e:
@@ -55,10 +51,7 @@ class TestCiscoHandlerBase(TestCase):
         Trying to connect to tftp server......
         Connection to Server Established.
         TFTP put operation failed:Access violation'''
-        self.output = output
-        handler = self._get_handler()
-        handler.cli.send_command = MagicMock
-        handler.cli.send_command = self.return_output
+        handler = self._get_handler(output)
         try:
             handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/')
         except Exception as e:
@@ -82,11 +75,10 @@ class TestCiscoHandlerBase(TestCase):
          TFTP put operation was successful
          Copy complete, now saving to disk (please wait)...
          N5K-L3-Sw1#"""
-        handler = self._get_handler()
+        handler = self._get_handler(output)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        handler.cli.send_command = MagicMock(return_value=output)
-        responce = handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
+        responce = handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
@@ -107,11 +99,10 @@ class TestCiscoHandlerBase(TestCase):
          Copy complete, now saving to disk (please wait)...
 
         N6K-Sw1-S1#"""
-        handler = self._get_handler()
+        handler = self._get_handler(output)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        handler.cli.send_command = MagicMock(return_value=output)
-        responce = handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
+        responce = handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
@@ -125,8 +116,7 @@ class TestCiscoHandlerBase(TestCase):
         .....
         %Error opening tftp://10.10.10.10/ASR1004-2-running-100516-084841 (Timed out)
         ASR1004-2#"""
-        handler = self._get_handler()
-        handler.cli.send_command = MagicMock(return_value=output)
+        handler = self._get_handler(output)
         self.assertRaises(Exception, handler.save, 'tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
                           'running')
 
@@ -139,11 +129,10 @@ class TestCiscoHandlerBase(TestCase):
         !!
         23518 bytes copied in 0.904 secs (26015 bytes/sec)
         C6504e-1-CE7#"""
-        handler = self._get_handler()
+        handler = self._get_handler(output)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        handler.cli.send_command = MagicMock(return_value=output)
-        responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+        responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
@@ -158,11 +147,10 @@ class TestCiscoHandlerBase(TestCase):
         [OK - 1811552 bytes]
         1811552 bytes copied in 53.511 secs (34180 bytes/sec)
         C6504e-1-CE7#"""
-        handler = self._get_handler()
+        handler = self._get_handler(output)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        handler.cli.send_command = MagicMock(return_value=output)
-        responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+        responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
@@ -172,9 +160,8 @@ class TestCiscoHandlerBase(TestCase):
         config_type = 'running'
         output = TEST_COPY_OUTPUT.replace('Copy complete, now saving to disk (please wait)...', '')
 
-        handler = self._get_handler()
+        handler = self._get_handler(output)
         handler._resource_name = resource_name
-        handler.cli.send_command = MagicMock(return_value=output)
         try:
             responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                     config_type, 'management')
@@ -187,12 +174,10 @@ class TestCiscoHandlerBase(TestCase):
         config_type = 'running'
         output = TEST_COPY_OUTPUT
         self.output = output
-        handler = self._get_handler()
-        handler.cli.send_command = MagicMock
-        handler.cli.send_command = self.return_output
+        handler = self._get_handler(output)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+        responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
@@ -205,7 +190,6 @@ class TestCiscoHandlerBase(TestCase):
                 "vrf_management_name": "network-1"
                 }
         }"""
-        handler = self._get_handler()
-        handler.cli.send_command = MagicMock(return_value='Copy complete, now saving to disk (please wait)...')
+        handler = self._get_handler('Copy complete, now saving to disk (please wait)...')
         json_string = handler.orchestration_save(custom_params=request)
         print json_string
