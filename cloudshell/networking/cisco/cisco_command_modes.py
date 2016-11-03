@@ -12,6 +12,11 @@ class DefaultCommandMode(CommandMode):
     EXIT_COMMAND = ''
 
     def __init__(self, context):
+        """
+        Initialize Default command mode, only for cases when session started not in enable mode
+
+        :param context:
+        """
         self._context = context
         CommandMode.__init__(self, DefaultCommandMode.PROMPT, DefaultCommandMode.ENTER_COMMAND,
                              DefaultCommandMode.EXIT_COMMAND)
@@ -21,10 +26,16 @@ class EnableCommandMode(CommandMode):
     PROMPT = r'(?:(?!\)).)#\s*$'
     # PROMPT = r'#\s*$'
     ENTER_COMMAND = 'enable'
-    EXIT_COMMAND = ''
+    EXIT_COMMAND = 'disable'
 
     def __init__(self, context):
+        """
+        Initialize Enable command mode - default command mode for Cisco Shells
+
+        :param context:
+        """
         self._context = context
+
         CommandMode.__init__(self, EnableCommandMode.PROMPT, EnableCommandMode.ENTER_COMMAND,
                              EnableCommandMode.EXIT_COMMAND)
 
@@ -34,15 +45,17 @@ class ConfigCommandMode(CommandMode):
     EXIT_COMMAND = 'exit'
 
     def __init__(self, context):
+        """
+        Initialize Config command mode
+
+        :param context:
+        """
         exit_action_map = {
             self.PROMPT: lambda session, logger: session.send_line('exit', logger)}
         CommandMode.__init__(self, ConfigCommandMode.PROMPT,
                              ConfigCommandMode.ENTER_COMMAND,
                              ConfigCommandMode.EXIT_COMMAND,
                              exit_action_map=exit_action_map)
-
-    def default_actions(self, cli_operations):
-        pass
 
 
 CommandMode.RELATIONS_DICT = {
@@ -55,6 +68,13 @@ CommandMode.RELATIONS_DICT = {
 
 
 def get_session(context, api):
+    """
+    Creates session object from context.
+
+    :param context:
+    :param api:
+    :return:
+    """
     str_session = get_attribute_by_name(context=context, attribute_name='CLI Connection Type')
     host = get_resource_address(context)
     username = get_attribute_by_name(context=context, attribute_name='User')
@@ -73,6 +93,11 @@ def get_session(context, api):
 
 class DefaultActions(object):
     def __init__(self, context, api):
+        """
+
+        :param context:
+        :param api:
+        """
         self._context = context
         self._api = api
 
@@ -90,6 +115,13 @@ class DefaultActions(object):
         session.hardware_expect('exit', EnableCommandMode.PROMPT, logger)
 
     def enter_enable_mode(self, session, logger):
+        """
+        Enter enable mode
+
+        :param session:
+        :param logger:
+        :raise Exception:
+        """
         result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT), logger)
         enable_password = decrypt_password_from_attribute(api=self._api,
                                                           password_attribute_name='Enable Password',
