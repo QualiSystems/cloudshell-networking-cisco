@@ -19,45 +19,30 @@ def _get_time_stamp():
 
 
 def _validate_restore_method(restore_method):
+    """Validate restore method.
+
+    :param str restore_method: possible values: override, append
+    :return: :raise Exception:
+    """
     restore_method = restore_method or "override"
     if not re.search('append|override', restore_method.lower()):
-        raise Exception("Cisco OS",
+        raise Exception("validate_restore_method",
                         "Restore method '{}' is wrong! Use 'Append' or 'Override'".format(restore_method))
 
     return restore_method.lower()
 
 
 def _validate_configuration_type(configuration_type):
+    """Validate configuration type.
+
+    :param str configuration_type: configuration_type, should contain Running* or Startup*
+    :return: :raise Exception:
+    """
     configuration_type = configuration_type or "running"
     if not re.search("startup|running", configuration_type, re.IGNORECASE):
-        raise Exception("Configuration type must be 'Running' or 'Startup'!")
+        raise Exception("validate_configuration_type", "Configuration type must be 'Running' or 'Startup'!")
 
     return configuration_type.lower()
-
-
-def configure_replace(current_session, logger, source_filename, timeout=30, vrf=None):
-    """Replace config on target device with specified one
-    :param source_filename: full path to the file which will replace current running-config
-    :param timeout: period of time code will wait for replace to finish
-    """
-    if not source_filename:
-        raise Exception('Cisco IOS', "No source filename provided for config replace method!")
-    command = 'configure replace ' + source_filename
-    action_map = {
-        '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),
-        '\(y\/n\)': lambda session, logger: session.send_line('y', logger),
-        '[\[\(][Nn]o[\)\]]': lambda session, logger: session.send_line('y', logger),
-        '[\[\(][Yy]es[\)\]]': lambda session, logger: session.send_line('y', logger),
-        '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger),
-        'overwrit+e': lambda session, logger: session.send_line('yes', logger)
-    }
-    output = current_session.send_command(command=command, action_map=action_map, timeout=timeout)
-    match_error = re.search(r'[Ee]rror:', output)
-    if match_error is not None:
-        error_str = output[match_error.end() + 1:] + '\n'
-        error_str += error_str[:error_str.find('\n')]
-        logger.error('Configure replace completed with error: ' + error_str)
-        raise Exception('Cisco IOS', 'Configure replace completed with error: ' + error_str)
 
 
 class CiscoConfigurationOperations(ConfigurationOperations):
@@ -81,7 +66,8 @@ class CiscoConfigurationOperations(ConfigurationOperations):
 
     def save(self, folder_path, configuration_type=None, vrf_management_name=None):
         """Backup 'startup-config' or 'running-config' from device to provided file_system [ftp|tftp]
-        Also possible to backup config to localhost
+        Also possible to backup config to localhost.
+
         :param folder_path:  tftp/ftp server where file be saved
         :param configuration_type: type of configuration that will be saved (StartUp or Running)
         :param vrf_management_name: Virtual Routing and Forwarding management name
@@ -114,12 +100,12 @@ class CiscoConfigurationOperations(ConfigurationOperations):
             return OrchestrationSavedArtifact(identifier=identifier, artifact_type=artifact_type)
         else:
             self._logger.info('Save configuration failed with errors: {0}'.format(is_uploaded[1]))
-            raise Exception(is_uploaded[1])
+            raise Exception('CiscoConfigurationOperations', is_uploaded[1])
 
     def restore(self, path, configuration_type=None, restore_method=None, vrf_management_name=None):
-        # def restore_configuration(self, source_file, config_type, restore_method='override', vrf=None):
         """Restore configuration on device from provided configuration file
         Restore configuration from local file system or ftp/tftp server into 'running-config' or 'startup-config'.
+
         :param path: relative path to the file on the remote host tftp://server/sourcefile
         :param configuration_type: the configuration type to restore (StartUp or Running)
         :param restore_method: override current config or not
@@ -142,7 +128,7 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         self._logger.info('Restore device configuration from {}'.format(path))
 
         if path == '':
-            raise Exception('Cisco OS', "Source Path is empty.")
+            raise Exception('CiscoConfigurationOperations', "Source Path is empty.")
         with self._cli.get_session(new_sessions=self._session_type, command_mode=self._enable_mode,
                                    logger=self._logger) as session:
             if (restore_method == 'override') and (destination_filename == 'startup-config'):
@@ -152,28 +138,59 @@ class CiscoConfigurationOperations(ConfigurationOperations):
                                              session, logger: session.send_line(destination_filename, logger),
                                           '[confirm]': lambda session, logger: session.send_line('', logger),
                                           '\?': lambda session, logger: session.send_line('', logger)}))
-                is_uploaded = self.copy(current_session=session, logger=self._logger, source_file=path,
-                                        destination_file=destination_filename, vrf=vrf_management_name)
+                is_uploaded = CiscoConfigurationOperations.copy(current_session=session, logger=self._logger,
+                                                                source_file=path,
+                                                                destination_file=destination_filename,
+                                                                vrf=vrf_management_name)
             elif (restore_method == 'override') and (destination_filename == 'running-config'):
 
                 if not self._check_replace_command(output=session.send_command('configure replace')):
-                    raise Exception('Overriding running-config is not supported for this device.')
+                    raise Exception('CiscoConfigurationOperations',
+                                    'Overriding running-config is not supported for this device.')
 
-                configure_replace(current_session=session, logger=self._logger, source_filename=path, timeout=600,
-                                  vrf=vrf_management_name)
+                self.configure_replace(current_session=session, source_filename=path, timeout=600)
                 is_uploaded = (True, '')
             else:
-                is_uploaded = self.copy(current_session=session, logger=self._logger, source_file=path,
-                                        destination_file=destination_filename, vrf=vrf_management_name)
+                is_uploaded = CiscoConfigurationOperations.copy(current_session=session, logger=self._logger,
+                                                                source_file=path,
+                                                                destination_file=destination_filename,
+                                                                vrf=vrf_management_name)
 
         if is_uploaded[0] is True:
             return 'Restore configuration completed.'
         else:
-            raise Exception('Cisco OS', is_uploaded[1])
+            raise Exception('CiscoConfigurationOperations', is_uploaded[1])
+
+    def configure_replace(self, current_session, source_filename, timeout=30):
+        """Replace config on target device with specified one.
+
+        :param source_filename: full path to the file which will replace current running-config
+        :param timeout: period of time code will wait for replace to finish
+        """
+
+        if not source_filename:
+            raise Exception('CiscoConfigurationOperations', "No source filename provided for config replace method!")
+        command = 'configure replace ' + source_filename
+        action_map = {
+            '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),
+            '\(y\/n\)': lambda session, logger: session.send_line('y', logger),
+            '[\[\(][Nn]o[\)\]]': lambda session, logger: session.send_line('y', logger),
+            '[\[\(][Yy]es[\)\]]': lambda session, logger: session.send_line('y', logger),
+            '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger),
+            'overwrit+e': lambda session, logger: session.send_line('yes', logger)
+        }
+        output = current_session.send_command(command=command, action_map=action_map, timeout=timeout)
+        match_error = re.search(r'[Ee]rror.*$|[Rr]ollback\s*[Dd]one|(?<=%).*(not.*|in)valid.*(?=\n)', output)
+        if match_error:
+            error_str = match_error.group()
+            if 'rollback' in error_str.lower():
+                error_str = 'Restore failed, ' + error_str
+            raise Exception('CiscoConfigurationOperations', 'Configure replace completed with error: ' + error_str)
 
     @staticmethod
     def copy(current_session, logger, source_file='', destination_file='', vrf=None, timeout=600, retries=5):
-        """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem
+        """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem.
+        Made static to allow usage form other operations classes.
 
         :param source_file: source file.
         :param destination_file: destination file.
@@ -193,28 +210,39 @@ class CiscoConfigurationOperations(ConfigurationOperations):
             source_file_data_list = re.sub('/+', '/', source_file).split('/')
             host = source_file_data_list[1]
             destination_file_name = destination_file.split(':')[-1].split('/')[-1]
-            action_map[r'(?!/){}'.format(source_file_data_list[-1])] = lambda session, logger: session.send_line('', logger)
-            action_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session, logger: session.send_line('', logger)
+            action_map[r'(?!/){}'.format(
+                source_file_data_list[-1])] = lambda session, logger: session.send_line('', logger)
+
+            action_map[r'[\[\(]{}[\)\]]'.format(
+                destination_file_name)] = lambda session, logger: session.send_line('', logger)
+
         elif '://' in destination_file:
             destination_file_data_list = re.sub('/+', '/', destination_file).split('/')
             host = destination_file_data_list[1]
             source_file_name = source_file.split(':')[-1].split('/')[-1]
-            action_map[r'[\[\(]{}[\)\]]'.format(destination_file_data_list[-1])] = lambda session, logger: session.send_line('', logger)
+            action_map[r'[\[\(]{}[\)\]]'.format(
+                destination_file_data_list[-1])] = lambda session, logger: session.send_line('', logger)
+
             action_map[r'(?!/){}'.format(source_file_name)] = lambda session, logger: session.send_line('', logger)
         else:
             destination_file_name = destination_file.split(':')[-1].split('/')[-1]
             source_file_name = source_file.split(':')[-1].split('/')[-1]
-            action_map[r'[\[\(]{}[\)\]]'.format(destination_file_name)] = lambda session, logger: session.send_line('', logger)
-            action_map[r'[\[\(]{}[\)\]]'.format(source_file_name)] = lambda session, logger: session.send_line('', logger)
+            action_map[r'[\[\(]{}[\)\]]'.format(
+                destination_file_name)] = lambda session, logger: session.send_line('', logger)
+            action_map[r'[\[\(]{}[\)\]]'.format(
+                source_file_name)] = lambda session, logger: session.send_line('', logger)
 
         if host:
             if '@' in host:
                 storage_data = re.search(r'^(?P<user>\S+):(?P<password>\S+)@(?P<host>\S+)', host)
                 if storage_data:
-                    host = storage_data.groupdict()['host']
-                    password = storage_data.groupdict()['password']
-                    action_map[r'[Pp]assword:'.format(source_file)] = lambda session, logger: session.send_line(
-                        password, logger)
+                    storage_data_dict = storage_data.groupdict()
+                    host = storage_data_dict['host']
+                    password = storage_data_dict['password']
+
+                    action_map[r'[Pp]assword:'.format(
+                        source_file)] = lambda session, logger: session.send_line(password, logger)
+
                 else:
                     host = host.split('@')[-1]
             action_map[r"(?!/){}(?!/)".format(host)] = lambda session, logger: session.send_line('', logger)
@@ -231,11 +259,13 @@ class CiscoConfigurationOperations(ConfigurationOperations):
 
     @staticmethod
     def _check_download_from_tftp(logger, output):
-        """Verify if file was successfully uploaded
+        """Validate copy output to make sure file was successfully uploaded. Made static together with copy.
+
         :param output: output from send_command_operations
         :return True or False, and success or error message
         :rtype tuple
         """
+
         is_success = True
         status_match = re.search(r'\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output,
                                  re.IGNORECASE)
@@ -255,9 +285,9 @@ class CiscoConfigurationOperations(ConfigurationOperations):
 
         return is_success, message
 
-    @staticmethod
-    def _check_replace_command(output):
-        """Checks whether replace command exist on device or not
+    def _check_replace_command(self, output):
+        """Check if replace command exist on the device or not.
+
         :rtype : bool
         :param output:
         """

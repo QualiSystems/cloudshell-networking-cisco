@@ -123,11 +123,11 @@ class DefaultActions(object):
         :raise Exception:
         """
         result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT), logger)
-        enable_password = decrypt_password_from_attribute(api=self._api,
-                                                          password_attribute_name='Enable Password',
-                                                          context=self._context)
-        expect_map = {'[Pp]assword': lambda session, logger: session.send_line(enable_password, logger)}
         if not re.search(EnableCommandMode.PROMPT, result):
+            enable_password = decrypt_password_from_attribute(api=self._api,
+                                                              password_attribute_name='Enable Password',
+                                                              context=self._context)
+            expect_map = {'[Pp]assword': lambda session, logger: session.send_line(enable_password, logger)}
             session.hardware_expect('enable', EnableCommandMode.PROMPT, action_map=expect_map, logger=logger)
             result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
                                              logger)

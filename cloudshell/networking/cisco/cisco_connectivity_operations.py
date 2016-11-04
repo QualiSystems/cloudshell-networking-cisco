@@ -1,7 +1,6 @@
 from collections import OrderedDict
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
-from cloudshell.shell.core.context_utils import get_resource_name
 
 from cloudshell.networking.networking_utils import *
 from cloudshell.networking.operations.connectivity_operations import ConnectivityOperations
@@ -26,11 +25,10 @@ def _does_interface_support_qnq(session, interface_name):
 
 
 def send_config_command_list(session, command_list, expected_map=None):
-    result = ''
+    result = []
     for command in command_list:
-        result += session.send_command(command, expected_map=expected_map)
-
-    return result
+        result.append(session.send_command(command, expected_map=expected_map))
+    return '\n'.join(result)
 
 
 class CiscoConnectivityOperations(ConnectivityOperations):
@@ -48,7 +46,6 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         self.cli = cli
         self._logger = logger
         self.api = api
-        self.resource_name = get_resource_name(context)
         self.session_type = get_session(context=context, api=api)
         self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
@@ -97,7 +94,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
             with session.enter_mode(self._config_mode) as config_session:
                 if qnq:
                     if not _does_interface_support_qnq(config_session, port_name):
-                        raise Exception('interface does not support QnQ')
+                        raise Exception('CiscoConnectivityOperations: add_vlan', 'interface does not support QnQ')
                     interface_config_actions['qnq'] = []
 
                 self.configure_vlan_on_interface(config_session, interface_config_actions)
@@ -142,15 +139,15 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
         self.logger.info('Validate incoming parameters for vlan configuration:')
         if not port_range:
-            raise Exception('CiscoHandlerBase: validate_vlan_methods_incoming_parameters ',
+            raise Exception('CiscoConnectivityOperations: validate_vlan_methods_incoming_parameters ',
                             'Port list can\'t be empty.')
 
         if vlan_range == '' and port_mode == 'access':
-            raise Exception('CiscoHandlerBase: validate_vlan_methods_incoming_parameters',
+            raise Exception('CiscoConnectivityOperations: validate_vlan_methods_incoming_parameters',
                             'Switchport type is Access, vlan id/range can\'t be empty.')
 
         if (',' in vlan_range or '-' in vlan_range) and port_mode == 'access':
-            raise Exception('CiscoHandlerBase: validate_vlan_methods_incoming_parameters',
+            raise Exception('CiscoConnectivityOperations: validate_vlan_methods_incoming_parameters',
                             'Interface in Access mode, vlan range is not allowed, only one vlan can be assigned.')
 
     def get_port_name(self, port):
@@ -164,7 +161,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         if not port:
             err_msg = 'Failed to get port name.'
             self.logger.error(err_msg)
-            raise Exception('Cisco OS: get_port_name', err_msg)
+            raise Exception('CiscoConnectivityOperations: get_port_name', err_msg)
 
         temp_port_name = port.split('/')[-1]
         if 'port-channel' not in temp_port_name.lower():
@@ -202,7 +199,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
             for line in output.splitlines():
                 if line.lower().startswith('command rejected'):
                     error = line.strip(' \t\n\r')
-            raise Exception('Cisco OS', 'Vlan configuration failed.\n{0}'.format(error))
+            raise Exception('CiscoConnectivityOperations', 'Vlan configuration failed.\n{0}'.format(error))
 
         return 'Vlan configuration completed.'
 
