@@ -42,7 +42,7 @@ class TestCiscoConfigurationOperations(TestCase):
             handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/')
         except Exception as e:
             self.assertIsNotNone(e)
-            self.assertTrue(output.replace('%', '') in e.message)
+            self.assertTrue(output.replace('%', '') in e[-1])
 
     def test_save_raises_exception_when_cannot_save_file_error_message(self):
         output = '''sw9003-vpp-10-3# copy running-config tftp://10.87.42.120
@@ -56,7 +56,7 @@ class TestCiscoConfigurationOperations(TestCase):
             handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/')
         except Exception as e:
             self.assertIsNotNone(e)
-            self.assertTrue('Copy Command failed. TFTP put operation failed:Access violation' in e.message)
+            self.assertTrue('Copy Command failed. TFTP put operation failed:Access violation' in e[-1])
 
     def test_save_cisco_nexus_5k_customer_report(self):
         resource_name = 'Very_long name with Spaces'
@@ -167,7 +167,7 @@ class TestCiscoConfigurationOperations(TestCase):
                                     config_type, 'management')
         except Exception as e:
             self.assertIsNotNone(e)
-            self.assertTrue(e.message != '')
+            self.assertTrue(e[-1] != '')
 
     def test_save_cisco_n6k_success_customer_report(self):
         resource_name = 'Very_long name with Spaces'

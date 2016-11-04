@@ -42,7 +42,7 @@ class TestCiscoHandlerBase(TestCase):
             handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/', 'running')
         except Exception as e:
             self.assertIsNotNone(e)
-            self.assertTrue(output.replace('%', '') in e.message)
+            self.assertTrue(output.replace('%', '') in e[-1])
 
     def test_save_cisco_nexus_5k_customer_report(self):
         resource_name = 'Very_long name with Spaces'
