@@ -1,19 +1,19 @@
 __author__ = 'g8y3e'
 
-from cloudshell.networking.networking_utils import validateIP, validateVlanRange
+from cloudshell.networking.networking_utils import validate_ip, validate_vlan_range
 from cloudshell.networking.cisco.command_templates.cisco_interface import CommandTemplate
 
 VLAN_COMMANDS_TEMPLATES = {
-    'ip_address': CommandTemplate('ip address {0} {1}', [validateIP, validateIP],
+    'ip_address': CommandTemplate('ip address {0} {1}', [validate_ip, validate_ip],
                                   ['Wrong ip address!', 'Wrong ip mask!']),
-    'configure_vlan': CommandTemplate('vlan {0}', validateVlanRange, 'Cannot create vlan - wrong vlan number(s)'),
+    'configure_vlan': CommandTemplate('vlan {0}', validate_vlan_range, 'Cannot create vlan - wrong vlan number(s)'),
     'exit': CommandTemplate('exit'),
     'state_active': CommandTemplate('state active'),
     'hsrp': CommandTemplate('hsrp {0}', ['[0-9]+'],
                             ['Wrong router protocol id!']),
     'authentication': CommandTemplate('authentication {0}', [r'\w+'],
                                       ['Wrong authentication name!']),
-    'ip': CommandTemplate('ip {0}', [validateIP],
+    'ip': CommandTemplate('ip {0}', [validate_ip],
                           ['Wrong ip address!']),
     'no_shutdown': CommandTemplate('no shutdown'),
     'preempt': CommandTemplate('preempt'),

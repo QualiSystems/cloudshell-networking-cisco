@@ -1,10 +1,10 @@
 from cloudshell.cli.command_template.command_template import CommandTemplate
-from cloudshell.networking.networking_utils import validateIP, validateVlanNumber, validateVlanRange, validateSpanningTreeType
+from cloudshell.networking.networking_utils import validate_ip, validate_vlan_number, validate_vlan_range, validate_spanning_tree_type
 
 ETHERNET_COMMANDS_TEMPLATES = {
     'switchport': CommandTemplate('switchport'),
-    'ip': CommandTemplate('ip {0}', validateIP, 'Wrong ip address!'),
-    'ip_address': CommandTemplate('ip address {0} {1}', [validateIP, validateIP],
+    'ip': CommandTemplate('ip {0}', validate_ip, 'Wrong ip address!'),
+    'ip_address': CommandTemplate('ip address {0} {1}', [validate_ip, validate_ip],
                                   ['Wrong ip address!', 'Wrong ip mask!']),
     'description': CommandTemplate('description {0}', r'[\w ]+', 'Wrong description!'),
     'switchport_mode_trunk': CommandTemplate('switchport mode trunk'),
@@ -14,15 +14,15 @@ ETHERNET_COMMANDS_TEMPLATES = {
                                            'Wrong encapsulation name!'),
     'exit': CommandTemplate('exit'),
     'trunk_allow_vlan': CommandTemplate('switchport trunk allowed vlan {0}',
-                                        validateVlanRange, 'Wrong vlan number(s)!'),
+                                        validate_vlan_range, 'Wrong vlan number(s)!'),
     'trunk_remove_vlan': CommandTemplate('switchport trunk allowed vlan remove {0}',
-                                         validateVlanRange, 'Wrong vlan number!'),
+                                         validate_vlan_range, 'Wrong vlan number!'),
     'access_allow_vlan': CommandTemplate('switchport access vlan {0}',
-                                         validateVlanNumber, 'Wrong vlan number!'),
+                                         validate_vlan_number, 'Wrong vlan number!'),
     'access_remove_vlan': CommandTemplate('no switchport access vlan {0}',
-                                          validateVlanNumber, 'Wrong vlan number!'),
+                                          validate_vlan_number, 'Wrong vlan number!'),
     'spanning_tree_type': CommandTemplate('spanning-tree {0} type {1}',
-                                          [validateSpanningTreeType, r'\bedge\b|\bnetwork\b'],
+                                          [validate_spanning_tree_type, r'\bedge\b|\bnetwork\b'],
                                           ['Wrong description!', 'Wrong description!']),
     'channel_group': CommandTemplate('channel-group {0}', r'[\w ]+', 'Wrong mode number'),
     'channel_group_mode': CommandTemplate('channel-group {0} mode {1}', [r'[\w ]+', r'\bactive\b|\bpassive\b|\bon\b'],

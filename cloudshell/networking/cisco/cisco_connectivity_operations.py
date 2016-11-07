@@ -1,8 +1,6 @@
-from cloudshell.configuration.cloudshell_cli_binding_keys import CLI_SERVICE
-from cloudshell.configuration.cloudshell_shell_core_binding_keys import LOGGER, API
-import inject
 from collections import OrderedDict
-import re
+from cloudshell.cli.command_mode_helper import CommandModeHelper
+from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
 
 from cloudshell.networking.networking_utils import *
 from cloudshell.networking.operations.connectivity_operations import ConnectivityOperations
@@ -10,87 +8,47 @@ from cloudshell.networking.cisco.command_templates.ethernet import ETHERNET_COMM
 from cloudshell.networking.cisco.command_templates.vlan import VLAN_COMMANDS_TEMPLATES
 from cloudshell.networking.cisco.command_templates.cisco_interface import ENTER_INTERFACE_CONF_MODE
 from cloudshell.cli.command_template.command_template_service import add_templates, get_commands_list
-from cloudshell.shell.core.context_utils import get_resource_name
 
 
 class CiscoConnectivityOperations(ConnectivityOperations):
-    def __init__(self, cli=None, logger=None, api=None, resource_name=None):
+    def __init__(self, cli, logger, api, context, supported_os):
+        """
+        Handle add/remove vlan flows
+
+        :param cli:
+        :param logger:
+        :param api:
+        :param context:
+        :param supported_os:
+        """
+
         ConnectivityOperations.__init__(self)
-        self._cli = cli
+        self.cli = cli
         self._logger = logger
-        self._api = api
-        self.resource_name = resource_name
-        if not self.resource_name:
-            try:
-                self.resource_name = get_resource_name()
-            except Exception:
-                raise Exception('CiscoConnectivityOperations', 'Failed to get ResourceName.')
+        self.api = api
+        self.session_type = get_session(context=context, api=api)
+        self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
+        self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
+        self.supported_os = supported_os
 
     @property
     def logger(self):
-        if self._logger:
-            logger = self._logger
-        else:
-            logger = inject.instance(LOGGER)
-        return logger
+        return self._logger
 
-    @property
-    def api(self):
-        if self._api:
-            api = self._api
-        else:
-            api = inject.instance(API)
-        return api
+    def _send_config_command_list(self, session, command_list, action_map=None):
+        """Send commands from commands_list one by one, and collect output
 
-    @property
-    def cli(self):
-        if self._cli is None:
-            self._cli = inject.instance(CLI_SERVICE)
-        return self._cli
-
-    def send_config_command_list(self, command_list, expected_map=None):
-        """Send list of config commands
-
+        :param session: current cli session, have to be in ConfigCommandMode
         :param command_list: list of commands
-        :return output from cli
-        :rtype: string
+        :param action_map: dict of actions should be taken during sending configuration commands, i.e.:
+                                                        {r'[Yy]es': session, logger: session.send_line('yes', logger)}
+        :return: output
         """
 
-        result = self.cli.send_command_list(command_list, expected_map=expected_map)
-        self.cli.exit_configuration_mode()
-        return result
-
-    def _get_resource_full_name(self, port_resource_address, resource_details_map):
-        """Recursively search for port name on the resource
-
-        :param port_resource_address: port resource address
-        :param resource_details_map: full device resource structure
-        :return: full port resource name (Cisco2950/Chassis 0/FastEthernet0-23)
-        :rtype: string
-        """
-
-        result = None
-        for port in resource_details_map.ChildResources:
-            if port.FullAddress in port_resource_address and port.FullAddress == port_resource_address:
-                return port.Name
-            if port.FullAddress in port_resource_address and port.FullAddress != port_resource_address:
-                result = self._get_resource_full_name(port_resource_address, port)
-            if result is not None:
-                return result
-        return result
-
-    def _does_interface_support_qnq(self, interface_name):
-        """Validate whether qnq is supported for certain port
-
-        """
-
-        result = False
-        self.cli.send_config_command('interface {0}'.format(interface_name))
-        output = self.cli.send_config_command('switchport mode ?')
-        if 'dot1q-tunnel' in output.lower():
-            result = True
-        self.cli.exit_configuration_mode()
-        return result
+        result = []
+        for command in command_list:
+            result.append(session.send_command(command, action_map=action_map))
+        return '\n'.join(result)
 
     @staticmethod
     def _load_vlan_command_templates():
@@ -115,43 +73,26 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         :rtype: string
         """
 
-        config = inject.instance('config')
-        supported_os = config.SUPPORTED_OS
         self._load_vlan_command_templates()
-        self.validate_vlan_methods_incoming_parameters(vlan_range, port, port_mode)
-        port_name = self.get_port_name(port)
+        self._validate_vlan_methods_incoming_parameters(vlan_range, port, port_mode)
+        port_name = self._get_port_name(port)
         self.logger.info('Start vlan configuration: vlan {0}; interface {1}.'.format(vlan_range, port_name))
-        vlan_config_actions = OrderedDict()
-        interface_config_actions = OrderedDict()
-        vlan_config_actions['configure_vlan'] = vlan_range
-        vlan_config_actions['state_active'] = []
-        vlan_config_actions['no_shutdown'] = []
 
-        self.configure_vlan(vlan_config_actions)
-        self.cli.exit_configuration_mode()
+        with self.cli.get_session(new_sessions=self.session_type, command_mode=self._enable_mode,
+                                  logger=self.logger) as session:
+            with session.enter_mode(self._config_mode) as config_session:
+                self._configure_vlan(config_session, self._prepare_vlan_config_commands(vlan_range))
 
-        interface_config_actions['configure_interface'] = port_name
-        interface_config_actions['no_shutdown'] = []
-        if supported_os and re.search(r"({0})".format("|".join(supported_os)), "NXOS"):
-            interface_config_actions['switchport'] = []
-        if 'trunk' in port_mode and vlan_range == '':
-            interface_config_actions['switchport_mode_trunk'] = []
-        elif 'trunk' in port_mode and vlan_range != '':
-            interface_config_actions['switchport_mode_trunk'] = []
-            interface_config_actions['trunk_allow_vlan'] = [vlan_range]
-        elif 'access' in port_mode and vlan_range != '':
-            if not qnq:
-                self.logger.info('qnq is {0}'.format(qnq))
-                interface_config_actions['switchport_mode_access'] = []
-            interface_config_actions['access_allow_vlan'] = [vlan_range]
-        if qnq:
-            if not self._does_interface_support_qnq(port_name):
-                raise Exception('interface does not support QnQ')
-            interface_config_actions['qnq'] = []
+            interface_config_actions = self._prepare_interface_config_commands(port_name=port_name, port_mode=port_mode,
+                                                                               vlan_range=vlan_range, qnq=qnq)
+            with session.enter_mode(self._config_mode) as config_session:
+                if qnq:
+                    interface_config_actions.update(self._prepare_interface_config_qnq_command(
+                        config_session, port_name))
 
-        self.configure_vlan_on_interface(interface_config_actions)
-        result = self.cli.send_command('show running-config interface {0}'.format(port_name))
-        self.logger.info('Vlan configuration completed: \n{0}'.format(result))
+                self._configure_vlan_on_interface(config_session, interface_config_actions)
+            result = session.send_command('show running-config interface {0}'.format(port_name))
+            self.logger.info('Vlan configuration completed: \n{0}'.format(result))
 
         return 'Vlan Configuration Completed.'
 
@@ -166,39 +107,43 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         :rtype: string
         """
 
-        self._load_vlan_command_templates()
-        self.validate_vlan_methods_incoming_parameters(vlan_range, port, port_mode)
+        with self.cli.get_session(new_sessions=self.session_type, command_mode=self._config_mode,
+                                  logger=self.logger) as session:
+            self._load_vlan_command_templates()
+            self._validate_vlan_methods_incoming_parameters(vlan_range, port, port_mode)
 
-        port_name = self.get_port_name(port)
-        self.logger.info('Remove Vlan {0} from interface {1}'.format(vlan_range, port_name))
-        interface_config_actions = OrderedDict()
-        interface_config_actions['configure_interface'] = port_name
-        self.configure_vlan_on_interface(interface_config_actions)
-        self.logger.info('Vlan configuration removed from the interface {0}'.format(port_name))
+            port_name = self._get_port_name(port)
+            self.logger.info('Remove Vlan {0} from interface {1}'.format(vlan_range, port_name))
+            interface_config_actions = OrderedDict()
+            interface_config_actions['configure_interface'] = port_name
+            self._configure_vlan_on_interface(session, interface_config_actions)
+            session.send_command('do show running interface {}'.format(port_name))
+            self.logger.info('Vlan configuration removed from the interface {0}'.format(port_name))
 
         return 'Remove Vlan Completed.'
 
-    def validate_vlan_methods_incoming_parameters(self, vlan_range, port, port_mode):
+    def _validate_vlan_methods_incoming_parameters(self, vlan_range, port_range, port_mode):
         """Validate add_vlan and remove_vlan incoming parameters
 
         :param vlan_range: vlan range (10,20,30-40)
-        :param port_list: list of port resource addresses ([192.168.1.1/0/34, 192.168.1.1/0/42])
+        :param port_range: list of port resource addresses ([192.168.1.1/0/34, 192.168.1.1/0/42])
         :param port_mode: switchport mode (access or trunk)
         """
 
         self.logger.info('Validate incoming parameters for vlan configuration:')
-        if not port:
-            raise Exception('CiscoHandlerBase: validate_vlan_methods_incoming_parameters ', 'Port list can\'t be empty.')
+        if not port_range:
+            raise Exception('CiscoConnectivityOperations: validate_vlan_methods_incoming_parameters',
+                            'Port list can\'t be empty.')
 
         if vlan_range == '' and port_mode == 'access':
-            raise Exception('CiscoHandlerBase: validate_vlan_methods_incoming_parameters',
+            raise Exception('CiscoConnectivityOperations: validate_vlan_methods_incoming_parameters',
                             'Switchport type is Access, vlan id/range can\'t be empty.')
 
         if (',' in vlan_range or '-' in vlan_range) and port_mode == 'access':
-            raise Exception('CiscoHandlerBase: validate_vlan_methods_incoming_parameters',
+            raise Exception('CiscoConnectivityOperations: validate_vlan_methods_incoming_parameters',
                             'Interface in Access mode, vlan range is not allowed, only one vlan can be assigned.')
 
-    def get_port_name(self, port):
+    def _get_port_name(self, port):
         """Get port name from port resource full address
 
         :param port: port resource full address (192.168.1.1/0/34)
@@ -206,21 +151,19 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         :rtype: string
         """
 
-        port_resource_map = self.api.GetResourceDetails(self.resource_name)
-        temp_port_full_name = self._get_resource_full_name(port, port_resource_map)
-        if not temp_port_full_name:
+        if not port:
             err_msg = 'Failed to get port name.'
             self.logger.error(err_msg)
-            raise Exception('Cisco OS: get_port_name', err_msg)
+            raise Exception('CiscoConnectivityOperations: get_port_name', err_msg)
 
-        temp_port_name = temp_port_full_name.split('/')[-1]
-        if 'port-channel' not in temp_port_full_name.lower():
+        temp_port_name = port.split('/')[-1]
+        if 'port-channel' not in temp_port_name.lower():
             temp_port_name = temp_port_name.replace('-', '/')
 
         self.logger.info('Interface name validation OK, portname = {0}'.format(temp_port_name))
         return temp_port_name
 
-    def configure_vlan_on_interface(self, commands_dict):
+    def _configure_vlan_on_interface(self, config_session, commands_dict):
         """Configure vlan on specified interface/s
 
         :param commands_dict: dictionary of parameters
@@ -230,7 +173,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
         commands_list = get_commands_list(commands_dict)
 
-        current_config = self.cli.send_command(
+        current_config = config_session.send_command(
             'show running-config interface {0}'.format(commands_dict['configure_interface']))
 
         for line in current_config.splitlines():
@@ -242,19 +185,19 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
         expected_map = {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
                         '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}
-        output = self.send_config_command_list(commands_list, expected_map=expected_map)
+        output = self._send_config_command_list(config_session, commands_list, action_map=expected_map)
 
         if re.search(r'[Cc]ommand rejected.*', output):
             error = 'Command rejected'
             for line in output.splitlines():
                 if line.lower().startswith('command rejected'):
                     error = line.strip(' \t\n\r')
-            raise Exception('Cisco OS', 'Vlan configuration failed.\n{0}'.format(error))
+            raise Exception('CiscoConnectivityOperations', 'Vlan configuration failed.\n{0}'.format(error))
 
         return 'Vlan configuration completed.'
 
-    def configure_vlan(self, ordered_parameters_dict):
-        """Configure vlan
+    def _configure_vlan(self, session, ordered_parameters_dict):
+        """Configure vlan,
 
         :param ordered_parameters_dict: dictionary of parameters
         :return: success message
@@ -262,6 +205,66 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         """
 
         commands_list = get_commands_list(ordered_parameters_dict)
-        self.send_config_command_list(commands_list)
+        self._send_config_command_list(session, commands_list)
 
         return 'Vlan configuration completed.'
+
+    def _prepare_vlan_config_commands(self, vlan_range):
+        """Prepare list of configuration commands for certain vlan_range
+
+        :param vlan_range: vlan range
+        :return: list of commands
+        """
+
+        vlan_config_actions = OrderedDict()
+        vlan_config_actions['configure_vlan'] = vlan_range
+        vlan_config_actions['state_active'] = []
+        vlan_config_actions['no_shutdown'] = []
+        self.logger.info('Finished preparing Vlan configuration commands')
+        return vlan_config_actions
+
+    def _prepare_interface_config_qnq_command(self, session, port_name):
+        """Verify if port supports qnq
+
+        :param session: current cli session. Should be in ConfigCommandMode
+        :param port_name: Port name
+        :return: dict with 'qnq' key or :raise Exception:
+        """
+
+        result = dict()
+        session.send_config_command('interface {0}'.format(port_name))
+        output = session.send_config_command('switchport mode ?')
+        if 'dot1q-tunnel' not in output.lower():
+            self.logger.info('Interface does not support QnQ')
+            raise Exception('CiscoConnectivityOperations: add_vlan', 'interface does not support QnQ')
+        result['qnq'] = []
+        return result
+
+    def _prepare_interface_config_commands(self, port_name, port_mode, vlan_range, qnq):
+        """Prepare list of vlan configuration commands for certain port.
+        For Nxos devices with routing capabilities add switchport command, to make sure port operate in L2 mode
+
+        :param port_name: port name
+        :param port_mode: switchport mode, qnq, trunk or access
+        :param vlan_range: vlan range
+        :param qnq: QNQ
+        :return: list of commands
+        """
+
+        interface_config_actions = OrderedDict()
+        interface_config_actions['configure_interface'] = port_name
+        interface_config_actions['no_shutdown'] = []
+        if self.supported_os and "nxos" in self.supported_os.lower():
+            interface_config_actions['switchport'] = []
+        if 'trunk' in port_mode and vlan_range == '':
+            interface_config_actions['switchport_mode_trunk'] = []
+        elif 'trunk' in port_mode and vlan_range != '':
+            interface_config_actions['switchport_mode_trunk'] = []
+            interface_config_actions['trunk_allow_vlan'] = [vlan_range]
+        elif 'access' in port_mode and vlan_range != '':
+            if not qnq:
+                self.logger.info('qnq is {0}'.format(qnq))
+                interface_config_actions['switchport_mode_access'] = []
+            interface_config_actions['access_allow_vlan'] = [vlan_range]
+        self.logger.info('Finished preparing interface configuration commands')
+        return interface_config_actions
