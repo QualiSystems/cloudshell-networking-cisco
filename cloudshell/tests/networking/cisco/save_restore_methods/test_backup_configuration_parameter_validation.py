@@ -4,7 +4,6 @@ import re
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
-__author__ = 'CoYe'
 
 class TestCiscoConfigurationOperationsParameterValidation(TestCase):
     def _get_handler(self):

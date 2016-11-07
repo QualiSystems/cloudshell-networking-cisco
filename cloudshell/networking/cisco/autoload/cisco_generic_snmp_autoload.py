@@ -79,8 +79,8 @@ class CiscoGenericSNMPAutoload(object):
                 self.relative_address[chassis] = chassis_id
 
         self._filter_lower_bay_containers()
-        self.get_module_list()
-        self.add_relative_addresss()
+        self._get_module_list()
+        self._add_relative_addresss()
         self._get_chassis_attributes(self.chassis_list)
         self._get_ports_attributes()
         self._get_module_attributes()
@@ -257,7 +257,7 @@ class CiscoGenericSNMPAutoload(object):
                 self.entity_table[child]['entPhysicalParentRelPos'] = str(child_upper_items_len + int(
                     self.entity_table[child]['entPhysicalParentRelPos']))
 
-    def add_relative_addresss(self):
+    def _add_relative_addresss(self):
         """Build dictionary of relative paths for each module and port
 
         :return:
@@ -306,7 +306,7 @@ class CiscoGenericSNMPAutoload(object):
         self.resources.append(resource.get_resource())
         self.attributes.extend(resource.get_attributes())
 
-    def get_module_list(self):
+    def _get_module_list(self):
         """Set list of all modules from entity mib table for provided list of ports
 
         :return:

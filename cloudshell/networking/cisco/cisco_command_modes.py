@@ -2,8 +2,8 @@ import re
 from cloudshell.cli.command_mode import CommandMode
 from cloudshell.cli.session.ssh_session import SSHSession
 from cloudshell.cli.session.telnet_session import TelnetSession
-from cloudshell.shell.core.context_utils import get_attribute_by_name, decrypt_password_from_attribute, \
-    get_resource_address
+from cloudshell.shell.core.api_utils import decrypt_password_from_attribute
+from cloudshell.shell.core.context_utils import get_attribute_by_name, get_resource_address
 
 
 class DefaultCommandMode(CommandMode):
