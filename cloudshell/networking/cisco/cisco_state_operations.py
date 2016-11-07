@@ -1,8 +1,6 @@
 from collections import OrderedDict
 import time
 
-import inject
-from cloudshell.cli.cli import CLI
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
 from cloudshell.networking.operations.state_operations import StateOperations

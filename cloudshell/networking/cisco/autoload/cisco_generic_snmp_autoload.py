@@ -538,9 +538,9 @@ class CiscoGenericSNMPAutoload(object):
                              'adjacent': self._get_adjacent(self.port_mapping[port])}
             attribute_map.update(self._get_interface_details(self.port_mapping[port]))
             attribute_map.update(self._get_ip_interface_details(self.port_mapping[port]))
-            unique_id = '{}.{}.{}'.format(self.resource_name, 'port-channel', port)
+            unique_id = '{}.{}.{}'.format(self.resource_name, 'port', port)
 
-            port_object = self.port(name=interface_name, relative_address=self.relative_address[port],
+            port_object = self.port(name=interface_name.replace('/', '-'), relative_address=self.relative_address[port],
                                     unique_id=unique_id, **attribute_map)
             self._add_resource(port_object)
             self.logger.info('Added ' + interface_name + ' Port')
