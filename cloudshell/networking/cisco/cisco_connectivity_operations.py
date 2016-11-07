@@ -47,7 +47,10 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
         result = []
         for command in command_list:
-            result.append(session.send_command(command, action_map=action_map))
+            if action_map:
+                result.append(session.send_command(command, action_map=action_map))
+            else:
+                result.append(session.send_command(command))
         return '\n'.join(result)
 
     @staticmethod
@@ -254,7 +257,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
         interface_config_actions = OrderedDict()
         interface_config_actions['configure_interface'] = port_name
         interface_config_actions['no_shutdown'] = []
-        if self.supported_os and "nxos" in self.supported_os.lower():
+        if self.supported_os and re.search(r"({0})".format("|".join(self.supported_os)), "NXOS"):
             interface_config_actions['switchport'] = []
         if 'trunk' in port_mode and vlan_range == '':
             interface_config_actions['switchport_mode_trunk'] = []
