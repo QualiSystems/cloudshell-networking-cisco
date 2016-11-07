@@ -75,8 +75,6 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         """
 
         full_path = self.get_path(folder_path)
-        if not vrf_management_name:
-            vrf_management_name = get_attribute_by_name(context=self._context, attribute_name='VRF Management Name')
 
         configuration_type = _validate_configuration_type(configuration_type)
 
@@ -116,9 +114,6 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         is_uploaded = (False, "")
         configuration_type = _validate_configuration_type(configuration_type)
         restore_method = _validate_restore_method(restore_method)
-
-        if not vrf_management_name:
-            vrf_management_name = get_attribute_by_name('VRF Management Name')
 
         destination_filename = configuration_type
 
