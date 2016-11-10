@@ -24,7 +24,6 @@ class DefaultCommandMode(CommandMode):
 
 class EnableCommandMode(CommandMode):
     PROMPT = r'(?:(?!\)).)#\s*$'
-    # PROMPT = r'#\s*$'
     ENTER_COMMAND = 'enable'
     EXIT_COMMAND = 'disable'
 

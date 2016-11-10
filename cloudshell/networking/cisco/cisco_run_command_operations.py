@@ -8,9 +8,10 @@ class CiscoRunCommandOperations(RunCommandInterface):
     def __init__(self, cli, context, logger, api):
         """Create CiscoIOSHandlerBase
 
-        :param cli: CliService object
+        :param context: command context
+        :param api: cloudshell api object
+        :param cli: CLI object
         :param logger: QsLogger object
-        :param resource_name: resource name
         :return:
         """
 

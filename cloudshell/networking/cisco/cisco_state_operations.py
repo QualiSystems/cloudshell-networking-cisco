@@ -20,7 +20,7 @@ class CiscoStateOperations(StateOperations):
         self._cli = cli
         self._logger = logger
         self._api = api
-        self._session_obj = get_session(context=context, api=api)
+        self._session_type = get_session(self._context, self._api)
         self._default_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
 
@@ -41,7 +41,7 @@ class CiscoStateOperations(StateOperations):
                                     })
         try:
             self._logger.info('Send \'reload\' to device...')
-            with self._cli.get_session(new_sessions=self._session_obj, command_mode=self._default_mode,
+            with self._cli.get_session(new_sessions=self._session_type, command_mode=self._default_mode,
                                        logger=self._logger) as session:
                 session.send_command(command='reload', expected_map=expected_map, timeout=3)
 
@@ -60,7 +60,7 @@ class CiscoStateOperations(StateOperations):
             time.sleep(sleep_timeout)
             try:
                 self._logger.debug('Trying to send command to device ... (retry {} of {}'.format(retry, retries))
-                with self._cli.get_session(new_sessions=self._session_obj, command_mode=self._default_mode,
+                with self._cli.get_session(new_sessions=self._session_type, command_mode=self._default_mode,
                                            logger=self._logger) as session:
                     output = session.send_command(command='', expected_str='(?<![#\n])[#>] *$', expected_map={}, timeout=5,
                                                   is_need_default_prompt=False)
