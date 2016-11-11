@@ -107,7 +107,7 @@ class DefaultActions(object):
 
         self.enter_enable_mode(session=session, logger=logger)
         session.hardware_expect('terminal length 0', EnableCommandMode.PROMPT, logger)
-        session.hardware_expect('terminal width 200', EnableCommandMode.PROMPT, logger)
+        session.hardware_expect('terminal width 300', EnableCommandMode.PROMPT, logger)
         session.hardware_expect('terminal no exec prompt timestamp', EnableCommandMode.PROMPT, logger)
         session.hardware_expect(ConfigCommandMode.ENTER_COMMAND, ConfigCommandMode.PROMPT, logger)
         session.hardware_expect('no logging console', ConfigCommandMode.PROMPT, logger)
