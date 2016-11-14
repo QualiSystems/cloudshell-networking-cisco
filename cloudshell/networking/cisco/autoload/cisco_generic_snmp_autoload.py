@@ -368,11 +368,11 @@ class CiscoGenericSNMPAutoload(object):
         for chassis in chassis_list:
             chassis_id = self.relative_address[chassis]
             chassis_details_map = {
-                'model': self.snmp.get_property('ENTITY-MIB', 'entPhysicalModelName', chassis),
-                'serial_number': self.snmp.get_property('ENTITY-MIB', 'entPhysicalSerialNum', chassis)
+                self.chassis.MODEL: self.snmp.get_property('ENTITY-MIB', 'entPhysicalModelName', chassis),
+                self.chassis.SERIAL_NUMBER: self.snmp.get_property('ENTITY-MIB', 'entPhysicalSerialNum', chassis)
             }
-            if chassis_details_map['model'] == '':
-                chassis_details_map['model'] = self.entity_table[chassis]['entPhysicalDescr']
+            if chassis_details_map[self.chassis.MODEL] == '':
+                chassis_details_map[self.chassis.MODEL] = self.entity_table[chassis]['entPhysicalDescr']
             relative_address = '{0}'.format(chassis_id)
             name = 'Chassis {}'.format(chassis_id)
             unique_id = '{}.{}.{}'.format(self.resource_name, 'chassis', chassis)
@@ -395,19 +395,20 @@ class CiscoGenericSNMPAutoload(object):
             module_id = self.relative_address[module]
             module_index = self._get_resource_id(module)
             module_details_map = {
-                'model': self.entity_table[module]['entPhysicalDescr'],
-                'version': self.snmp.get_property('ENTITY-MIB', 'entPhysicalSoftwareRev', module),
-                'serial_number': self.snmp.get_property('ENTITY-MIB', 'entPhysicalSerialNum', module)
+                self.module.MODEL: self.entity_table[module]['entPhysicalDescr'],
+                self.module.VERSION: self.snmp.get_property('ENTITY-MIB', 'entPhysicalSoftwareRev', module),
+                self.module.SERIAL_NUMBER: self.snmp.get_property('ENTITY-MIB', 'entPhysicalSerialNum', module)
             }
 
             if '/' in module_id and len(module_id.split('/')) < 3:
                 module_name = 'Module {0}'.format(module_index)
                 model = 'Generic Module'
+                unique_id = '{}.{}.{}'.format(self.resource_name, 'module', module)
             else:
                 module_name = 'Sub Module {0}'.format(module_index)
                 model = 'Generic Sub Module'
+                unique_id = '{}.{}.{}'.format(self.resource_name, 'sub-module', module)
 
-            unique_id = '{}.{}.{}'.format(self.resource_name, 'module', module)
             module_object = self.module(name=module_name, resource_model=model, relative_address=module_id,
                                         unique_id=unique_id, **module_details_map)
             self._add_resource(module_object)
@@ -454,10 +455,13 @@ class CiscoGenericSNMPAutoload(object):
             chassis_id = self.get_relative_address(parent_index)
             relative_address = '{0}/PP{1}-{2}'.format(chassis_id, parent_id, port_id)
             port_name = 'PP{0}'.format(self.power_supply_list.index(port))
-            port_details = {'model': self.snmp.get_property('ENTITY-MIB', 'entPhysicalModelName', port, ),
-                            'description': self.snmp.get_property('ENTITY-MIB', 'entPhysicalDescr', port, 'str'),
-                            'version': self.snmp.get_property('ENTITY-MIB', 'entPhysicalHardwareRev', port),
-                            'serial_number': self.snmp.get_property('ENTITY-MIB', 'entPhysicalSerialNum', port)
+            port_details = {self.power_port.MODEL: self.snmp.get_property('ENTITY-MIB', 'entPhysicalModelName', port, ),
+                            self.power_port.PORT_DESCRIPTION: self.snmp.get_property('ENTITY-MIB', 'entPhysicalDescr',
+                                                                                     port, 'str'),
+                            self.power_port.VERSION: self.snmp.get_property('ENTITY-MIB', 'entPhysicalHardwareRev',
+                                                                            port),
+                            self.power_port.SERIAL_NUMBER: self.snmp.get_property('ENTITY-MIB', 'entPhysicalSerialNum',
+                                                                                  port)
                             }
 
             unique_id = '{}.{}.{}'.format(self.resource_name, 'power_port', port)
@@ -487,11 +491,11 @@ class CiscoGenericSNMPAutoload(object):
             else:
                 self.logger.error('Adding of {0} failed. Name is invalid'.format(interface_model))
                 continue
-            attribute_map = {'port_description': self.snmp.get_property('IF-MIB', 'ifAlias', key),
-                             'associated_ports': self._get_associated_ports(key)}
+            attribute_map = {self.port_channel.PORT_DESCRIPTION: self.snmp.get_property('IF-MIB', 'ifAlias', key),
+                             self.port_channel.ASSOCIATED_PORTS: self._get_associated_ports(key)}
 
             unique_id = '{}.{}.{}'.format(self.resource_name, 'port-channel', interface_id)
-            attribute_map.update(self._get_ip_interface_details(key))
+            attribute_map.update(self._get_ip_interface_details(self.port_channel, key))
             port_channel = self.port_channel(name=interface_model, relative_address=interface_id,
                                              unique_id=unique_id, **attribute_map)
             self._add_resource(port_channel)
@@ -529,15 +533,19 @@ class CiscoGenericSNMPAutoload(object):
                 interface_name = self.entity_table[port]['entPhysicalName']
             if interface_name == '':
                 continue
+
             interface_type = if_table[self.port_mapping[port]]['ifType'].replace('/', '').replace("'", '')
-            attribute_map = {'l2_protocol_type': interface_type,
-                             'mac_address': if_table[self.port_mapping[port]]['ifPhysAddress'],
-                             'mtu': if_table[self.port_mapping[port]]['ifMtu'],
-                             'bandwidth': if_table[self.port_mapping[port]]['ifHighSpeed'],
-                             'port_description': self.snmp.get_property('IF-MIB', 'ifAlias', self.port_mapping[port]),
-                             'adjacent': self._get_adjacent(self.port_mapping[port])}
-            attribute_map.update(self._get_interface_details(self.port_mapping[port]))
-            attribute_map.update(self._get_ip_interface_details(self.port_mapping[port]))
+            attribute_map = {self.port.L2_PROTOCOL_TYPE: interface_type,
+                             self.port.MAC_ADDRESS: if_table[self.port_mapping[port]]['ifPhysAddress'],
+                             self.port.MTU: if_table[self.port_mapping[port]]['ifMtu'],
+                             self.port.BANDWIDTH: if_table[self.port_mapping[port]]['ifHighSpeed'],
+                             self.port.PORT_DESCRIPTION: self.snmp.get_property('IF-MIB', 'ifAlias',
+                                                                                self.port_mapping[port]),
+                             self.port.ADJACENT: self._get_adjacent(self.port_mapping[port])}
+            attribute_map.update(self._get_interface_details(resource_obj=self.port,
+                                                             port_index=self.port_mapping[port]))
+            attribute_map.update(self._get_ip_interface_details(resource_obj=self.port,
+                                                                port_index=self.port_mapping[port]))
             unique_id = '{}.{}.{}'.format(self.resource_name, 'port', port)
 
             port_object = self.port(name=interface_name.replace('/', '-'), relative_address=self.relative_address[port],
@@ -583,45 +591,45 @@ class CiscoGenericSNMPAutoload(object):
             if parent_id not in raw_entity_table or parent_id in self.exclusion_list:
                 self.exclusion_list.append(element)
 
-    def _get_ip_interface_details(self, port_index):
+    def _get_ip_interface_details(self, resource_obj, port_index):
         """Get IP address details for provided port
 
         :param port_index: port index in ifTable
         :return interface_details: detected info for provided interface dict{'IPv4 Address': '', 'IPv6 Address': ''}
         """
 
-        interface_details = {'ipv4_address': '', 'ipv6_address': ''}
+        interface_details = {}
         if self.ip_v4_table and len(self.ip_v4_table) > 1:
             for key, value in self.ip_v4_table.iteritems():
                 if 'ipAdEntIfIndex' in value and int(value['ipAdEntIfIndex']) == port_index:
-                    interface_details['ipv4_address'] = key
+                    interface_details[resource_obj.IPV4_ADDRESS] = key
                 break
         if self.ip_v6_table and len(self.ip_v6_table) > 1:
             for key, value in self.ip_v6_table.iteritems():
                 if 'ipAdEntIfIndex' in value and int(value['ipAdEntIfIndex']) == port_index:
-                    interface_details['ipv6_address'] = key
+                    interface_details[resource_obj.IPV6_ADDRESS] = key
                 break
         return interface_details
 
-    def _get_interface_details(self, port_index):
+    def _get_interface_details(self, resource_obj, port_index):
         """Get interface attributes
 
         :param port_index: port index in ifTable
         :return interface_details: detected info for provided interface dict{'Auto Negotiation': '', 'Duplex': ''}
         """
 
-        interface_details = {'duplex': 'Full', 'auto_negotiation': 'False'}
+        interface_details = {}
         try:
             auto_negotiation = self.snmp.get(('MAU-MIB', 'ifMauAutoNegAdminStatus', port_index, 1)).values()[0]
             if 'enabled' in auto_negotiation.lower():
-                interface_details['auto_negotiation'] = 'True'
+                interface_details[resource_obj.AUTO_NEGOTIATION] = 'True'
         except Exception as e:
             self.logger.error('Failed to load auto negotiation property for interface {0}'.format(e.message))
         for key, value in self.duplex_table.iteritems():
             if 'dot3StatsIndex' in value.keys() and value['dot3StatsIndex'] == str(port_index):
                 interface_duplex = self.snmp.get_property('EtherLike-MIB', 'dot3StatsDuplexStatus', key)
                 if 'halfDuplex' in interface_duplex:
-                    interface_details['duplex'] = 'Half'
+                    interface_details[resource_obj.DUPLEX] = 'Half'
         return interface_details
 
     def _get_device_details(self):
@@ -630,12 +638,14 @@ class CiscoGenericSNMPAutoload(object):
         """
 
         self.logger.info('Load Switch Attributes:')
-        result = {'system_name': self.snmp.get_property('SNMPv2-MIB', 'sysName', 0),
-                  'vendor': 'Cisco',
-                  'model': self._get_device_model(),
-                  'location': self.snmp.get_property('SNMPv2-MIB', 'sysLocation', 0),
-                  'contact_name': self.snmp.get_property('SNMPv2-MIB', 'sysContact', 0),
-                  'os_version': ''}
+        result = {self.root_model.SYSTEM_NAME: self.snmp.get_property('SNMPv2-MIB', 'sysName', 0),
+                  self.root_model.VENDOR: 'Cisco',
+                  self.root_model.MODEL: self._get_device_model(),
+                  self.root_model.LOCATION: self.snmp.get_property('SNMPv2-MIB', 'sysLocation',
+                                                                   0),
+                  self.root_model.CONTACT_NAME: self.snmp.get_property(
+                      'SNMPv2-MIB', 'sysContact', 0),
+                  self.root_model.OS_VERSION: ''}
 
         match_version = re.search(r'Version\s+(?P<software_version>\S+)\S*\s+',
                                   self.snmp.get_property('SNMPv2-MIB', 'sysDescr', 0))
