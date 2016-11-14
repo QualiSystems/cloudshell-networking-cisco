@@ -408,8 +408,8 @@ class CiscoGenericSNMPAutoload(object):
                 model = 'Generic Sub Module'
 
             unique_id = '{}.{}.{}'.format(self.resource_name, 'module', module)
-            module_object = self.module(name=module_name, model=model, relative_address=module_id, unique_id=unique_id,
-                                        **module_details_map)
+            module_object = self.module(name=module_name, resource_model=model, relative_address=module_id,
+                                        unique_id=unique_id, **module_details_map)
             self._add_resource(module_object)
 
             self.logger.info('Module {} added'.format(self.entity_table[module]['entPhysicalDescr']))
