@@ -454,7 +454,7 @@ class CiscoGenericSNMPAutoload(object):
             chassis_id = self.get_relative_address(parent_index)
             relative_address = '{0}/PP{1}-{2}'.format(chassis_id, parent_id, port_id)
             port_name = 'PP{0}'.format(self.power_supply_list.index(port))
-            port_details = {'port_model': self.snmp.get_property('ENTITY-MIB', 'entPhysicalModelName', port, ),
+            port_details = {'model': self.snmp.get_property('ENTITY-MIB', 'entPhysicalModelName', port, ),
                             'description': self.snmp.get_property('ENTITY-MIB', 'entPhysicalDescr', port, 'str'),
                             'version': self.snmp.get_property('ENTITY-MIB', 'entPhysicalHardwareRev', port),
                             'serial_number': self.snmp.get_property('ENTITY-MIB', 'entPhysicalSerialNum', port)
