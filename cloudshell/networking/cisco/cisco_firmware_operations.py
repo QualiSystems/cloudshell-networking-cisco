@@ -124,14 +124,13 @@ class CiscoFirmwareOperations(FirmwareOperationsInterface):
         else:
             raise Exception('CiscoFirmwareOperations', 'Update firmware failed!')
 
-    def reload(self, sleep_timeout=60, retries=15):
+    def reload(self, sleep_timeout=500):
         """Reload device
 
         :param sleep_timeout: timeout between attempts to establish connection to the device
-        :param retries: amount of retires will be taken
         :return: True or False
         """
 
         state_operations = CiscoStateOperations(cli=self._cli, api=self._api,
                                                 context=self._context, logger=self._logger)
-        return state_operations.reload(sleep_timeout=sleep_timeout, retries=retries)
+        return state_operations.reload(sleep_timeout=sleep_timeout)

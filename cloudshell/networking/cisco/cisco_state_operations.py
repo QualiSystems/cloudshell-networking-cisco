@@ -27,18 +27,18 @@ class CiscoStateOperations(StateOperations):
     def shutdown(self):
         pass
 
-    def reload(self, sleep_timeout=60, retries=15):
+    def reload(self, sleep_timeout=500):
         """Reload device
 
         :param sleep_timeout: period of time, to wait for device to get back online
-        :param retries: amount of retires to get response from device after it will be rebooted
         """
 
-        expected_map = OrderedDict({'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
-                                    '\(y/n\)|continue': lambda session: session.send_line('y'),
-                                    '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')
-                                    # 'reload': lambda session: session.send_line('')
-                                    })
+        expected_map = OrderedDict(
+            {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),
+             '\(y/n\)|continue': lambda session, logger: session.send_line('y', logger),
+             '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger)
+             # 'reload': lambda session: session.send_line('')
+             })
         try:
             self._logger.info('Send \'reload\' to device...')
             with self._cli.get_session(new_sessions=self._session_type, command_mode=self._default_mode,
@@ -50,29 +50,5 @@ class CiscoStateOperations(StateOperations):
 
         self._logger.info('Wait 20 seconds for device to reload...')
         time.sleep(20)
-        # output = self.send_command_operations.send_command(command='', expected_str='.*', expected_map={})
 
-        retry = 0
-        is_reloaded = False
-        while retry < retries:
-            retry += 1
-
-            time.sleep(sleep_timeout)
-            try:
-                self._logger.debug('Trying to send command to device ... (retry {} of {}'.format(retry, retries))
-                with self._cli.get_session(new_sessions=self._session_type, command_mode=self._default_mode,
-                                           logger=self._logger) as session:
-                    output = session.send_command(command='', expected_str='(?<![#\n])[#>] *$', expected_map={}, timeout=5,
-                                                  is_need_default_prompt=False)
-                    if len(output) == 0:
-                        continue
-
-                    is_reloaded = True
-                    break
-            except Exception as e:
-                self._logger.error('CiscoStateOperations', e.message)
-                self._logger.debug('Wait {} seconds and retry ...'.format(sleep_timeout / 2))
-                time.sleep(sleep_timeout / 2)
-                pass
-
-        return is_reloaded
+        return self._wait_device_up(sleep_timeout)
