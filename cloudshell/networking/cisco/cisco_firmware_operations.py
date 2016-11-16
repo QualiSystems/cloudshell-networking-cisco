@@ -113,7 +113,8 @@ class CiscoFirmwareOperations(FirmwareOperationsInterface):
             session.send_command(command='copy run start',
                                  expected_map={'\?': lambda session: session.send_line('')})
 
-        self.reload()
+            CiscoStateOperations.reboot(cli_session=session, logger=self._logger)
+
         with self._cli.get_session(new_sessions=self._session_type, command_mode=self._enable_mode,
                                    logger=self._logger) as session:
             output_version = session.send_command(command='show version | include image file')
@@ -124,13 +125,3 @@ class CiscoFirmwareOperations(FirmwareOperationsInterface):
         else:
             raise Exception('CiscoFirmwareOperations', 'Update firmware failed!')
 
-    def reload(self, sleep_timeout=500):
-        """Reload device
-
-        :param sleep_timeout: timeout between attempts to establish connection to the device
-        :return: True or False
-        """
-
-        state_operations = CiscoStateOperations(cli=self._cli, api=self._api,
-                                                context=self._context, logger=self._logger)
-        return state_operations.reload(sleep_timeout=sleep_timeout)

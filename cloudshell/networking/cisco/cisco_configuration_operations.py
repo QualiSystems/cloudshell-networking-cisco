@@ -6,7 +6,6 @@ import re
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
 from cloudshell.networking.operations.configuration_operations import ConfigurationOperations
-from cloudshell.shell.core.context_utils import get_attribute_by_name
 from cloudshell.shell.core.interfaces.save_restore import OrchestrationSavedArtifact
 
 

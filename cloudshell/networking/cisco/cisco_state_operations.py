@@ -27,7 +27,8 @@ class CiscoStateOperations(StateOperations):
     def shutdown(self):
         pass
 
-    def reload(self, sleep_timeout=500):
+    @staticmethod
+    def reboot(cli_session, logger, sleep_timeout=500):
         """Reload device
 
         :param sleep_timeout: period of time, to wait for device to get back online
@@ -37,18 +38,22 @@ class CiscoStateOperations(StateOperations):
             {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),
              '\(y/n\)|continue': lambda session, logger: session.send_line('y', logger),
              '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger)
-             # 'reload': lambda session: session.send_line('')
              })
         try:
-            self._logger.info('Send \'reload\' to device...')
-            with self._cli.get_session(new_sessions=self._session_type, command_mode=self._default_mode,
-                                       logger=self._logger) as session:
-                session.send_command(command='reload', expected_map=expected_map, timeout=3)
-
+            logger.info('Send \'reload\' to device...')
+            cli_session.send_command(command='reload', expected_map=expected_map, timeout=3)
         except Exception:
             pass
 
-        self._logger.info('Wait 20 seconds for device to reload...')
+        logger.info('Wait 20 seconds for device to reload...')
         time.sleep(20)
 
-        return self._wait_device_up(sleep_timeout)
+        cli_session.reconnect(sleep_timeout)
+
+    def reload(self, cli_session, sleep_timeout=500):
+        """Reload device
+
+        :param sleep_timeout: period of time, to wait for device to get back online
+        """
+
+        return CiscoStateOperations.reboot(cli_session=cli_session, logger=self._logger)
