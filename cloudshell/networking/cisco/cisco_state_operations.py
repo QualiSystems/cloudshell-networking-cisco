@@ -3,7 +3,7 @@ import time
 
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
-from cloudshell.networking.operations.state_operations import StateOperations
+from cloudshell.networking.devices.operations import StateOperations
 
 
 class CiscoStateOperations(StateOperations):
@@ -31,6 +31,8 @@ class CiscoStateOperations(StateOperations):
     def reboot(cli_session, logger, sleep_timeout=500):
         """Reload device
 
+        :param cli_session:
+        :param logger:
         :param sleep_timeout: period of time, to wait for device to get back online
         """
 
@@ -41,7 +43,7 @@ class CiscoStateOperations(StateOperations):
              })
         try:
             logger.info('Send \'reload\' to device...')
-            cli_session.send_command(command='reload', expected_map=expected_map, timeout=3)
+            cli_session.send_command(command='reload', action_map=expected_map, timeout=3)
         except Exception:
             pass
 
@@ -56,4 +58,4 @@ class CiscoStateOperations(StateOperations):
         :param sleep_timeout: period of time, to wait for device to get back online
         """
 
-        return CiscoStateOperations.reboot(cli_session=cli_session, logger=self._logger)
+        return CiscoStateOperations.reboot(cli_session=cli_session, logger=self._logger, sleep_timeout=sleep_timeout)

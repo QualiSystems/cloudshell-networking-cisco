@@ -38,6 +38,7 @@ class EnableCommandMode(CommandMode):
         CommandMode.__init__(self, EnableCommandMode.PROMPT, EnableCommandMode.ENTER_COMMAND,
                              EnableCommandMode.EXIT_COMMAND)
 
+
 class ConfigCommandMode(CommandMode):
     PROMPT = r'\(config.*\)#\s*$'
     ENTER_COMMAND = 'configure terminal'

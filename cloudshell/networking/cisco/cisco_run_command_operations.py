@@ -1,7 +1,7 @@
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
 from cloudshell.shell.core.context_utils import get_resource_name
-from cloudshell.networking.operations.interfaces.run_command_interface import RunCommandInterface
+from cloudshell.networking.devices.operations.interfaces import RunCommandInterface
 
 
 class CiscoRunCommandOperations(RunCommandInterface):

@@ -1,8 +1,8 @@
 from collections import OrderedDict
+
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
-
-from cloudshell.networking.networking_utils import *
+from cloudshell.networking.devices.networking_utils import *
 from cloudshell.networking.operations.connectivity_operations import ConnectivityOperations
 from cloudshell.networking.cisco.command_templates.ethernet import ETHERNET_COMMANDS_TEMPLATES
 from cloudshell.networking.cisco.command_templates.vlan import VLAN_COMMANDS_TEMPLATES

@@ -1,11 +1,11 @@
 import time
 from collections import OrderedDict
 from posixpath import join
-
 import re
+
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
-from cloudshell.networking.operations.configuration_operations import ConfigurationOperations
+from cloudshell.networking.devices.operations.configuration_operations import ConfigurationOperations
 from cloudshell.shell.core.interfaces.save_restore import OrchestrationSavedArtifact
 
 
@@ -23,6 +23,7 @@ def _validate_restore_method(restore_method):
     :param str restore_method: possible values: override, append
     :return: :raise Exception:
     """
+
     restore_method = restore_method or "override"
     if not re.search('append|override', restore_method.lower()):
         raise Exception("validate_restore_method",
@@ -48,6 +49,7 @@ class CiscoConfigurationOperations(ConfigurationOperations):
     def __init__(self, cli, api, logger, context):
         super(CiscoConfigurationOperations, self).__init__(logger, api, context)
         self._cli = cli
+        self._cli_handler()
         self._session_type = get_session(api=api, context=context)
         self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
@@ -138,7 +140,7 @@ class CiscoConfigurationOperations(ConfigurationOperations):
                                                                 vrf=vrf_management_name)
             elif (restore_method == 'override') and (destination_filename == 'running-config'):
 
-                if not self._check_replace_command(output=session.send_command('configure replace')):
+                if not CiscoConfigurationOperations._check_replace_command(output=session.send_command('configure replace')):
                     raise Exception('CiscoConfigurationOperations',
                                     'Overriding running-config is not supported for this device.')
 
@@ -197,7 +199,6 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         action_map[r'\(y/n\)'] = lambda session, logger: session.send_line('y', logger)
         action_map[r'[Oo]verwrit+e'] = lambda session, logger: session.send_line('y', logger)
         action_map[r'\([Yy]es/[Nn]o\)'] = lambda session, logger: session.send_line('yes', logger)
-        # action_map[r'bytes'] = lambda session, logger: session.send_line('', logger)
         action_map[r'\s+[Vv][Rr][Ff]\s+'] = lambda session, logger: session.send_line('', logger)
 
         if '://' in source_file:
@@ -279,7 +280,8 @@ class CiscoConfigurationOperations(ConfigurationOperations):
 
         return is_success, message
 
-    def _check_replace_command(self, output):
+    @staticmethod
+    def _check_replace_command(output):
         """Check if replace command exist on the device or not.
 
         :rtype : bool
@@ -289,3 +291,31 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         if re.search(r'invalid (input|command)', output.lower()):
             return False
         return True
+
+    @staticmethod
+    def _get_copy_action_map(path):
+        action_map = {}
+        host
+        source_file_data_list = re.sub('/+', '/', source_file).split('/')
+        host = source_file_data_list[1]
+        host = source_file_data_list[1]
+        destination_file_name = path.split('/')[-1]
+        action_map[r'(?!/){}'.format(
+            source_file_data_list[-1])] = lambda session, logger: session.send_line('', logger)
+
+        action_map[r'[\[\(]{}[\)\]]'.format(
+            destination_file_name)] = lambda session, logger: session.send_line('', logger)
+
+        if '@' in host:
+            storage_data = re.search(r'^(?P<user>\S+):(?P<password>\S+)@(?P<host>\S+)', host)
+            if storage_data:
+                storage_data_dict = storage_data.groupdict()
+                host = storage_data_dict['host']
+                password = storage_data_dict['password']
+
+                action_map[r'[Pp]assword:'.format(
+                    source_file)] = lambda session, logger: session.send_line(password, logger)
+
+            else:
+                host = host.split('@')[-1]
+        action_map[r"(?!/){}(?!/)".format(host)] = lambda session, logger: session.send_line('', logger)
