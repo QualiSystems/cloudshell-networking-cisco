@@ -1,6 +1,5 @@
 import re
 from cloudshell.networking.cisco.command_templates.configuration_templates import COPY
-from cloudshell.networking.cisco.command_templates.vlan import CONFIGURE_VLAN, STATE_ACTIVE, NO_SHUTDOWN
 from cloudshell.networking.devices.command_actions_interface import CommandActions
 
 
@@ -32,7 +31,7 @@ class CiscoCommandActions(CommandActions):
 
     def copy(self, session, logger, source, destination, vrf=None, action_map=None, error_map=None):
         output = session.send_command(
-            COPY.get_command(source=source, destination=destination, action_map=action_map, error_map=error_map))
+            **COPY.get_command(src=source, dst=destination, vrf=vrf, action_map=action_map, error_map=error_map))
 
         status_match = re.search(r'\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output,
                                  re.IGNORECASE)

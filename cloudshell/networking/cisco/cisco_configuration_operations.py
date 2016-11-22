@@ -49,7 +49,6 @@ class CiscoConfigurationOperations(ConfigurationOperations):
     def __init__(self, cli, api, logger, context):
         super(CiscoConfigurationOperations, self).__init__(logger, api, context)
         self._cli = cli
-        self._cli_handler()
         self._session_type = get_session(api=api, context=context)
         self._enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self._config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
@@ -204,7 +203,7 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         if '://' in source_file:
             source_file_data_list = re.sub('/+', '/', source_file).split('/')
             host = source_file_data_list[1]
-            destination_file_name = destination_file.split(':')[-1].split('/')[-1]
+            destination_file_name = destination_file.split('/')[-1]
             action_map[r'(?!/){}'.format(
                 source_file_data_list[-1])] = lambda session, logger: session.send_line('', logger)
 
@@ -222,9 +221,9 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         else:
             destination_file_name = destination_file.split(':')[-1].split('/')[-1]
             source_file_name = source_file.split(':')[-1].split('/')[-1]
-            action_map[r'[\[\(]{}[\)\]]'.format(
+            action_map[r'(?!/)[\[\(]{}[\)\]]'.format(
                 destination_file_name)] = lambda session, logger: session.send_line('', logger)
-            action_map[r'[\[\(]{}[\)\]]'.format(
+            action_map[r'(?!/)[\[\(]{}[\)\]]'.format(
                 source_file_name)] = lambda session, logger: session.send_line('', logger)
 
         if host:
