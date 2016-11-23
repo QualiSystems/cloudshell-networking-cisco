@@ -1,13 +1,14 @@
 import re
+
 from cloudshell.cli.command_mode_helper import CommandModeHelper
-from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, DefaultCommandMode, ConfigCommandMode
+from cloudshell.networking.cisco.old.cisco_command_modes import EnableCommandMode, DefaultCommandMode, ConfigCommandMode
 from cloudshell.networking.cli_handler_impl import CliHandlerImpl
 from cloudshell.shell.core.api_utils import decrypt_password_from_attribute
 
 
 class CiscoCliHandler(CliHandlerImpl):
-    def __init__(self, cli, context, logger):
-        super(CiscoCliHandler, self).__init__(cli, context, logger)
+    def __init__(self, cli, context, logger, api):
+        super(CiscoCliHandler, self).__init__(cli, context, logger, api)
         self.enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self.default_mode = CommandModeHelper.create_command_mode(DefaultCommandMode, context)
         self.config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)

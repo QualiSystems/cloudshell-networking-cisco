@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import re
-from cloudshell.networking.cisco.new.cisco_command_actions import CiscoCommandActions
+
+from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
 from cloudshell.networking.devices.flows.configuration_flows import SaveConfigurationFlow
 
 
@@ -8,7 +9,6 @@ class CiscoSaveFlow(SaveConfigurationFlow):
     def __init__(self, cli_handler, logger, resource_name):
         super(CiscoSaveFlow, self).__init__(cli_handler, logger, resource_name)
         self._command_actions = CiscoCommandActions()
-        self._default_configuration = 'running-config'
 
     def prepare_action_map(self, source_file, destination_file):
         action_map = OrderedDict()

@@ -1,8 +1,9 @@
 from unittest import TestCase
-from mock import MagicMock, patch
 import re
-import cloudshell.cli.session.telnet_session
-from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
+
+from mock import MagicMock
+
+from cloudshell.networking.cisco.old.cisco_configuration_operations import CiscoConfigurationOperations
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 from cloudshell.tests.networking.cisco.save_restore_methods.test_copy_output import TEST_COPY_OUTPUT
 

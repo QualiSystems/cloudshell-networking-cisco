@@ -3,7 +3,7 @@ import os
 
 from cloudshell.shell.core.driver_context import AutoLoadDetails
 from cloudshell.snmp.quali_snmp import QualiMibTable
-from cloudshell.networking.cisco.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
+from cloudshell.networking.cisco.old.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
 
 class CiscoGenericSNMPAutoload(object):

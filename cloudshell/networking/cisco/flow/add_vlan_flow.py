@@ -1,4 +1,4 @@
-from cloudshell.networking.cisco.new.cisco_command_actions import CiscoCommandActions
+from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
 from cloudshell.networking.devices.flows.configuration_flows import AddVlanFlow
 
 

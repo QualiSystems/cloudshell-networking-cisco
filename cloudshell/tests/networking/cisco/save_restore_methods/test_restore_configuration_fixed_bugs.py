@@ -1,7 +1,9 @@
 from unittest import TestCase
-from mock import MagicMock
 import re
-from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
+
+from mock import MagicMock
+
+from cloudshell.networking.cisco.old.cisco_configuration_operations import CiscoConfigurationOperations
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
 __author__ = 'CoYe'

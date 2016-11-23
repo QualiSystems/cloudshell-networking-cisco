@@ -5,7 +5,7 @@ from cloudshell.cli.cli import CLI
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
-from cloudshell.networking.cisco.cisco_state_operations import CiscoStateOperations
+from cloudshell.networking.cisco.old.cisco_state_operations import CiscoStateOperations
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
 from cloudshell.networking.devices.networking_utils import UrlParser
 from cloudshell.networking.operations.interfaces.firmware_operations_interface import FirmwareOperationsInterface

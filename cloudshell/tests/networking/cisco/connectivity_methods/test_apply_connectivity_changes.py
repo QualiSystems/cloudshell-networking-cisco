@@ -1,7 +1,9 @@
 from unittest import TestCase
+
 from mock import MagicMock
+
 from cloudshell.networking.apply_connectivity.apply_connectivity_operation import apply_connectivity_changes
-from cloudshell.networking.cisco.cisco_connectivity_operations import CiscoConnectivityOperations
+from cloudshell.networking.cisco.old.cisco_connectivity_operations import CiscoConnectivityOperations
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
 

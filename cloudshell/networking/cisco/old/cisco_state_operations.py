@@ -2,7 +2,7 @@ from collections import OrderedDict
 import time
 
 from cloudshell.cli.command_mode_helper import CommandModeHelper
-from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
+from cloudshell.networking.cisco.old.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
 from cloudshell.networking.devices.operations import StateOperations
 
 
