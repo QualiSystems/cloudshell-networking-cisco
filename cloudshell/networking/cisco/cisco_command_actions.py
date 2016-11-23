@@ -14,7 +14,7 @@ class CiscoCommandActions(CommandActions):
     def health_check(self, session, logger):
         pass
 
-    def set_vlan_to_interface(self, session, logger, vlan_range, port_mode, port_name, qnq, c_tag, action_map=None,
+    def set_vlan_to_interface(self, config_session, logger, vlan_range, port_mode, port_name, qnq, c_tag, action_map=None,
                               error_map=None):
         # interface_config_actions = OrderedDict()
         # interface_config_actions['configure_interface'] = port_name
@@ -42,23 +42,22 @@ class CiscoCommandActions(CommandActions):
                     line_to_remove = line
                 commands_list.insert(1, 'no {0}'.format(line_to_remove.strip(' ')))
 
-        session.send_command(**CONFIGURE_INTERFACE.get_command(port_name=port_name))
-        session.send_command(**SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
+        config_session.send_command(**CONFIGURE_INTERFACE.get_command(port_name=port_name))
+        config_session.send_command(**SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
         if qnq:
             port_mode = 'dot1q-tunnel'
-        session.send_command(**SWITCHPORT_MODE.get_command(port_mode=port_mode, action_map=action_map,
+        config_session.send_command(**SWITCHPORT_MODE.get_command(port_mode=port_mode, action_map=action_map,
                                                          error_map=error_map))
         if 'trunk' not in port_mode:
-            session.send_command(**SWITCHPORT_ALLOW_VLAN.get_command(port_mode_access='',
+            config_session.send_command(**SWITCHPORT_ALLOW_VLAN.get_command(port_mode_access='',
                                                                      vlan_range=vlan_range,
                                                                      action_map=action_map,
                                                                      error_map=error_map))
         else:
-            session.send_command(**SWITCHPORT_ALLOW_VLAN.get_command(port_mode_trunk='',
+            config_session.send_command(**SWITCHPORT_ALLOW_VLAN.get_command(port_mode_trunk='',
                                                                      vlan_range=vlan_range,
                                                                      action_map=action_map,
                                                                      error_map=error_map))
-
 
     def reload(self, session, logger, timeout):
         pass

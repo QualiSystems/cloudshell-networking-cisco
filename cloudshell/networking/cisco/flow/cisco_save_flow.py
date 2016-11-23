@@ -10,7 +10,13 @@ class CiscoSaveFlow(SaveConfigurationFlow):
         super(CiscoSaveFlow, self).__init__(cli_handler, logger, resource_name)
         self._command_actions = CiscoCommandActions()
 
-    def prepare_action_map(self, source_file, destination_file):
+    def save_config(self, configuration_type, full_path, vrf_management_name):
+        action_map = self._prepare_action_map(source_file=configuration_type, destination_file=full_path)
+        with self._cli_handler.get_cli_operations(self._cli_handler.enable_mode) as session:
+            self._command_actions.copy(session, self._logger, configuration_type, full_path,
+                                       vrf_management_name, action_map)
+
+    def _prepare_action_map(self, source_file, destination_file):
         action_map = OrderedDict()
         host = None
         if '://' in destination_file:
@@ -20,7 +26,8 @@ class CiscoSaveFlow(SaveConfigurationFlow):
             action_map[r'[\[\(]{}[\)\]]'.format(
                 destination_file_data_list[-1])] = lambda session, logger: session.send_line('', logger)
 
-            action_map[r'[\[\(]{}[\)\]]'.format(source_file_name)] = lambda session, logger: session.send_line('', logger)
+            action_map[r'[\[\(]{}[\)\]]'.format(source_file_name)] = lambda session, logger: session.send_line('',
+                                                                                                               logger)
         else:
             destination_file_name = destination_file.split(':')[-1].split('/')[-1]
             source_file_name = source_file.split(':')[-1].split('/')[-1]
