@@ -1,13 +1,11 @@
 from collections import OrderedDict
 import re
 from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIGURE_INTERFACE, SHUTDOWN, SWITCHPORT_MODE, \
-    SWITCHPORT_ALLOW_VLAN
+    SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN
 from cloudshell.networking.cisco.command_templates.configuration_templates import COPY, DEL, CONFIGURE_REPLACE
-from cloudshell.networking.cisco.command_templates.vlan import CONFIGURE_VLAN, STATE_ACTIVE, NO_SHUTDOWN
-from cloudshell.networking.devices.command_actions_interface import CommandActions
 
 
-class CiscoCommandActions(CommandActions):
+class CiscoCommandActions():
     def install_firmware(self, session, logger, path, vrf):
         pass
 
@@ -57,7 +55,7 @@ class CiscoCommandActions(CommandActions):
                                                         action_map=action_map,
                                                         error_map=error_map))
         session.send_command(STATE_ACTIVE.get_command(action_map=action_map, error_map=error_map))
-        session.send_command(NO_SHUTDOWN.get_command(action_map=action_map, error_map=error_map))
+        session.send_command(SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
 
     def run_custom_command(self, session, logger, command):
         pass
@@ -84,21 +82,13 @@ class CiscoCommandActions(CommandActions):
                     message += error_match.group()
             raise Exception(self.__class__.__name__, message)
 
-    def verify_firmware(self, session, logger):
-        pass
-
-    def remove_vlan_from_interface(self, config_session, logger, vlan_range, port_mode, port_name, qnq, c_tag):
-        current_config = config_session.send_command(
-            'show running-config interface {0}'.format(port_name))
-
+    def remove_vlan_from_interface(self, config_session, logger, port_name, action_map=None, error_map=None):
+        current_config = config_session.send_command(**SHOW_RUNNING(port_name=port_name, action_map=action_map, error_map=error_map))
         for line in current_config.splitlines():
-            if re.search(r'^\s*switchport\s+', line):
-                line_to_remove = re.sub(r'\s+\d+[-\d+,]+', '', line)
-                if not line_to_remove:
-                    line_to_remove = line
-                commands_list.insert(1, 'no {0}'.format(line_to_remove.strip(' ')))
+            if line.strip(" ").startswith('switchport '):
+                config_session.send_command(**NO(command=line.strip(' '), action_map=action_map, error_map=error_map))
 
-    def delete_file(self, session, path, action_map=None, error_map=None):
+    def delete_file(self, session, logger, path, action_map=None, error_map=None):
         session.send_command(**DEL.get_command(tarfget=path, action_map=action_map, error_map=error_map))
 
     def verify_vlan_added(self, session, logger):

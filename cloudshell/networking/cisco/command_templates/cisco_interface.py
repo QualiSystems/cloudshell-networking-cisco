@@ -1,9 +1,9 @@
 from collections import OrderedDict
 from cloudshell.cli.command_template.command_template import CommandTemplate
 
-CONFIGURE_INTERFACE = CommandTemplate('interface {0}')
+# <editor-fold desc="Interface configuration templates">
 
-SHUTDOWN = CommandTemplate('[no{no}] shutdown')
+CONFIGURE_INTERFACE = CommandTemplate('interface {0}')
 
 SWITCHPORT_MODE = CommandTemplate('[no{no}] switchport [mode {port_mode}]',
                                   action_map=OrderedDict(
@@ -23,4 +23,24 @@ SWITCHPORT_ALLOW_VLAN = CommandTemplate(
         "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected": Exception('SWITCHPORT_MODE',
                                                                             'Failed to switch port mode')})
 
-ACCESS_ALLOW_VLAN = CommandTemplate('[no{no}] switchport access vlan {0}')
+# </editor-fold>
+
+# <editor-fold desc="Vlan configuration templates">
+
+CONFIGURE_VLAN = CommandTemplate('vlan {vlan_id}',
+                                 error_map=OrderedDict({"%.*\.": Exception('CONFIGURE_VLAN', "Error")}))
+STATE_ACTIVE = CommandTemplate('state active')
+
+# </editor-fold>
+
+SHUTDOWN = CommandTemplate('[no{no}] shutdown')
+
+NO = CommandTemplate('no {command}')
+
+IP = CommandTemplate('ip {0}')
+
+# <editor-fold desc="Vlan configuration templates">
+
+SHOW_RUNNING = CommandTemplate('show running-config [interface {port_name}]')
+
+# </editor-fold>
