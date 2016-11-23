@@ -32,16 +32,6 @@ class CiscoCommandActions(CommandActions):
         #         interface_config_actions['switchport_mode_access'] = []
         #     interface_config_actions['access_allow_vlan'] = [vlan_range]
         # self.logger.info('Finished preparing interface configuration commands')
-        current_config = config_session.send_command(
-            'show running-config interface {0}'.format(commands_dict['configure_interface']))
-
-        for line in current_config.splitlines():
-            if re.search(r'^\s*switchport\s+', line):
-                line_to_remove = re.sub(r'\s+\d+[-\d+,]+', '', line)
-                if not line_to_remove:
-                    line_to_remove = line
-                commands_list.insert(1, 'no {0}'.format(line_to_remove.strip(' ')))
-
         config_session.send_command(**CONFIGURE_INTERFACE.get_command(port_name=port_name))
         config_session.send_command(**SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
         if qnq:
@@ -97,24 +87,22 @@ class CiscoCommandActions(CommandActions):
     def verify_firmware(self, session, logger):
         pass
 
-    def remove_vlan_from_interface(self, session, logger, vlan_range, port_mode, port_name, qnq, c_tag):
-        pass
+    def remove_vlan_from_interface(self, config_session, logger, vlan_range, port_mode, port_name, qnq, c_tag):
+        current_config = config_session.send_command(
+            'show running-config interface {0}'.format(port_name))
 
-    def override_startup(self, session, logger, path, vrf):
-        destination_file = 'startup_config'
-        destination_file_path = 'nvram:startup_config'
-        action_map = OrderedDict({'[Dd]elete [Ff]ilename ': lambda session, logger: session.send_line(destination_file,
-                                                                                                      logger)})
-        session.send_command(**DEL.get_command(tarfget=destination_file_path, action_map=action_map))
+        for line in current_config.splitlines():
+            if re.search(r'^\s*switchport\s+', line):
+                line_to_remove = re.sub(r'\s+\d+[-\d+,]+', '', line)
+                if not line_to_remove:
+                    line_to_remove = line
+                commands_list.insert(1, 'no {0}'.format(line_to_remove.strip(' ')))
 
-        self.copy(session=session, logger=logger, source=path, destination=destination_file, vrf=vrf)
-        pass
+    def delete_file(self, session, path, action_map=None, error_map=None):
+        session.send_command(**DEL.get_command(tarfget=path, action_map=action_map, error_map=error_map))
 
     def verify_vlan_added(self, session, logger):
         pass
 
     def override_running(self, session, path, vrf, action_map=None, error_map=None):
         session.send_command(**CONFIGURE_REPLACE(path=path, action_map=action_map, error_map))
-
-    def verify_config_applied(self, session, logger):
-        pass
