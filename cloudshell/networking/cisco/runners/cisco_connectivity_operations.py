@@ -18,7 +18,7 @@ class CiscoConnectivityOperations(ConnectivityOperations):
 
         super(CiscoConnectivityOperations, self).__init__(logger)
         self._cli_handler = CiscoCliHandler(cli, context, logger, api)
-        self._save_flow = CiscoAddVlanFlow(cli_handler=self._cli_handler,
-                                           logger=self._logger)
-        self._restore_flow = CiscoRemoveVlanFlow(cli_handler=self._cli_handler,
-                                                 logger=self._logger)
+        self.add_vlan_flow = CiscoAddVlanFlow(cli_handler=self._cli_handler,
+                                              logger=self._logger)
+        self.remove_vlan_flow = CiscoRemoveVlanFlow(cli_handler=self._cli_handler,
+                                                    logger=self._logger)
