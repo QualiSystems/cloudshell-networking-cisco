@@ -1,7 +1,7 @@
 from cloudshell.networking.devices.flows.action_flows import RunCommandFlow
 
 
-class CiscoRunCustomCommand(RunCommandFlow):
+class CiscoRunCustomCommandFlow(RunCommandFlow):
     def __init__(self, cli_handler, logger):
         super(CiscoRunCustomCommand, self).__init__(cli_handler, logger)
 

@@ -5,7 +5,7 @@ from cloudshell.networking.devices.runners.interfaces.run_command_interface impo
 
 class CiscoRunCommandOperations(RunCommandInterface):
     def __init__(self, cli, context, logger, api):
-        """Create CiscoIOSHandlerBase
+        """Create CiscoRunCommandOperations
 
         :param context: command context
         :param api: cloudshell api object
@@ -18,8 +18,8 @@ class CiscoRunCommandOperations(RunCommandInterface):
         self._logger = logger
         self._run_command_flow = CiscoRunCustomCommand(self._cli_handler, self._logger)
 
-    def run_custom_command(self, command):
-        return self._run_command_flow.execute_flow(custom_command=command)
+    def run_custom_command(self, custom_command):
+        return self._run_command_flow.execute_flow(custom_command=custom_command)
 
-    def run_custom_config_command(self, command):
-        return self._run_command_flow.execute_flow(custom_command=command, is_config=True)
+    def run_custom_config_command(self, custom_command):
+        return self._run_command_flow.execute_flow(custom_command=custom_command, is_config=True)

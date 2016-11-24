@@ -2,7 +2,7 @@ from collections import OrderedDict
 import re
 from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIGURE_INTERFACE, SHUTDOWN, \
     SWITCHPORT_MODE, \
-    SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, DO_SHOW_RUNNING, SHOW_VERSION
+    SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, SHOW_VERSION
 from cloudshell.networking.cisco.command_templates.configuration_templates import COPY, DEL, CONFIGURE_REPLACE
 
 
@@ -77,6 +77,12 @@ class CiscoCommandActions():
     def get_current_os_version(self, session, action_map=None, error_map=None):
         return session.send_command(**SHOW_VERSION(action_map=action_map, error_map=error_map))
 
+    def get_current_snmp_communities(self, session, action_map=None, error_map=None):
+        return session.send_command(**SHOW_RUNNING(snmp='', action_map=action_map,
+                                                                      error_map=error_map))
+
+
+
     def clean_interface_switchport_config(self, config_session, logger, current_config, port_name, action_map=None,
                                           error_map=None):
         logger.debug("Start cleaning interface switchport configuration")
@@ -98,5 +104,5 @@ class CiscoCommandActions():
     def verify_interface_configured(self, vlan_range, current_config):
         return vlan_range not in current_config
 
-    def override_running(self, session, path, vrf, action_map=None, error_map=None):
+    def override_running(self, session, path, action_map=None, error_map=None):
         session.send_command(**CONFIGURE_REPLACE(path=path, action_map=action_map, error_map))

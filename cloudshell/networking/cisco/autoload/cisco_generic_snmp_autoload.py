@@ -3,7 +3,6 @@ import os
 
 from cloudshell.shell.core.driver_context import AutoLoadDetails
 from cloudshell.snmp.quali_snmp import QualiMibTable
-from cloudshell.networking.cisco.old.resource_drivers_map import CISCO_RESOURCE_DRIVERS_MAP
 
 
 class CiscoGenericSNMPAutoload(object):
@@ -688,17 +687,17 @@ class CiscoGenericSNMPAutoload(object):
         """
 
         result = ''
-        snmp_object_id = self.snmp.get_property('SNMPv2-MIB', 'sysObjectID', 0)
-        match_name = re.search(r'\.(?P<model>\d+$)', snmp_object_id)
+        # snmp_object_id = self.snmp.get_property('SNMPv2-MIB', 'sysObjectID', 0)
+        # match_name = re.search(r'\.(?P<model>\d+$)', snmp_object_id)
+        # if match_name:
+        #     model = match_name.groupdict()['model']
+        #     if model in CISCO_RESOURCE_DRIVERS_MAP:
+        #         result = CISCO_RESOURCE_DRIVERS_MAP[model].lower().replace('_', '').capitalize()
+        # if not result:
+        self.snmp.load_mib(['CISCO-PRODUCTS-MIB', 'CISCO-ENTITY-VENDORTYPE-OID-MIB'])
+        match_name = re.search(r'::(?P<model>\S+$)', self.snmp.get_property('SNMPv2-MIB', 'sysObjectID', '0'))
         if match_name:
-            model = match_name.groupdict()['model']
-            if model in CISCO_RESOURCE_DRIVERS_MAP:
-                result = CISCO_RESOURCE_DRIVERS_MAP[model].lower().replace('_', '').capitalize()
-        if not result or result == '':
-            self.snmp.load_mib(['CISCO-PRODUCTS-MIB', 'CISCO-ENTITY-VENDORTYPE-OID-MIB'])
-            match_name = re.search(r'::(?P<model>\S+$)', self.snmp.get_property('SNMPv2-MIB', 'sysObjectID', '0'))
-            if match_name:
-                result = match_name.groupdict()['model'].capitalize()
+            result = match_name.groupdict()['model'].capitalize()
         return result
 
     def _get_mapping(self, port_index, port_descr):
