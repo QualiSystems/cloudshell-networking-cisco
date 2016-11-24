@@ -43,6 +43,7 @@ IP = CommandTemplate('ip {0}')
 
 # <editor-fold desc="Show templates">
 
-SHOW_RUNNING = CommandTemplate('show running-config [interface {port_name}]')
+SHOW_RUNNING = CommandTemplate('show running-config [interface {port_name}] [boot{boot}]')
+SHOW_VERSION = CommandTemplate('show version')
 
 # </editor-fold>
