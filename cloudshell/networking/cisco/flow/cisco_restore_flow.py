@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
-from cloudshell.networking.devices.flows.configuration_flows import RestoreConfigurationFlow
+from cloudshell.networking.devices.flows.action_flows import RestoreConfigurationFlow
 
 
 class CiscoRestoreFlow(RestoreConfigurationFlow):

@@ -1,6 +1,6 @@
 import re
 from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
-from cloudshell.networking.devices.flows.configuration_flows import LoadFirmwareFlow
+from cloudshell.networking.devices.flows.action_flows import LoadFirmwareFlow
 from cloudshell.networking.devices.networking_utils import UrlParser
 
 

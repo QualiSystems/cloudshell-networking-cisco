@@ -2,7 +2,7 @@ from collections import OrderedDict
 import re
 
 from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
-from cloudshell.networking.devices.flows.configuration_flows import SaveConfigurationFlow
+from cloudshell.networking.devices.flows.action_flows import SaveConfigurationFlow
 
 
 class CiscoSaveFlow(SaveConfigurationFlow):

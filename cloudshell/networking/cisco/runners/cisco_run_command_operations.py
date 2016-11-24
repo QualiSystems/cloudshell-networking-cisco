@@ -1,6 +1,6 @@
 from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.flow.cisco_run_command_flow import CiscoRunCustomCommand
-from cloudshell.networking.devices.operations.interfaces.run_command_interface import RunCommandInterface
+from cloudshell.networking.devices.runners.interfaces.run_command_interface import RunCommandInterface
 
 
 class CiscoRunCommandOperations(RunCommandInterface):

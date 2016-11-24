@@ -1,7 +1,7 @@
 from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.flow import CiscoSaveFlow
 from cloudshell.networking.cisco.flow.cisco_restore_flow import CiscoRestoreFlow
-from cloudshell.networking.devices.operations.configuration_operations import ConfigurationOperations
+from cloudshell.networking.devices.runners.configuration_operations import ConfigurationOperations
 
 
 class CiscoConfigurationOperations(ConfigurationOperations):

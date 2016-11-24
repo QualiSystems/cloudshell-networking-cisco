@@ -1,7 +1,7 @@
 from collections import OrderedDict
 import time
 from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
-from cloudshell.networking.devices.operations.state_operations import StateOperations
+from cloudshell.networking.devices.runners.state_operations import StateOperations
 
 
 class CiscoStateOperations(StateOperations):

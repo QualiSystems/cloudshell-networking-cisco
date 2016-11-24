@@ -1,4 +1,4 @@
-from cloudshell.networking.devices.flows.configuration_flows import RemoveVlanFlow
+from cloudshell.networking.devices.flows.action_flows import RemoveVlanFlow
 
 
 class CiscoRemoveVlanFlow(RemoveVlanFlow):

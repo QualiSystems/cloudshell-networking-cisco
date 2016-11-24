@@ -1,7 +1,7 @@
 from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.flow.cisco_add_vlan_flow import CiscoAddVlanFlow
 from cloudshell.networking.cisco.flow.cisco_remove_vlan_flow import CiscoRemoveVlanFlow
-from cloudshell.networking.devices.operations.connectivity_operations import ConnectivityOperations
+from cloudshell.networking.devices.runners.connectivity_operations import ConnectivityOperations
 
 
 class CiscoConnectivityOperations(ConnectivityOperations):

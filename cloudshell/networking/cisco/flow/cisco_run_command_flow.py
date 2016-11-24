@@ -1,11 +1,9 @@
-from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
-from cloudshell.networking.devices.flows.configuration_flows import RunCommandFlow
+from cloudshell.networking.devices.flows.action_flows import RunCommandFlow
 
 
 class CiscoRunCustomCommand(RunCommandFlow):
     def __init__(self, cli_handler, logger):
         super(CiscoRunCustomCommand, self).__init__(cli_handler, logger)
-        self._command_actions = CiscoCommandActions()
 
     def execute_flow(self, custom_command='', is_config=False):
         responses = []

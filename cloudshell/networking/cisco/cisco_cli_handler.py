@@ -9,8 +9,8 @@ from cloudshell.shell.core.api_utils import decrypt_password_from_attribute
 class CiscoCliHandler(CliHandlerImpl):
     def __init__(self, cli, context, logger, api):
         super(CiscoCliHandler, self).__init__(cli, context, logger, api)
-        self.enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self.default_mode = CommandModeHelper.create_command_mode(DefaultCommandMode, context)
+        self.enable_mode = CommandModeHelper.create_command_mode(EnableCommandMode, context)
         self.config_mode = CommandModeHelper.create_command_mode(ConfigCommandMode, context)
 
     def on_session_start(self, session, logger):

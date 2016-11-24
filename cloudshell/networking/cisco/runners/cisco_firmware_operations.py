@@ -7,7 +7,7 @@ from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.cisco_command_modes import get_session, EnableCommandMode, ConfigCommandMode
 from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 from cloudshell.networking.cisco.flow.cisco_load_firmware_flow import CiscoLoadFirmwareFlow
-from cloudshell.networking.cisco.operations.cisco_state_operations import CiscoStateOperations
+from cloudshell.networking.cisco.runners.cisco_state_operations import CiscoStateOperations
 from cloudshell.networking.cisco.firmware_data.cisco_firmware_data import CiscoFirmwareData
 from cloudshell.networking.devices.networking_utils import UrlParser
 from cloudshell.networking.operations.interfaces.firmware_operations_interface import FirmwareOperationsInterface
