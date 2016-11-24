@@ -19,8 +19,8 @@ class CiscoRestoreFlow(RestoreConfigurationFlow):
                 if restore_method == 'override':
                     action_map = OrderedDict({
                         '[Dd]elete [Ff]ilename ': lambda session, logger: session.send_line(configuration, logger)})
-                    self._command_actions.delete_file(session=enable_session, path=self.STARTUP_LOCATION,
-                                                      action_map=action_map)
+                    self._command_actions.delete_file(session=enable_session, logger=self._logger,
+                                                      path=self.STARTUP_LOCATION, action_map=action_map)
                     self._command_actions.copy(enable_session, path, restore_method, configuration, vrf)
                 else:
                     self._command_actions.copy(enable_session, path, restore_method, configuration, vrf)

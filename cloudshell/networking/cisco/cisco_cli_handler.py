@@ -1,7 +1,7 @@
 import re
 
 from cloudshell.cli.command_mode_helper import CommandModeHelper
-from cloudshell.networking.cisco.old.cisco_command_modes import EnableCommandMode, DefaultCommandMode, ConfigCommandMode
+from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, DefaultCommandMode, ConfigCommandMode
 from cloudshell.networking.cli_handler_impl import CliHandlerImpl
 from cloudshell.shell.core.api_utils import decrypt_password_from_attribute
 

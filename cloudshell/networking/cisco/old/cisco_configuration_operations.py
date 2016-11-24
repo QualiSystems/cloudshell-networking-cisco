@@ -4,7 +4,7 @@ from posixpath import join
 import re
 
 from cloudshell.cli.command_mode_helper import CommandModeHelper
-from cloudshell.networking.cisco.old.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
+from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, ConfigCommandMode, get_session
 from cloudshell.networking.devices.operations.configuration_operations import ConfigurationOperations
 from cloudshell.shell.core.interfaces.save_restore import OrchestrationSavedArtifact
 

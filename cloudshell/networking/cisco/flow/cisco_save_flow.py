@@ -6,11 +6,11 @@ from cloudshell.networking.devices.flows.configuration_flows import SaveConfigur
 
 
 class CiscoSaveFlow(SaveConfigurationFlow):
-    def __init__(self, cli_handler, logger, resource_name):
-        super(CiscoSaveFlow, self).__init__(cli_handler, logger, resource_name)
+    def __init__(self, cli_handler, logger):
+        super(CiscoSaveFlow, self).__init__(cli_handler, logger)
         self._command_actions = CiscoCommandActions()
 
-    def save_config(self, configuration_type, full_path, vrf_management_name):
+    def execute_flow(self, configuration_type, full_path, vrf_management_name=None):
         action_map = self._prepare_action_map(source_file=configuration_type, destination_file=full_path)
         with self._cli_handler.get_cli_operations(self._cli_handler.enable_mode) as session:
             self._command_actions.copy(session, self._logger, configuration_type, full_path,

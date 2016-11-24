@@ -5,7 +5,7 @@ from cloudshell.cli.command_template.command_template import CommandTemplate
 
 CONFIGURE_INTERFACE = CommandTemplate('interface {0}')
 
-SWITCHPORT_MODE = CommandTemplate('[no{no}] switchport [mode {port_mode}]',
+SWITCHPORT_MODE = CommandTemplate('switchport [mode {port_mode}]',
                                   action_map=OrderedDict(
                                       {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
                                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}),
@@ -15,7 +15,7 @@ SWITCHPORT_MODE = CommandTemplate('[no{no}] switchport [mode {port_mode}]',
                                   })
 
 SWITCHPORT_ALLOW_VLAN = CommandTemplate(
-    '[no{no}] switchport [trunk{port_mode_trunk} allowed] [access{port_mode_access}] vlan {vlan_range}',
+    'switchport [trunk{port_mode_trunk} allowed] [access{port_mode_access}] vlan {vlan_range}',
     action_map=OrderedDict(
         {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
          '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}),
@@ -33,13 +33,15 @@ STATE_ACTIVE = CommandTemplate('state active')
 
 # </editor-fold>
 
-SHUTDOWN = CommandTemplate('[no{no}] shutdown')
+SHUTDOWN = CommandTemplate('shutdown')
+
+NO_SHUTDOWN = CommandTemplate('no shutdown')
 
 NO = CommandTemplate('no {command}')
 
 IP = CommandTemplate('ip {0}')
 
-# <editor-fold desc="Vlan configuration templates">
+# <editor-fold desc="Show templates">
 
 SHOW_RUNNING = CommandTemplate('show running-config [interface {port_name}]')
 

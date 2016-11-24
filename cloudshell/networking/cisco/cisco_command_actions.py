@@ -1,7 +1,8 @@
 from collections import OrderedDict
 import re
-from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIGURE_INTERFACE, SHUTDOWN, SWITCHPORT_MODE, \
-    SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN
+from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIGURE_INTERFACE, SHUTDOWN, \
+    SWITCHPORT_MODE, \
+    SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, DO_SHOW_RUNNING
 from cloudshell.networking.cisco.command_templates.configuration_templates import COPY, DEL, CONFIGURE_REPLACE
 
 
@@ -12,7 +13,8 @@ class CiscoCommandActions():
     def health_check(self, session, logger):
         pass
 
-    def set_vlan_to_interface(self, config_session, logger, vlan_range, port_mode, port_name, qnq, c_tag, action_map=None,
+    def set_vlan_to_interface(self, config_session, logger, vlan_range, port_mode, port_name, qnq, c_tag,
+                              action_map=None,
                               error_map=None):
         # interface_config_actions = OrderedDict()
         # interface_config_actions['configure_interface'] = port_name
@@ -35,17 +37,17 @@ class CiscoCommandActions():
         if qnq:
             port_mode = 'dot1q-tunnel'
         config_session.send_command(**SWITCHPORT_MODE.get_command(port_mode=port_mode, action_map=action_map,
-                                                         error_map=error_map))
+                                                                  error_map=error_map))
         if 'trunk' not in port_mode:
             config_session.send_command(**SWITCHPORT_ALLOW_VLAN.get_command(port_mode_access='',
-                                                                     vlan_range=vlan_range,
-                                                                     action_map=action_map,
-                                                                     error_map=error_map))
+                                                                            vlan_range=vlan_range,
+                                                                            action_map=action_map,
+                                                                            error_map=error_map))
         else:
             config_session.send_command(**SWITCHPORT_ALLOW_VLAN.get_command(port_mode_trunk='',
-                                                                     vlan_range=vlan_range,
-                                                                     action_map=action_map,
-                                                                     error_map=error_map))
+                                                                            vlan_range=vlan_range,
+                                                                            action_map=action_map,
+                                                                            error_map=error_map))
 
     def reload(self, session, logger, timeout):
         pass
@@ -82,17 +84,25 @@ class CiscoCommandActions():
                     message += error_match.group()
             raise Exception(self.__class__.__name__, message)
 
-    def remove_vlan_from_interface(self, config_session, logger, port_name, action_map=None, error_map=None):
-        current_config = config_session.send_command(**SHOW_RUNNING(port_name=port_name, action_map=action_map, error_map=error_map))
+    def get_current_interface_config(self, session, logger, port_name, action_map=None, error_map=None):
+        return session.send_command(**SHOW_RUNNING(port_name=port_name, action_map=action_map,
+                                                   error_map=error_map))
+
+    def clean_interface_switchport_config(self, config_session, logger, current_config, port_name, action_map=None,
+                                          error_map=None):
+        logger.debug("Start cleaning interface switchport configuration")
+        config_session.send_command(**CONFIGURE_INTERFACE.get_command(port_name=port_name))
         for line in current_config.splitlines():
             if line.strip(" ").startswith('switchport '):
                 config_session.send_command(**NO(command=line.strip(' '), action_map=action_map, error_map=error_map))
 
+        logger.debug("Completed cleaning interface switchport configuration")
+
     def delete_file(self, session, logger, path, action_map=None, error_map=None):
         session.send_command(**DEL.get_command(tarfget=path, action_map=action_map, error_map=error_map))
 
-    def verify_vlan_added(self, session, logger):
-        pass
+    def verify_interface_configured(self, vlan_range, current_config):
+        return vlan_range not in current_config
 
     def override_running(self, session, path, vrf, action_map=None, error_map=None):
         session.send_command(**CONFIGURE_REPLACE(path=path, action_map=action_map, error_map))

@@ -1,5 +1,6 @@
 from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.flow import CiscoSaveFlow
+from cloudshell.networking.cisco.flow.cisco_restore_flow import CiscoRestoreFlow
 from cloudshell.networking.devices.operations.configuration_operations import ConfigurationOperations
 
 
@@ -10,7 +11,8 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         self._save_flow = CiscoSaveFlow(cli_handler=self._cli_handler,
                                         logger=self._logger,
                                         resource_name=self._resource_name)
-        self._restore_flow = CiscoRestoreFlow()
+        self._restore_flow = CiscoRestoreFlow(cli_handler=self._cli_handler,
+                                              logger=self._logger)
 
     # def save_configuration(self, folder_path, configuration_type=None, vrf_management_name=None):
     #     """Proxy method for Save command, to modify output according to networking standard
