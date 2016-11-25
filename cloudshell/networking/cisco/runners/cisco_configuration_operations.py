@@ -1,6 +1,6 @@
 from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
-from cloudshell.networking.cisco.flow import CiscoSaveFlow
 from cloudshell.networking.cisco.flow.cisco_restore_flow import CiscoRestoreFlow
+from cloudshell.networking.cisco.flow.cisco_save_flow import CiscoSaveFlow
 from cloudshell.networking.devices.runners.configuration_operations import ConfigurationOperations
 
 
@@ -9,8 +9,7 @@ class CiscoConfigurationOperations(ConfigurationOperations):
         super(CiscoConfigurationOperations, self).__init__(logger, context, api)
         self._cli_handler = CiscoCliHandler(cli, context, logger, api)
         self._save_flow = CiscoSaveFlow(cli_handler=self._cli_handler,
-                                        logger=self._logger,
-                                        resource_name=self._resource_name)
+                                        logger=self._logger)
         self._restore_flow = CiscoRestoreFlow(cli_handler=self._cli_handler,
                                               logger=self._logger)
 

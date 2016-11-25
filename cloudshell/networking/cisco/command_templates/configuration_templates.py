@@ -23,3 +23,6 @@ CONFIGURE_REPLACE = CommandTemplate('configure replace {path}', action_map=Order
     "[Ee]rror.*$|[Rr]ollback\s*[Dd]one|(?<=%).*(not.*|in)valid.*(?=\n)})":
         Exception("Configure_Replace",
                   "Configure replace completed with error")})
+
+SNMP_SERVER_COMMUNITY = CommandTemplate("snmp-server community {snmp_community} ro")
+NO_SNMP_SERVER_COMMUNITY = CommandTemplate("no snmp-server community {snmp_community}")

@@ -10,10 +10,10 @@ class CiscoSaveFlow(SaveConfigurationFlow):
         super(CiscoSaveFlow, self).__init__(cli_handler, logger)
         self._command_actions = CiscoCommandActions()
 
-    def execute_flow(self, configuration_type, full_path, vrf_management_name=None):
-        action_map = self._prepare_action_map(source_file=configuration_type, destination_file=full_path)
+    def execute_flow(self, folder_path, configuration_type, vrf_management_name=None):
+        action_map = self._prepare_action_map(source_file=configuration_type, destination_file=folder_path)
         with self._cli_handler.get_cli_operations(self._cli_handler.enable_mode) as session:
-            self._command_actions.copy(session, self._logger, configuration_type, full_path,
+            self._command_actions.copy(session, self._logger, configuration_type, folder_path,
                                        vrf_management_name, action_map)
 
     def _prepare_action_map(self, source_file, destination_file):

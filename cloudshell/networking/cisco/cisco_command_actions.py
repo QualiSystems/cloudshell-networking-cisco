@@ -3,10 +3,11 @@ import re
 from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIGURE_INTERFACE, SHUTDOWN, \
     SWITCHPORT_MODE, \
     SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, SHOW_VERSION
-from cloudshell.networking.cisco.command_templates.configuration_templates import COPY, DEL, CONFIGURE_REPLACE
+from cloudshell.networking.cisco.command_templates.configuration_templates import COPY, DEL, CONFIGURE_REPLACE, \
+    SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY
 
 
-class CiscoCommandActions():
+class CiscoCommandActions(object):
     def install_firmware(self, session, logger, path, vrf):
         pass
 
@@ -69,19 +70,18 @@ class CiscoCommandActions():
             raise Exception(self.__class__.__name__, message)
 
     def get_current_interface_config(self, session, logger, port_name, action_map=None, error_map=None):
-        return session.send_command(**SHOW_RUNNING(port_name=port_name, action_map=action_map, error_map=error_map))
+        return session.send_command(
+            **SHOW_RUNNING.get_command(port_name=port_name, action_map=action_map, error_map=error_map))
 
     def get_current_boot_config(self, session, action_map=None, error_map=None):
-        return session.send_command(**SHOW_RUNNING(boot='', action_map=action_map,  error_map=error_map))
+        return session.send_command(**SHOW_RUNNING.get_command(boot='', action_map=action_map, error_map=error_map))
 
     def get_current_os_version(self, session, action_map=None, error_map=None):
-        return session.send_command(**SHOW_VERSION(action_map=action_map, error_map=error_map))
+        return session.send_command(**SHOW_VERSION.get_command(action_map=action_map, error_map=error_map))
 
     def get_current_snmp_communities(self, session, action_map=None, error_map=None):
-        return session.send_command(**SHOW_RUNNING(snmp='', action_map=action_map,
-                                                                      error_map=error_map))
-
-
+        return session.send_command(**SHOW_RUNNING.get_command(snmp='', action_map=action_map,
+                                                               error_map=error_map))
 
     def clean_interface_switchport_config(self, config_session, logger, current_config, port_name, action_map=None,
                                           error_map=None):
@@ -89,14 +89,16 @@ class CiscoCommandActions():
         config_session.send_command(**CONFIGURE_INTERFACE.get_command(port_name=port_name))
         for line in current_config.splitlines():
             if line.strip(" ").startswith('switchport '):
-                config_session.send_command(**NO(command=line.strip(' '), action_map=action_map, error_map=error_map))
+                config_session.send_command(
+                    **NO.get_command(command=line.strip(' '), action_map=action_map, error_map=error_map))
 
         logger.debug("Completed cleaning interface switchport configuration")
 
     def remove_configuration_commands(self, session, config_to_remove, action_map=None, error_map=None):
         for line in config_to_remove.splitlines():
             if line.strip(" ").startswith('switchport '):
-                session.send_command(**NO(command=line.strip(' '), action_map=action_map, error_map=error_map))
+                session.send_command(
+                    **NO.get_command(command=line.strip(' '), action_map=action_map, error_map=error_map))
 
     def delete_file(self, session, logger, path, action_map=None, error_map=None):
         session.send_command(**DEL.get_command(tarfget=path, action_map=action_map, error_map=error_map))
@@ -105,4 +107,12 @@ class CiscoCommandActions():
         return vlan_range not in current_config
 
     def override_running(self, session, path, action_map=None, error_map=None):
-        session.send_command(**CONFIGURE_REPLACE(path=path, action_map=action_map, error_map))
+        session.send_command(**CONFIGURE_REPLACE.get_command(path=path, action_map=action_map, error_map=error_map))
+
+    def enable_snmp(self, session, snmp_community, action_map=None, error_map=None):
+        session.send_command(**SNMP_SERVER_COMMUNITY.get_command(snmp_community=snmp_community,
+                                                                 action_map=action_map, error_map=error_map))
+
+    def disable_snmp(self, session, snmp_community, action_map=None, error_map=None):
+        session.send_command(**NO_SNMP_SERVER_COMMUNITY.get_command(snmp_community=snmp_community,
+                                                                    action_map=action_map, error_map=error_map))

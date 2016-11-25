@@ -1,5 +1,5 @@
 from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
-from cloudshell.networking.cisco.flow.cisco_run_command_flow import CiscoRunCustomCommand
+from cloudshell.networking.devices.flows.action_flows import RunCommandFlow
 from cloudshell.networking.devices.runners.interfaces.run_command_interface import RunCommandInterface
 
 
@@ -16,7 +16,7 @@ class CiscoRunCommandOperations(RunCommandInterface):
 
         self._cli_handler = CiscoCliHandler(cli, context, logger, api)
         self._logger = logger
-        self._run_command_flow = CiscoRunCustomCommand(self._cli_handler, self._logger)
+        self._run_command_flow = RunCommandFlow(self._cli_handler, self._logger)
 
     def run_custom_command(self, custom_command):
         return self._run_command_flow.execute_flow(custom_command=custom_command)

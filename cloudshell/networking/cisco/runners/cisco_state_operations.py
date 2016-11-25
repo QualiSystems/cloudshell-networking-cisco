@@ -16,4 +16,3 @@ class CiscoStateOperations(StateOperations):
 
         super(CiscoStateOperations, self).__init__(logger, api, context)
         self._cli_handler = CiscoCliHandler(cli, context, logger, api)
-        self._logger = logger
