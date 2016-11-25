@@ -7,7 +7,7 @@ class CiscoRemoveVlanFlow(RemoveVlanFlow):
 
     def execute_flow(self, vlan_range, port_name, port_mode, action_map=None, error_map=None):
         self._logger.info(self.__class__.__name__, 'Remove Vlan configuration started')
-        with self._cli_handler.get_session(self._cli_handler.enable_mode) as session:
+        with self._cli_handler.get_cli_operations(self._cli_handler.enable_mode) as session:
             current_config = self._command_actions.get_current_interface_config(session, logger=self._logger,
                                                                                 port_name=port_name)
             with session.enter_mode(self._cli_handler.config_mode) as config_sesison:

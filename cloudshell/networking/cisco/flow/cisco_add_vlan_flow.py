@@ -10,7 +10,7 @@ class CiscoAddVlanFlow(AddVlanFlow):
 
     def execute_flow(self, vlan_range, port_mode, port_name, qnq, c_tag):
         self._logger.info(self.__class__.__name__, 'Add Vlan configuration started')
-        with self._cli_handler.get_session(self._cli_handler.enable_mode) as session:
+        with self._cli_handler.get_cli_operations(self._cli_handler.enable_mode) as session:
             with session.enter_mode(self._cli_handler.config_mode) as config_session:
                 self._command_actions.create_vlan(config_session, self._logger, vlan_range, port_mode, qnq, c_tag)
 

@@ -14,7 +14,7 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
         firmware_file_name = full_path_dict.get(UrlParser.FILENAME)
         if not firmware_file_name:
             raise Exception(self.__class__.__name__, "Unable to find firmware file")
-        with self._cli_handler.get_session(self._cli_handler.enable_mode) as enable_session:
+        with self._cli_handler.get_cli_operations(self._cli_handler.enable_mode) as enable_session:
             self._command_actions.copy(enable_session, self._logger, path, 'flash:/', vrf)
             current_boot_settings = self._command_actions.get_current_boot_config(session=enable_session)
             current_boot_settings = re.sub('boot-start-marker|boot-end-marker', '', current_boot_settings)
