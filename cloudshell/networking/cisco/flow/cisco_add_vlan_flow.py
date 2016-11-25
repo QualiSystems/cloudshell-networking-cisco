@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
 from cloudshell.networking.devices.flows.action_flows import AddVlanFlow
 
@@ -9,7 +12,7 @@ class CiscoAddVlanFlow(AddVlanFlow):
         self._command_actions = CiscoCommandActions()
 
     def execute_flow(self, vlan_range, port_mode, port_name, qnq, c_tag):
-        self._logger.info(self.__class__.__name__, 'Add Vlan configuration started')
+        self._logger.info(self.__class__.__name__, "Add VLAN(s) {} configuration started".format(vlan_range))
         with self._cli_handler.get_cli_operations(self._cli_handler.enable_mode) as session:
             with session.enter_mode(self._cli_handler.config_mode) as config_session:
                 self._command_actions.create_vlan(config_session, self._logger, vlan_range, port_mode, qnq, c_tag)
@@ -26,6 +29,6 @@ class CiscoAddVlanFlow(AddVlanFlow):
             current_config = self._command_actions.get_current_interface_config(session, logger=self._logger,
                                                                                 port_name=port_name)
             if not self._command_actions.verify_interface_configured(vlan_range, current_config):
-                raise Exception(self.__class__.__name__, "Failed to assign vlan(s) {}".format(vlan_range))
-            self._logger.info('Add Vlan configuration successfully completed')
-            return 'Vlan configuration successfully completed'
+                raise Exception(self.__class__.__name__, "[FAIL] VLAN(s) {} configuration failed".format(vlan_range))
+            self._logger.info("VLAN(s) {} configuration completed successfully".format(vlan_range))
+            return "[ OK ] VLAN(s) {} configuration completed successfully".format(vlan_range)

@@ -1,7 +1,10 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
 from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
 from cloudshell.networking.devices.flows.action_flows import BaseFlow
 from cloudshell.snmp.quali_snmp import QualiSnmp
-from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
 from cloudshell.snmp.snmp_parameters import SNMPV2Parameters
 
 
@@ -22,14 +25,14 @@ class CiscoAutoloadFlow(BaseFlow):
                             session):
                         self._command_actions.enable_snmp(session, snmp_parameters.snmp_community)
                 else:
-                    self._logger.info('Enable SNMP skipped: Enable SNMP attribute set to False or SNMP Version = v3')
+                    self._logger.info("Enable SNMP skipped: Enable SNMP attribute set to False or SNMP Version = v3")
                 result = self.run_autoload(snmp_parameters)
             finally:
                 if disable_snmp and isinstance(snmp_parameters, SNMPV2Parameters):
                     self._command_actions.disable_snmp(session, snmp_parameters.snmp_community)
                 else:
                     self._logger.info(
-                        'Disable SNMP skipped: Disable SNMP attribute set to False and/or SNMP Version = v3')
+                        "Disable SNMP skipped: Disable SNMP attribute set to False and/or SNMP Version = v3")
 
         return result
 
