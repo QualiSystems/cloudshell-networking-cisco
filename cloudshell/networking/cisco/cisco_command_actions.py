@@ -2,7 +2,7 @@ from collections import OrderedDict
 import re
 from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIGURE_INTERFACE, SHUTDOWN, \
     SWITCHPORT_MODE, \
-    SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, SHOW_VERSION
+    SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, SHOW_VERSION, NO_SHUTDOWN
 from cloudshell.networking.cisco.command_templates.configuration_templates import COPY, DEL, CONFIGURE_REPLACE, \
     SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY
 
@@ -18,7 +18,7 @@ class CiscoCommandActions(object):
                               action_map=None,
                               error_map=None):
         config_session.send_command(**CONFIGURE_INTERFACE.get_command(port_name=port_name))
-        config_session.send_command(**SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
+        config_session.send_command(**NO_SHUTDOWN.get_command(action_map=action_map, error_map=error_map))
         if qnq:
             port_mode = 'dot1q-tunnel'
         config_session.send_command(**SWITCHPORT_MODE.get_command(port_mode=port_mode, action_map=action_map,
@@ -38,11 +38,11 @@ class CiscoCommandActions(object):
         pass
 
     def create_vlan(self, session, logger, vlan_range, action_map=None, error_map=None):
-        session.send_command(CONFIGURE_VLAN.get_command(vlan_id=vlan_range.replace(' ', ''),
-                                                        action_map=action_map,
-                                                        error_map=error_map))
-        session.send_command(STATE_ACTIVE.get_command(action_map=action_map, error_map=error_map))
-        session.send_command(SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
+        session.send_command(**CONFIGURE_VLAN.get_command(vlan_id=vlan_range,
+                                                          action_map=action_map,
+                                                          error_map=error_map))
+        session.send_command(**STATE_ACTIVE.get_command(action_map=action_map, error_map=error_map))
+        session.send_command(**SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
 
     def run_custom_command(self, session, logger, command):
         pass
@@ -104,7 +104,7 @@ class CiscoCommandActions(object):
         session.send_command(**DEL.get_command(tarfget=path, action_map=action_map, error_map=error_map))
 
     def verify_interface_configured(self, vlan_range, current_config):
-        return vlan_range not in current_config
+        return str(vlan_range) in current_config
 
     def override_running(self, session, path, action_map=None, error_map=None):
         session.send_command(**CONFIGURE_REPLACE.get_command(path=path, action_map=action_map, error_map=error_map))
@@ -116,3 +116,22 @@ class CiscoCommandActions(object):
     def disable_snmp(self, session, snmp_community, action_map=None, error_map=None):
         session.send_command(**NO_SNMP_SERVER_COMMUNITY.get_command(snmp_community=snmp_community,
                                                                     action_map=action_map, error_map=error_map))
+
+    def get_port_name(self, logger, port):
+        """Get port name from port resource full address
+        :param port: port resource full address (192.168.1.1/0/34)
+        :return: port name (FastEthernet0/23)
+        :rtype: string
+        """
+
+        if not port:
+            err_msg = 'Failed to get port name.'
+            logger.error(err_msg)
+            raise Exception('CiscoConnectivityOperations: get_port_name', err_msg)
+
+        temp_port_name = port.split('/')[-1]
+        if 'port-channel' not in temp_port_name.lower():
+            temp_port_name = temp_port_name.replace('-', '/')
+
+        logger.info('Interface name validation OK, portname = {0}'.format(temp_port_name))
+        return temp_port_name

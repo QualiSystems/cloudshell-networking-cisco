@@ -3,7 +3,7 @@ from cloudshell.cli.command_template.command_template import CommandTemplate
 
 # <editor-fold desc="Interface configuration templates">
 
-CONFIGURE_INTERFACE = CommandTemplate('interface {0}')
+CONFIGURE_INTERFACE = CommandTemplate('interface {port_name}')
 
 SWITCHPORT_MODE = CommandTemplate('switchport [mode {port_mode}]',
                                   action_map=OrderedDict(
@@ -15,7 +15,7 @@ SWITCHPORT_MODE = CommandTemplate('switchport [mode {port_mode}]',
                                   })
 
 SWITCHPORT_ALLOW_VLAN = CommandTemplate(
-    'switchport [trunk{port_mode_trunk} allowed] [access{port_mode_access}] vlan {vlan_range}',
+    'switchport [trunk allowed{port_mode_trunk}] [access{port_mode_access}] vlan {vlan_range}',
     action_map=OrderedDict(
         {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
          '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}),
@@ -44,7 +44,7 @@ IP = CommandTemplate('ip {0}')
 # <editor-fold desc="Show templates">
 
 SHOW_RUNNING = CommandTemplate(
-    'show running-config [interface {port_name}] [ | include boot{boot}] [ | include {snmp}snmp-server community]')
+    'show running-config [interface {port_name}] [ | include boot{boot}] [ | include snmp-server community{snmp}]')
 
 SHOW_VERSION = CommandTemplate('show version')
 
