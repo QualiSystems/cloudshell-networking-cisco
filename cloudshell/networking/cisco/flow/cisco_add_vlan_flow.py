@@ -26,6 +26,6 @@ class CiscoAddVlanFlow(AddVlanFlow):
             current_config = self._command_actions.get_current_interface_config(session, logger=self._logger,
                                                                                 port_name=port_name)
             if not self._command_actions.verify_interface_configured(vlan_range, current_config):
-                raise Exception(self.__class__.__name__, "Failed to assign vlan(s)")
+                raise Exception(self.__class__.__name__, "Failed to assign vlan(s) {}".format(vlan_range))
             self._logger.info('Add Vlan configuration successfully completed')
             return 'Vlan configuration successfully completed'
