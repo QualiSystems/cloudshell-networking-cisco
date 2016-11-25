@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
+import re
 
 from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
 from cloudshell.networking.devices.flows.action_flows import RestoreConfigurationFlow
@@ -14,23 +15,66 @@ class CiscoRestoreFlow(RestoreConfigurationFlow):
         super(CiscoRestoreFlow, self).__init__(cli_handler, logger)
         self._command_actions = CiscoCommandActions()
 
-    def execute_flow(self, path, restore_method, configuration, vrf):
-        if "-config" not in configuration:
-            configuration += "-config"
+    def execute_flow(self, path, configuration_type, restore_method, vrf_management_name):
+        if "-config" not in configuration_type:
+            configuration_type += "-config"
 
         with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as enable_session:
-            if configuration == "startup":
+            copy_action_map = self._prepare_action_map(path, configuration_type)
+            if "startup" in configuration_type:
                 if restore_method == "override":
-                    action_map = OrderedDict({
-                        "[Dd]elete [Ff]ilename ": lambda session, logger: session.send_line(configuration, logger)})
+                    del_action_map = OrderedDict({
+                        "[Dd]elete [Ff]ilename ": lambda session, logger: session.send_line(configuration_type,
+                                                                                            logger)})
                     self._command_actions.delete_file(session=enable_session, logger=self._logger,
-                                                      path=self.STARTUP_LOCATION, action_map=action_map)
-                    self._command_actions.copy(enable_session, path, restore_method, configuration, vrf)
+                                                      path=self.STARTUP_LOCATION, action_map=del_action_map)
+                    self._command_actions.copy(session=enable_session, logger=self._logger, source=path,
+                                               destination=configuration_type, vrf=vrf_management_name,
+                                               action_map=copy_action_map)
                 else:
-                    self._command_actions.copy(enable_session, path, restore_method, configuration, vrf)
+                    self._command_actions.copy(session=enable_session, logger=self._logger, source=path,
+                                               destination=configuration_type, vrf=vrf_management_name,
+                                               action_map=copy_action_map)
 
-            if configuration == "running":
+            elif "running" in configuration_type:
                 if restore_method == "override":
                     self._command_actions.override_running(enable_session, path)
                 else:
-                    self._command_actions.copy(enable_session, path, restore_method, configuration, vrf)
+                    self._command_actions.copy(session=enable_session, logger=self._logger, source=path,
+                                               destination=configuration_type, vrf=vrf_management_name,
+                                               action_map=copy_action_map)
+
+    def _prepare_action_map(self, source_file, destination_file):
+        action_map = OrderedDict()
+        host = None
+        if "://" in source_file:
+            source_file_data_list = re.sub("/+", "/", source_file).split("/")
+            host = source_file_data_list[1]
+            destination_file_name = destination_file.split("/")[-1]
+            action_map[r"[\[\(]{}[\)\]]".format(
+                source_file_data_list[-1])] = lambda session, logger: session.send_line("", logger)
+
+            action_map[r"[\[\(]{}[\)\]]".format(destination_file_name)] = lambda session, logger: session.send_line("",
+                                                                                                               logger)
+        else:
+            source_file_name = destination_file.split("/")[-1]
+            destination_file_name = source_file.split("/")[-1]
+            action_map[r"(?!/)[\[\(]{}[\)\]]".format(
+                source_file_name)] = lambda session, logger: session.send_line("", logger)
+            action_map[r"(?!/)[\[\(]{}[\)\]]".format(
+                destination_file_name)] = lambda session, logger: session.send_line("", logger)
+        if host:
+            if "@" in host:
+                storage_data = re.search(r"^(?P<user>\S+):(?P<password>\S+)@(?P<host>\S+)", host)
+                if storage_data:
+                    storage_data_dict = storage_data.groupdict()
+                    host = storage_data_dict["host"]
+                    password = storage_data_dict["password"]
+
+                    action_map[r"[Pp]assword:".format(
+                        source_file)] = lambda session, logger: session.send_line(password, logger)
+
+                else:
+                    host = host.split("@")[-1]
+            action_map[r"(?!/){}(?!/)".format(host)] = lambda session, logger: session.send_line("", logger)
+        return action_map

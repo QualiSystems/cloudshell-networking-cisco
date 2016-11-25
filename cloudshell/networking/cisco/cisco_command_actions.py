@@ -101,13 +101,18 @@ class CiscoCommandActions(object):
                     **NO.get_command(command=line.strip(' '), action_map=action_map, error_map=error_map))
 
     def delete_file(self, session, logger, path, action_map=None, error_map=None):
-        session.send_command(**DEL.get_command(tarfget=path, action_map=action_map, error_map=error_map))
+        session.send_command(**DEL.get_command(target=path, action_map=action_map, error_map=error_map))
 
     def verify_interface_configured(self, vlan_range, current_config):
         return str(vlan_range) in current_config
 
     def override_running(self, session, path, action_map=None, error_map=None):
-        session.send_command(**CONFIGURE_REPLACE.get_command(path=path, action_map=action_map, error_map=error_map))
+        output = session.send_command(
+            **CONFIGURE_REPLACE.get_command(path=path, action_map=action_map, error_map=error_map))
+        match_error = re.search(r'[Ee]rror.*$', output)
+        if match_error:
+            error_str = match_error.group()
+            raise Exception('CiscoConfigurationOperations', 'Configure replace completed with error: ' + error_str)
 
     def enable_snmp(self, session, snmp_community, action_map=None, error_map=None):
         session.send_command(**SNMP_SERVER_COMMUNITY.get_command(snmp_community=snmp_community,
