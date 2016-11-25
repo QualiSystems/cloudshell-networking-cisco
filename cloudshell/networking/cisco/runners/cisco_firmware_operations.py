@@ -5,7 +5,7 @@ from cloudshell.cli.cli import CLI
 from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.flow.cisco_load_firmware_flow import CiscoLoadFirmwareFlow
 from cloudshell.networking.devices.networking_utils import UrlParser
-from cloudshell.networking.devices.runners.interfaces.firmware_operations_interface import FirmwareOperationsInterface
+from cloudshell.networking.devices.runners.interfaces.firmware_runner_interface import FirmwareOperationsInterface
 from cloudshell.shell.core.context import ResourceCommandContext
 
 

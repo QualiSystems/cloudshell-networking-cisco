@@ -1,10 +1,10 @@
 from collections import OrderedDict
 import time
 from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
-from cloudshell.networking.devices.runners.state_operations import StateOperations
+from cloudshell.networking.devices.runners.state_runner import StateRunner
 
 
-class CiscoStateOperations(StateOperations):
+class CiscoStateRunner(StateRunner):
     def __init__(self, cli, logger, api, context):
         """
 
@@ -14,5 +14,5 @@ class CiscoStateOperations(StateOperations):
         :param context:
         """
 
-        super(CiscoStateOperations, self).__init__(logger, api, context)
+        super(CiscoStateRunner, self).__init__(logger, api, context)
         self._cli_handler = CiscoCliHandler(cli, context, logger, api)

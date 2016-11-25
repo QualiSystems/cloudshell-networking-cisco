@@ -9,15 +9,14 @@ from cloudshell.snmp.snmp_parameters import SNMPV2Parameters
 
 
 class CiscoAutoloadFlow(BaseFlow):
-    def __init__(self, cli_handler, logger, resource_name, supported_os, autoload_class):
+    def __init__(self, cli_handler, logger, resource_name, autoload_class):
         super(CiscoAutoloadFlow, self).__init__(cli_handler, logger)
         self._command_actions = CiscoCommandActions()
         self._resource_name = resource_name
-        self._supported_os = supported_os
         self._cisco_autoload_class = autoload_class
         self._snmp_command_actions = CiscoGenericSNMPAutoload
 
-    def execute_flow(self, enable_snmp, disable_snmp, snmp_parameters):
+    def execute_flow(self, enable_snmp, disable_snmp, snmp_parameters, supported_os):
         with self._cli_handler.get_cli_operations(self._cli_handler.config_mode) as session:
             try:
                 if enable_snmp and isinstance(snmp_parameters, SNMPV2Parameters):
@@ -26,7 +25,7 @@ class CiscoAutoloadFlow(BaseFlow):
                         self._command_actions.enable_snmp(session, snmp_parameters.snmp_community)
                 else:
                     self._logger.info("Enable SNMP skipped: Enable SNMP attribute set to False or SNMP Version = v3")
-                result = self.run_autoload(snmp_parameters)
+                result = self.run_autoload(snmp_parameters, supported_os)
             finally:
                 if disable_snmp and isinstance(snmp_parameters, SNMPV2Parameters):
                     self._command_actions.disable_snmp(session, snmp_parameters.snmp_community)
@@ -36,10 +35,10 @@ class CiscoAutoloadFlow(BaseFlow):
 
         return result
 
-    def run_autoload(self, snmp_parameters):
+    def run_autoload(self, snmp_parameters, supported_os):
         snmp_handler = QualiSnmp(snmp_parameters, self._logger)
         snmp_command_actions = self._cisco_autoload_class(snmp_handler=snmp_handler,
                                                           logger=self._logger,
-                                                          supported_os=self._supported_os,
+                                                          supported_os=supported_os,
                                                           resource_name=self._resource_name)
         return snmp_command_actions.discover()
