@@ -12,7 +12,7 @@ class TestCiscoSaveConfigurationFlow(TestCase):
         session.send_command.return_value = output
         cliservice = MagicMock()
         cliservice.__enter__.return_value = session
-        cli.get_cli_operations.return_value = cliservice
+        cli.get_cli_service.return_value = cliservice
         logger = MagicMock()
         return CiscoSaveFlow(cli_handler=cli, logger=logger, resource_name='test_resource')
 

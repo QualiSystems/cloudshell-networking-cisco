@@ -18,7 +18,7 @@ class CiscoRestoreFlow(RestoreConfigurationFlow):
         if "-config" not in configuration:
             configuration += "-config"
 
-        with self._cli_handler.get_cli_operations(self._cli_handler.enable_mode) as enable_session:
+        with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as enable_session:
             if configuration == "startup":
                 if restore_method == "override":
                     action_map = OrderedDict({

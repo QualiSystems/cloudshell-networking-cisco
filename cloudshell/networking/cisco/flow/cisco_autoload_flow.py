@@ -18,7 +18,7 @@ class CiscoAutoloadFlow(BaseFlow):
         self._snmp_command_actions = CiscoGenericSNMPAutoload
 
     def execute_flow(self, enable_snmp, disable_snmp, snmp_parameters):
-        with self._cli_handler.get_cli_operations(self._cli_handler.config_mode) as session:
+        with self._cli_handler.get_cli_service(self._cli_handler.config_mode) as session:
             try:
                 if enable_snmp and isinstance(snmp_parameters, SNMPV2Parameters):
                     if not snmp_parameters.snmp_community not in self._command_actions.get_current_snmp_communities(
