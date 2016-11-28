@@ -3,8 +3,8 @@
 
 from collections import OrderedDict
 import re
+from cloudshell.networking.cisco.cisco_command_actions import delete_file, copy, override_running
 
-from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
 from cloudshell.networking.devices.flows.action_flows import RestoreConfigurationFlow
 
 
@@ -13,7 +13,6 @@ class CiscoRestoreFlow(RestoreConfigurationFlow):
 
     def __init__(self, cli_handler, logger):
         super(CiscoRestoreFlow, self).__init__(cli_handler, logger)
-        self._command_actions = CiscoCommandActions()
 
     def execute_flow(self, path, configuration_type, restore_method, vrf_management_name):
         if "-config" not in configuration_type:
@@ -26,21 +25,21 @@ class CiscoRestoreFlow(RestoreConfigurationFlow):
                     del_action_map = OrderedDict({
                         "[Dd]elete [Ff]ilename ": lambda session, logger: session.send_line(configuration_type,
                                                                                             logger)})
-                    self._command_actions.delete_file(session=enable_session, logger=self._logger,
+                    delete_file(session=enable_session, logger=self._logger,
                                                       path=self.STARTUP_LOCATION, action_map=del_action_map)
-                    self._command_actions.copy(session=enable_session, logger=self._logger, source=path,
+                    copy(session=enable_session, logger=self._logger, source=path,
                                                destination=configuration_type, vrf=vrf_management_name,
                                                action_map=copy_action_map)
                 else:
-                    self._command_actions.copy(session=enable_session, logger=self._logger, source=path,
+                    copy(session=enable_session, logger=self._logger, source=path,
                                                destination=configuration_type, vrf=vrf_management_name,
                                                action_map=copy_action_map)
 
             elif "running" in configuration_type:
                 if restore_method == "override":
-                    self._command_actions.override_running(enable_session, path)
+                    override_running(enable_session, path)
                 else:
-                    self._command_actions.copy(session=enable_session, logger=self._logger, source=path,
+                    copy(session=enable_session, logger=self._logger, source=path,
                                                destination=configuration_type, vrf=vrf_management_name,
                                                action_map=copy_action_map)
 

@@ -3,7 +3,7 @@ import re
 
 from mock import MagicMock
 
-from cloudshell.networking.cisco.old.cisco_configuration_operations import CiscoConfigurationOperations
+from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 from cloudshell.tests.networking.cisco.save_restore_methods.test_copy_output import TEST_COPY_OUTPUT
 
@@ -27,7 +27,7 @@ class TestCiscoConfigurationOperations(TestCase):
         context.resource.attributes = dict()
         context.resource.attributes['CLI Connection Type'] = 'Telnet'
         context.resource.attributes['Sessions Concurrency Limit'] = '1'
-        return CiscoConfigurationOperations(cli=cli, logger=logger, api=api, context=context)
+        return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, context=context)
 
     def test_save_raises_exception(self):
         #output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
@@ -79,7 +79,7 @@ class TestCiscoConfigurationOperations(TestCase):
         handler = self._get_handler(output)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        responce = handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
+        responce = handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
@@ -103,7 +103,7 @@ class TestCiscoConfigurationOperations(TestCase):
         handler = self._get_handler(output)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        responce = handler.save_configuration('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
+        responce = handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
@@ -133,7 +133,7 @@ class TestCiscoConfigurationOperations(TestCase):
         handler = self._get_handler(output)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+        responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
@@ -151,7 +151,7 @@ class TestCiscoConfigurationOperations(TestCase):
         handler = self._get_handler(output)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+        responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
         self.assertIsNotNone(responce)
         self.assertTrue(re.search(responce_template, responce))
@@ -177,11 +177,11 @@ class TestCiscoConfigurationOperations(TestCase):
         self.output = output
         handler = self._get_handler(output)
         handler._resource_name = resource_name
-        responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        responce = handler.save_configuration('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+        response_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
+        response = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
-        self.assertIsNotNone(responce)
-        self.assertTrue(re.search(responce_template, responce))
+        self.assertIsNotNone(response)
+        self.assertTrue(re.search(response_template, response))
 
     def test_orchestration_save_should_save_default_config(self):
         request = """

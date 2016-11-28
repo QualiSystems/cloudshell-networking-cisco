@@ -4,21 +4,20 @@
 import re
 
 from collections import OrderedDict
+from cloudshell.networking.cisco.cisco_command_actions import copy
 
-from cloudshell.networking.cisco.cisco_command_actions import CiscoCommandActions
 from cloudshell.networking.devices.flows.action_flows import SaveConfigurationFlow
 
 
 class CiscoSaveFlow(SaveConfigurationFlow):
     def __init__(self, cli_handler, logger):
         super(CiscoSaveFlow, self).__init__(cli_handler, logger)
-        self._command_actions = CiscoCommandActions()
 
     def execute_flow(self, folder_path, configuration_type, vrf_management_name=None):
         action_map = self._prepare_action_map(source_file=configuration_type, destination_file=folder_path)
         with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as session:
-            self._command_actions.copy(session, self._logger, configuration_type, folder_path,
-                                       vrf_management_name, action_map)
+            copy(session, self._logger, configuration_type, folder_path,
+                 vrf_management_name, action_map)
 
     def _prepare_action_map(self, source_file, destination_file):
         action_map = OrderedDict()

@@ -687,6 +687,7 @@ class CiscoGenericSNMPAutoload(object):
         """
 
         result = ''
+        # TODO Decide what we will do with CISCO_RESOURCE_DRIVERS_MAP
         # snmp_object_id = self.snmp.get_property('SNMPv2-MIB', 'sysObjectID', 0)
         # match_name = re.search(r'\.(?P<model>\d+$)', snmp_object_id)
         # if match_name:

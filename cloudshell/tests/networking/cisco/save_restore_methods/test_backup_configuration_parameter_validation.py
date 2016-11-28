@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from mock import MagicMock
 
-from cloudshell.networking.cisco.old.cisco_configuration_operations import CiscoConfigurationOperations
+from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
 
@@ -31,18 +31,18 @@ class TestCiscoConfigurationOperationsParameterValidation(TestCase):
         context.resource.attributes = dict()
         context.resource.attributes['CLI Connection Type'] = 'Telnet'
         context.resource.attributes['Sessions Concurrency Limit'] = '1'
-        return CiscoConfigurationOperations(cli=cli, logger=logger, api=api, context=context)
+        return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, context=context)
 
     def test_save_validates_source_filename_parameter(self):
         handler = self._get_handler()
-        self.assertRaises(Exception, handler.save_configuration, 'tftp://10.10.10.10//////CloudShell/Configs/Gold/Test1/',
+        self.assertRaises(Exception, handler.save, 'tftp://10.10.10.10//////CloudShell/Configs/Gold/Test1/',
                           'runsning')
 
     def test_save_should_handle_source_filename_not_case_sensitive(self):
         handler = self._get_handler()
-        self.assertIsNotNone(handler.save_configuration('tftp://10.10.10.10//////CloudShell/Configs/Gold/Test1/',
+        self.assertIsNotNone(handler.save('tftp://10.10.10.10//////CloudShell/Configs/Gold/Test1/',
                                           'running'))
-        self.assertIsNotNone(handler.save_configuration('tftp://10.10.10.10//////CloudShell/Configs/Gold/Test1/',
+        self.assertIsNotNone(handler.save('tftp://10.10.10.10//////CloudShell/Configs/Gold/Test1/',
                                           'RUNNING'))
 
         # def test_save_validates_destination_host_host_parameter(self):
