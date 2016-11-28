@@ -268,7 +268,7 @@ def disable_snmp(session, snmp_community, action_map=None, error_map=None):
     :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
     :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
     """
-    
+
     session.send_command(**NO_SNMP_SERVER_COMMUNITY.get_command(snmp_community=snmp_community,
                                                                 action_map=action_map, error_map=error_map))
 

@@ -14,6 +14,14 @@ class CiscoSaveFlow(SaveConfigurationFlow):
         super(CiscoSaveFlow, self).__init__(cli_handler, logger)
 
     def execute_flow(self, folder_path, configuration_type, vrf_management_name=None):
+        """ Execute flow which save selected file to the provided destination
+
+        :param folder_path: destination path where file will be saved
+        :param configuration_type: source file, which will be saved
+        :param vrf_management_name: Virtual Routing and Forwarding Name
+        :return: saved configuration file name
+        """
+
         action_map = self._prepare_action_map(source_file=configuration_type, destination_file=folder_path)
         with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as session:
             copy(session, self._logger, configuration_type, folder_path,

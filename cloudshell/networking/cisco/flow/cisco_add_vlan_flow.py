@@ -11,6 +11,16 @@ class CiscoAddVlanFlow(AddVlanFlow):
         super(CiscoAddVlanFlow, self).__init__(cli_handler, logger)
 
     def execute_flow(self, vlan_range, port_mode, port_name, qnq, c_tag):
+        """ Configures VLANs on multiple ports or port-channels
+
+        :param vlan_range: VLAN or VLAN range
+        :param port_mode: mode which will be configured on port. Possible Values are trunk and access
+        :param port_name: full port name
+        :param qnq:
+        :param c_tag:
+        :return:
+        """
+
         port_name = get_port_name(self._logger, port_name)
         self._logger.info(self.__class__.__name__, "Add VLAN(s) {} configuration started".format(vlan_range))
         with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as session:

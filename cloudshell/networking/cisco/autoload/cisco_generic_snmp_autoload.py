@@ -62,8 +62,8 @@ class CiscoGenericSNMPAutoload(object):
         self.logger.info('Start SNMP discovery process .....')
 
         self.load_cisco_mib()
-        self._get_device_details()
         self.snmp.load_mib(['CISCO-PRODUCTS-MIB', 'CISCO-ENTITY-VENDORTYPE-OID-MIB'])
+        self._get_device_details()
         self._load_snmp_tables()
 
         if len(self.chassis_list) < 1:
@@ -687,15 +687,6 @@ class CiscoGenericSNMPAutoload(object):
         """
 
         result = ''
-        # TODO Decide what we will do with CISCO_RESOURCE_DRIVERS_MAP
-        # snmp_object_id = self.snmp.get_property('SNMPv2-MIB', 'sysObjectID', 0)
-        # match_name = re.search(r'\.(?P<model>\d+$)', snmp_object_id)
-        # if match_name:
-        #     model = match_name.groupdict()['model']
-        #     if model in CISCO_RESOURCE_DRIVERS_MAP:
-        #         result = CISCO_RESOURCE_DRIVERS_MAP[model].lower().replace('_', '').capitalize()
-        # if not result:
-        self.snmp.load_mib(['CISCO-PRODUCTS-MIB', 'CISCO-ENTITY-VENDORTYPE-OID-MIB'])
         match_name = re.search(r'::(?P<model>\S+$)', self.snmp.get_property('SNMPv2-MIB', 'sysObjectID', '0'))
         if match_name:
             result = match_name.groupdict()['model'].capitalize()

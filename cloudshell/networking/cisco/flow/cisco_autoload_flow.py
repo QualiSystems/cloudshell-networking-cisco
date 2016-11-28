@@ -16,6 +16,15 @@ class CiscoAutoloadFlow(BaseFlow):
         self._snmp_command_actions = CiscoGenericSNMPAutoload
 
     def execute_flow(self, bool_enable_snmp, bool_disable_snmp, snmp_parameters, supported_os):
+        """Facilitate SNMP autoload, enable and disable SNMP if needed.
+
+        :param bool_enable_snmp: bool Enable SNMP Attribute
+        :param bool_disable_snmp: bool Disable SNMP Attribute
+        :param SNMPParameters snmp_parameters: snmp parameters class
+        :param supported_os: supported os regexp
+        :return: AutoloadDetails
+        """
+
         with self._cli_handler.get_cli_service(self._cli_handler.config_mode) as session:
             try:
                 if bool_enable_snmp and isinstance(snmp_parameters, SNMPV2Parameters):
@@ -35,6 +44,13 @@ class CiscoAutoloadFlow(BaseFlow):
         return result
 
     def run_autoload(self, snmp_parameters, supported_os):
+        """Executes device autoload discovery
+
+        :param SNMPParameters snmp_parameters: snmp parameters class
+        :param supported_os: supported os regexp
+        :return: AutoloadDetails
+        """
+        
         snmp_handler = QualiSnmp(snmp_parameters, self._logger)
         snmp_command_actions = self._cisco_autoload_class(snmp_handler=snmp_handler,
                                                           logger=self._logger,

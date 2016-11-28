@@ -14,6 +14,14 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
         super(CiscoLoadFirmwareFlow, self).__init__(cli_handler, logger)
 
     def execute_flow(self, path, vrf, timeout):
+        """Load a firmware onto the device
+
+        :param path: The path to the firmware file, including the firmware file name
+        :param vrf: Virtual Routing and Forwarding Name
+        :param timeout:
+        :return:
+        """
+
         full_path_dict = UrlParser().parse_url(path)
         firmware_file_name = full_path_dict.get(UrlParser.FILENAME)
         if not firmware_file_name:
