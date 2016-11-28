@@ -50,7 +50,7 @@ class CiscoAutoloadFlow(BaseFlow):
         :param supported_os: supported os regexp
         :return: AutoloadDetails
         """
-        
+
         snmp_handler = QualiSnmp(snmp_parameters, self._logger)
         snmp_command_actions = self._cisco_autoload_class(snmp_handler=snmp_handler,
                                                           logger=self._logger,
