@@ -237,10 +237,7 @@ def override_running(session, path, action_map=None, error_map=None):
     """
 
     conf_replace = CONFIGURE_REPLACE.get_command(path=path, action_map=action_map, error_map=error_map)
-    output = session.send_command(command=conf_replace['command'], action_map=conf_replace['action_map'],
-                                  error_map=conf_replace['']
-                                            ** CONFIGURE_REPLACE.get_command(path=path, action_map=action_map,
-                                                                             error_map=error_map))
+    output = session.send_command(**conf_replace)
     match_error = re.search(r'[Ee]rror.*$', output)
     if match_error:
         error_str = match_error.group()
