@@ -23,13 +23,13 @@ CONFIGURE_REPLACE = CommandTemplate('configure replace {path}',
                                         '[\[\(][Yy]es[\)\]]': lambda session, logger: session.send_line('y', logger),
                                         '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger),
                                         'overwrit+e': lambda session, logger: session.send_line('yes', logger)}),
-                                    error_map={
+                                    error_map=OrderedDict({
                                         "[Rr]ollback\s*[Dd]one|(?<=%).*(not.*|in)valid.*(?=\n)":
                                             Exception("Configure_Replace",
                                                       "Configure replace completed with error"),
                                         "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected":
                                             Exception('Configure_Replace', 'Override mode is not supported')
-                                    })
+                                    }))
 
 SNMP_SERVER_COMMUNITY = CommandTemplate("snmp-server community {snmp_community} ro")
 NO_SNMP_SERVER_COMMUNITY = CommandTemplate("no snmp-server community {snmp_community}")

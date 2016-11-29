@@ -9,19 +9,19 @@ SWITCHPORT_MODE = CommandTemplate('switchport [mode {port_mode}]',
                                   action_map=OrderedDict(
                                       {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
                                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}),
-                                  error_map={
+                                  error_map=OrderedDict({
                                       "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected":
                                           Exception('SWITCHPORT_MODE', 'Failed to switch port mode'),
-                                  })
+                                  }))
 
 SWITCHPORT_ALLOW_VLAN = CommandTemplate(
     'switchport [trunk allowed{port_mode_trunk}] [access{port_mode_access}] vlan {vlan_range}',
     action_map=OrderedDict(
         {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
          '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}),
-    error_map={
+    error_map=OrderedDict({
         "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected": Exception('SWITCHPORT_MODE',
-                                                                            'Failed to switch port mode')})
+                                                                            'Failed to switch port mode')}))
 
 # </editor-fold>
 
