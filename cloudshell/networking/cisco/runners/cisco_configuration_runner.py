@@ -12,3 +12,4 @@ class CiscoConfigurationRunner(ConfigurationRunner):
                                         logger=self._logger)
         self._restore_flow = CiscoRestoreFlow(cli_handler=self._cli_handler,
                                               logger=self._logger)
+        self.file_system = 'flash:'
