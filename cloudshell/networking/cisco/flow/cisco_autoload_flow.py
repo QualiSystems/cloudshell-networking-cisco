@@ -25,22 +25,23 @@ class CiscoAutoloadFlow(BaseFlow):
         :return: AutoloadDetails
         """
 
-        with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as session:
-            current_snmp_config = get_current_snmp_communities(session)
-            with session.enter_mode(self._cli_handler.config_mode) as config_session:
-                try:
-                    if bool_enable_snmp and isinstance(snmp_parameters, SNMPV2Parameters):
+        try:
+            if bool_enable_snmp and isinstance(snmp_parameters, SNMPV2Parameters):
+                with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as session:
+                    current_snmp_config = get_current_snmp_communities(session)
+                    with session.enter_mode(self._cli_handler.config_mode) as config_session:
                         if snmp_parameters.snmp_community not in current_snmp_config:
                             enable_snmp(config_session, snmp_parameters.snmp_community)
-                    else:
-                        self._logger.info("Enable SNMP skipped: Enable SNMP attribute set to False or SNMP Version = v3")
-                    result = self.run_autoload(snmp_parameters, supported_os)
-                finally:
-                    if bool_disable_snmp and isinstance(snmp_parameters, SNMPV2Parameters):
-                        disable_snmp(config_session, snmp_parameters.snmp_community)
-                    else:
-                        self._logger.info(
-                            "Disable SNMP skipped: Disable SNMP attribute set to False and/or SNMP Version = v3")
+            else:
+                self._logger.info("Enable SNMP skipped: Enable SNMP attribute set to False or SNMP Version = v3")
+            result = self.run_autoload(snmp_parameters, supported_os)
+        finally:
+            if bool_disable_snmp and isinstance(snmp_parameters, SNMPV2Parameters):
+                with self._cli_handler.get_cli_service(self._cli_handler.config_mode) as config_session:
+                    disable_snmp(config_session, snmp_parameters.snmp_community)
+            else:
+                self._logger.info(
+                    "Disable SNMP skipped: Disable SNMP attribute set to False and/or SNMP Version = v3")
 
         return result
 
