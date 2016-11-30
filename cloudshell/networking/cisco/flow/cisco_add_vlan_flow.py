@@ -22,7 +22,7 @@ class CiscoAddVlanFlow(AddVlanFlow):
         """
 
         port_name = get_port_name(self._logger, port_name)
-        self._logger.info(self.__class__.__name__, "Add VLAN(s) {} configuration started".format(vlan_range))
+        self._logger.info("Add VLAN(s) {} configuration started".format(vlan_range))
         with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as session:
             with session.enter_mode(self._cli_handler.config_mode) as config_session:
                 create_vlan(config_session, self._logger, vlan_range)
