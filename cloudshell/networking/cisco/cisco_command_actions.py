@@ -93,6 +93,8 @@ def copy(session, logger, source, destination, vrf=None, action_map=None, error_
     :raise Exception: 
     """
 
+    if not vrf:
+        vrf = None
     output = session.send_command(
         **COPY.get_command(src=source, dst=destination, vrf=vrf, action_map=action_map, error_map=error_map))
 
