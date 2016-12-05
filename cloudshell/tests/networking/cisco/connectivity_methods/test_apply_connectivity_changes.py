@@ -3,7 +3,7 @@ from unittest import TestCase
 from mock import MagicMock
 
 from cloudshell.networking.apply_connectivity.apply_connectivity_operation import apply_connectivity_changes
-from cloudshell.networking.cisco.old.cisco_connectivity_operations import CiscoConnectivityOperations
+from cloudshell.networking.cisco.runners.cisco_connectivity_runner import CiscoConnectivityRunner
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
 
@@ -22,8 +22,8 @@ class TestCiscoConnectivityOperations(TestCase):
         context.resource.attributes['CLI Connection Type'] = 'Telnet'
         context.resource.attributes['Sessions Concurrency Limit'] = '1'
         supported_os = ["CAT[ -]?OS", "IOS[ -]?X?[ER]?"]
-        return CiscoConnectivityOperations(cli=self.cli, logger=self.logger, api=self.api,
-                                           context=context, supported_os=supported_os)
+        return CiscoConnectivityRunner(cli=self.cli, logger=self.logger, api=self.api,
+                                       context=context)
 
     def test_apply_connectivity_changes_validates_request_parameter(self):
         request = """{
@@ -80,5 +80,4 @@ class TestCiscoConnectivityOperations(TestCase):
         }"""
         handler = self._get_handler()
         handler.get_port_name = MagicMock(return_value='port-channel2')
-        apply_connectivity_changes(request=request, add_vlan_action=handler.add_vlan_action,
-                                   remove_vlan_action=handler.remove_vlan_action, logger=self.logger)
+        handler.apply_connectivity_changes(request)

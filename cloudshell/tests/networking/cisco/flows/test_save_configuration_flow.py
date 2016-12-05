@@ -1,20 +1,19 @@
 from unittest import TestCase
 
 from mock import MagicMock
-
-from cloudshell.networking.cisco.flow import CiscoSaveFlow
+from cloudshell.networking.cisco.flow.cisco_save_flow import CiscoSaveFlow
 
 
 class TestCiscoSaveConfigurationFlow(TestCase):
     def _get_handler(self, output):
         cli = MagicMock()
-        session = MagicMock()
-        session.send_command.return_value = output
+        self.session = MagicMock()
+        self.session.send_command.return_value = output
         cliservice = MagicMock()
-        cliservice.__enter__.return_value = session
+        cliservice.__enter__.return_value = self.session
         cli.get_cli_service.return_value = cliservice
         logger = MagicMock()
-        return CiscoSaveFlow(cli_handler=cli, logger=logger, resource_name='test_resource')
+        return CiscoSaveFlow(cli_handler=cli, logger=logger)
 
     def test_save_configuration(self):
         save_flow = self._get_handler("""N5K-L3-Sw1#
@@ -32,8 +31,8 @@ class TestCiscoSaveConfigurationFlow(TestCase):
          Copy complete, now saving to disk (please wait)...
          N5K-L3-Sw1#""")
 
-        result = save_flow.execute_flow('tftp://127.0.0.1', 'startup')
-        self.assertIsNotNone(result)
+        save_flow.execute_flow('tftp://127.0.0.1', 'startup')
+        self.session.send_command.assert_called_once()
 
     def test_save_configuration_with_vrf(self):
         save_flow = self._get_handler("""N5K-L3-Sw1#
@@ -51,5 +50,5 @@ class TestCiscoSaveConfigurationFlow(TestCase):
          Copy complete, now saving to disk (please wait)...
          N5K-L3-Sw1#""")
 
-        result = save_flow.execute_flow('tftp://127.0.0.1', 'running', vrf='management')
-        self.assertIsNotNone(result)
+        save_flow.execute_flow('tftp://127.0.0.1', 'running', vrf_management_name='management')
+        self.session.send_command.assert_called_once()
