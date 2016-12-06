@@ -36,3 +36,10 @@ NO_SNMP_SERVER_COMMUNITY = CommandTemplate("no snmp-server community {snmp_commu
 
 BOOT_SYSTEM_FILE = CommandTemplate("boot system flash bootflash:{firmware_file_name}")
 CONFIG_REG = CommandTemplate("config-reg 0x2102")
+
+RELOAD = CommandTemplate("reload", action_map=OrderedDict(
+    {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),
+     '\(y\/n\)|continue': lambda session, logger: session.send_line('y', logger),
+     'reload': lambda session, logger: session.send_line('', logger),
+     '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger)
+     }))

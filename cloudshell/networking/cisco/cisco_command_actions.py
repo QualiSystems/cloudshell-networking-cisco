@@ -1,9 +1,10 @@
 import re
+from cloudshell.cli.cli_exception import CliException
 from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIGURE_INTERFACE, SHUTDOWN, \
     SWITCHPORT_MODE, \
     SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, SHOW_VERSION, NO_SHUTDOWN
 from cloudshell.networking.cisco.command_templates.cisco_configuration_templates import COPY, DEL, CONFIGURE_REPLACE, \
-    SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY, BOOT_SYSTEM_FILE, CONFIG_REG
+    SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY, BOOT_SYSTEM_FILE, CONFIG_REG, RELOAD
 
 
 def install_firmware(config_session, logger, firmware_file_name):
@@ -52,7 +53,7 @@ def set_vlan_to_interface(config_session, logger, vlan_range, port_mode, port_na
                                                                         error_map=error_map))
 
 
-def reload_device(session, logger, timeout):
+def reload_device(session, logger, timeout, action_map=None, error_map=None):
     """Reload device
 
     :param session: current session
@@ -60,6 +61,10 @@ def reload_device(session, logger, timeout):
     :param timeout: session reconnect timeout
     """
 
+    try:
+        session.send_command(**RELOAD.get_command(action_map=action_map, error_map=error_map))
+    except CliException as e:
+        logger.info("Device rebooted, starting reconnect")
     session.reconnect(timeout)
 
 
