@@ -63,7 +63,7 @@ def reload_device(session, logger, timeout, action_map=None, error_map=None):
 
     try:
         session.send_command(**RELOAD.get_command(action_map=action_map, error_map=error_map))
-    except CliException as e:
+    except Exception as e:
         logger.info("Device rebooted, starting reconnect")
     session.reconnect(timeout)
 
