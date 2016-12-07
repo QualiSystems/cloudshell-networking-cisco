@@ -20,6 +20,7 @@ def install_firmware(config_session, logger, firmware_file_name):
 
 
 def set_vlan_to_interface(config_session, logger, vlan_range, port_mode, port_name, qnq, c_tag,
+                          does_require_single_switchport_cmd=False,
                           action_map=None,
                           error_map=None):
     """Assign vlan to a certain interface
@@ -39,6 +40,10 @@ def set_vlan_to_interface(config_session, logger, vlan_range, port_mode, port_na
     config_session.send_command(**NO_SHUTDOWN.get_command(action_map=action_map, error_map=error_map))
     if qnq:
         port_mode = 'dot1q-tunnel'
+
+    if does_require_single_switchport_cmd:
+        config_session.send_command(**SWITCHPORT_MODE.get_command(action_map=action_map, error_map=error_map))
+
     config_session.send_command(**SWITCHPORT_MODE.get_command(port_mode=port_mode, action_map=action_map,
                                                               error_map=error_map))
     if 'trunk' not in port_mode:
