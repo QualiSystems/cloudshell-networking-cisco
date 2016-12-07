@@ -1,4 +1,5 @@
 import re
+import time
 
 from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, DefaultCommandMode, ConfigCommandMode
@@ -23,9 +24,25 @@ class CiscoCliHandler(CliHandlerImpl):
         session.hardware_expect('terminal length 0', EnableCommandMode.PROMPT, logger)
         session.hardware_expect('terminal width 300', EnableCommandMode.PROMPT, logger)
         session.hardware_expect('terminal no exec prompt timestamp', EnableCommandMode.PROMPT, logger)
-        session.hardware_expect(ConfigCommandMode.ENTER_COMMAND, ConfigCommandMode.PROMPT, logger)
+        self._enter_config_mode(session, logger)
         session.hardware_expect('no logging console', ConfigCommandMode.PROMPT, logger)
         session.hardware_expect('exit', EnableCommandMode.PROMPT, logger)
+
+    def _enter_config_mode(self, session, logger):
+        max_retries = 5
+        error_message = 'Failed to enter config mode, please check logs, for details'
+        output = session.hardware_expect(ConfigCommandMode.ENTER_COMMAND,
+                                         '{0}|{1}'.format(ConfigCommandMode.PROMPT, EnableCommandMode.PROMPT), logger)
+
+        if not re.search(ConfigCommandMode.PROMPT, output):
+            retries = 0
+            while not re.search(r"[Cc]onfiguration [Ll]ocked", output, re.IGNORECASE) or retries == max_retries:
+                time.sleep(5)
+                output = session.hardware_expect(ConfigCommandMode.ENTER_COMMAND,
+                                                 '{0}|{1}'.format(ConfigCommandMode.PROMPT, EnableCommandMode.PROMPT),
+                                                 logger)
+            if not re.search(ConfigCommandMode.PROMPT, output):
+                raise Exception('_enter_config_mode', error_message)
 
     def enter_enable_mode(self, session, logger):
         """
@@ -35,15 +52,15 @@ class CiscoCliHandler(CliHandlerImpl):
         :param logger:
         :raise Exception:
         """
-        result = session.hardware_expect('', '{0}|{1}'.format(self.default_mode.PROMPT, self.enable_mode.PROMPT),
+        result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
                                          logger)
-        if not re.search(self.enable_mode.PROMPT, result):
+        if not re.search(EnableCommandMode.PROMPT, result):
             enable_password = decrypt_password_from_attribute(api=self._api,
                                                               password_attribute_name='Enable Password',
                                                               context=self._context)
             expect_map = {'[Pp]assword': lambda session, logger: session.send_line(enable_password, logger)}
             session.hardware_expect('enable', EnableCommandMode.PROMPT, action_map=expect_map, logger=logger)
-            result = session.hardware_expect('', '{0}|{1}'.format(self.default_mode.PROMPT, EnableCommandMode.PROMPT),
+            result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
                                              logger)
             if not re.search(EnableCommandMode.PROMPT, result):
                 raise Exception('enter_enable_mode', 'Enable password is incorrect')

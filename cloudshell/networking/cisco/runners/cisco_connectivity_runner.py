@@ -13,7 +13,6 @@ class CiscoConnectivityRunner(ConnectivityRunner):
         :param logger:
         :param api:
         :param context:
-        :param supported_os:
         """
 
         super(CiscoConnectivityRunner, self).__init__(logger)

@@ -7,8 +7,9 @@ from cloudshell.networking.devices.flows.action_flows import AddVlanFlow
 
 
 class CiscoAddVlanFlow(AddVlanFlow):
-    def __init__(self, cli_handler, logger):
+    def __init__(self, cli_handler, logger, does_require_single_switchport_cmd=False):
         super(CiscoAddVlanFlow, self).__init__(cli_handler, logger)
+        self._does_require_single_switchport_cmd = does_require_single_switchport_cmd
 
     def execute_flow(self, vlan_range, port_mode, port_name, qnq, c_tag):
         """ Configures VLANs on multiple ports or port-channels
@@ -35,7 +36,7 @@ class CiscoAddVlanFlow(AddVlanFlow):
                                                   logger=self._logger,
                                                   port_name=port_name)
                 set_vlan_to_interface(config_sesison, self._logger, vlan_range, port_mode,
-                                      port_name, qnq, c_tag)
+                                      port_name, qnq, c_tag, self._does_require_single_switchport_cmd)
             current_config = get_current_interface_config(session, logger=self._logger,
                                                           port_name=port_name)
             if not verify_interface_configured(vlan_range, current_config):
