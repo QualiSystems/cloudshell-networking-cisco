@@ -142,10 +142,11 @@ class CiscoGenericSNMPAutoload(object):
             raise Exception('Cannot load entPhysicalTable. Autoload cannot continue')
         self.logger.info('Entity table loaded')
 
-        self.lldp_local_table = self.snmp.get_table('LLDP-MIB', 'lldpLocPortDesc')
-        self.lldp_remote_table = self.snmp.get_table('LLDP-MIB', 'lldpRemTable')
-        self.cdp_index_table = self.snmp.get_table('CISCO-CDP-MIB', 'cdpInterface')
-        self.cdp_table = self.snmp.get_table('CISCO-CDP-MIB', 'cdpCacheTable')
+        self.lldp_remote_table = self.snmp.get_table('LLDP-MIB', 'lldpRemSysName')
+        lldp_local_table = self.snmp.get_table('LLDP-MIB', 'lldpLocPortDesc')
+        if lldp_local_table:
+            self.lldp_local_table = dict([(v['lldpLocPortDesc'].lower(), k) for k, v in lldp_local_table.iteritems()])
+        self.cdp_table = self.snmp.get_table('CISCO-CDP-MIB', 'cdpCacheDeviceId')
         self.duplex_table = self.snmp.get_table('EtherLike-MIB', 'dot3StatsIndex')
         self.ip_v4_table = self.snmp.get_table('IP-MIB', 'ipAddrTable')
         self.ip_v6_table = self.snmp.get_table('IPV6-MIB', 'ipv6AddrEntry')
@@ -663,20 +664,26 @@ class CiscoGenericSNMPAutoload(object):
         :rtype string
         """
 
+        result_template = '{remote_host} through {remote_port}'
         result = ''
         for key, value in self.cdp_table.iteritems():
-            if 'cdpCacheDeviceId' in value and 'cdpCacheDevicePort' in value:
-                if re.search(r'^\d+', str(key)).group(0) == interface_id:
-                    result = '{0} through {1}'.format(value['cdpCacheDeviceId'], value['cdpCacheDevicePort'])
-        if result == '' and self.lldp_remote_table:
-            for key, value in self.lldp_local_table.iteritems():
-                interface_name = self.if_table[interface_id][self.IF_ENTITY]
-                if interface_name == '':
-                    break
-                if 'lldpLocPortDesc' in value and interface_name in value['lldpLocPortDesc']:
-                    if 'lldpRemSysName' in self.lldp_remote_table and 'lldpRemPortDesc' in self.lldp_remote_table:
-                        result = '{0} through {1}'.format(self.lldp_remote_table[key]['lldpRemSysName'],
-                                                          self.lldp_remote_table[key]['lldpRemPortDesc'])
+            if str(key).startswith(str(interface_id)):
+                port = self.snmp.get_property('CISCO-CDP-MIB', 'cdpCacheDevicePort', key)
+                result = result_template.format(remote_host=value.get('cdpCacheDeviceId', ''), remote_port=port)
+                break
+        if result == '' and self.lldp_local_table:
+            interface_name = self.if_table[interface_id][self.IF_ENTITY].lower()
+            if interface_name:
+                key = self.lldp_local_table.get(interface_name, None)
+                if key:
+                    for port_id, rem_table in self.lldp_remote_table.iteritems():
+                        if ".{0}.".format(key) in port_id:
+                            remoute_sys_name = rem_table.get('lldpRemSysName', "")
+                            remoute_port_name = self.snmp.get_property('LLDP-MIB', 'lldpRemPortDesc', port_id)
+                            if remoute_port_name and remoute_sys_name:
+                                result = result_template.format(remote_host=remoute_sys_name,
+                                                                remote_port=remoute_port_name)
+                                break
         return result
 
     def _get_device_model(self):
