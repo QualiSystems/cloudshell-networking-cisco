@@ -1,5 +1,4 @@
 import re
-from cloudshell.cli.cli_exception import CliException
 from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIGURE_INTERFACE, SHUTDOWN, \
     SWITCHPORT_MODE, \
     SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, SHOW_VERSION, NO_SHUTDOWN
@@ -235,7 +234,8 @@ def verify_interface_configured(vlan_range, current_config):
     :return: True or False
     """
 
-    return str(vlan_range) in current_config
+    return re.search("switchport.*vlan.*{0}".format(str(vlan_range)), current_config,
+                     re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
 
 def override_running(session, path, action_map=None, error_map=None):
