@@ -143,6 +143,7 @@ class CiscoGenericSNMPAutoload(object):
         self.logger.info('Entity table loaded')
 
         self.lldp_remote_table = self.snmp.get_table('LLDP-MIB', 'lldpRemSysName')
+        self.lldp_local_table = dict()
         lldp_local_table = self.snmp.get_table('LLDP-MIB', 'lldpLocPortDesc')
         if lldp_local_table:
             self.lldp_local_table = dict([(v['lldpLocPortDesc'].lower(), k) for k, v in lldp_local_table.iteritems()])
