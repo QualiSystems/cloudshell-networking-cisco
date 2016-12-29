@@ -16,7 +16,7 @@ class TestCiscoConfigurationOperations(TestCase):
         cliservice = MagicMock()
         cliservice.__enter__.return_value = session
         cli.get_session.return_value = cliservice
-        #cli.return_value.get_session.return_value = session
+        # cli.return_value.get_session.return_value = session
         api = MagicMock()
         logger = MagicMock()
         context = ResourceCommandContext()
@@ -30,7 +30,7 @@ class TestCiscoConfigurationOperations(TestCase):
         return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, context=context)
 
     def test_save_raises_exception(self):
-        #output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
+        # output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         output = '%Error opening tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         handler = self._get_handler(output)
         self.assertRaises(Exception, handler.save, 'tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/')
@@ -193,4 +193,18 @@ class TestCiscoConfigurationOperations(TestCase):
         }"""
         handler = self._get_handler('Copy complete, now saving to disk (please wait)...')
         json_string = handler.orchestration_save(custom_params=request)
+        print json_string
+
+    def test_orchestration_restore_should_save_startup_config(self):
+        request = """
+        {"saved_artifacts_info": {"saved_artifact": {"artifact_type": "tftp", "identifier": "//10.0.0.1/folder1/resource_name-startup-281216-145700"}, "resource_name": "resource_name", "restore_rules": {"requires_same_resource": true}, "created_date": "2016-12-28T14:57:00.111000"}}"""
+        handler = self._get_handler('Copy complete, now saving to disk (please wait)...')
+        json_string = handler.orchestration_restore(saved_artifact_info=request)
+        print json_string
+
+    def test_orchestration_restore_should_save_default_config(self):
+        request = """
+        {"saved_artifacts_info": {"saved_artifact": {"artifact_type": "tftp", "identifier": "//10.0.0.1/folder1/resource_name-running-281216-145700"}, "resource_name": "resource_name", "restore_rules": {"requires_same_resource": true}, "created_date": "2016-12-28T14:57:00.111000"}}"""
+        handler = self._get_handler('Copy complete, now saving to disk (please wait)...')
+        json_string = handler.orchestration_restore(saved_artifact_info=request)
         print json_string

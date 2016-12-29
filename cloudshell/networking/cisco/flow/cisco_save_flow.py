@@ -34,7 +34,7 @@ class CiscoSaveFlow(SaveConfigurationFlow):
             destination_file_data_list = re.sub("/+", "/", destination_file).split("/")
             host = destination_file_data_list[1]
             source_file_name = source_file.split(":")[-1].split("/")[-1]
-            action_map[r"[\[\(]{}[\)\]]".format(
+            action_map[r"[\[\(].*{}[\)\]]".format(
                 destination_file_data_list[-1])] = lambda session, logger: session.send_line("", logger)
 
             action_map[r"[\[\(]{}[\)\]]".format(source_file_name)] = lambda session, logger: session.send_line("",
