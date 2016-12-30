@@ -30,7 +30,7 @@ class CiscoGenericSNMPAutoload(object):
         self.relative_address = {}
         self.port_mapping = {}
         self.entity_table_black_list = ['alarm', 'fan', 'sensor']
-        self.port_exclude_pattern = r'serial|stack|engine|management|mgmt|voice|foreign|cpu'
+        self.port_exclude_pattern = r'stack|engine|management|mgmt|voice|foreign|cpu'
         self.module_exclude_pattern = r'cevsfp'
         self.resources = list()
         self.attributes = list()
@@ -547,6 +547,7 @@ class CiscoGenericSNMPAutoload(object):
                                                              port_index=self.port_mapping[port]))
             attribute_map.update(self._get_ip_interface_details(resource_obj=self.port,
                                                                 port_index=self.port_mapping[port]))
+
             unique_id = '{}.{}.{}'.format(self.resource_name, 'port', port)
 
             port_object = self.port(name=interface_name.replace('/', '-'), relative_address=self.relative_address[port],
