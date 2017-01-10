@@ -1,13 +1,19 @@
 from unittest import TestCase
-
 from mock import MagicMock
-from cloudshell.networking.cisco.command_templates.cisco_configuration_templates import CONFIGURE_REPLACE
-
-from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
-from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
+import mock
+from cloudshell.networking.cisco.cisco_configuration_operations import CiscoConfigurationOperations
 
 
 class CiscoConfigurationOperationsRestore(TestCase):
+    def setUp(self):
+        self.output = ''
+        self.cli = MagicMock()
+        self.snmp = MagicMock()
+        self.api = MagicMock()
+        self.logger = MagicMock()
+        self.handler = CiscoConfigurationOperations(cli=self.cli, logger=self.logger, api=self.api,
+                                                resource_name='resource_name')
+
     def test_configure_replace_validates_error_output(self):
         output = """Command: configure replace ftp://admin:KPlab123@10.233.30.222/CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg
             This will apply all necessary additions and deletions
@@ -17,13 +23,17 @@ class CiscoConfigurationOperationsRestore(TestCase):
             configuration. Enter Y if you are sure you want to proceed. ? [no]: y
             Loading CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg !
             [OK - 3569/4096 bytes]
+
             Loading CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg !
             [OK - 3569/4096 bytes]
+
+
             %The input file is not a valid config file.
+
             37501#
             """
-        configure_replace = CONFIGURE_REPLACE.get_command(path='ftp://admin:KPlab123@10.233.30.222/CloudShell/config')
-        self.assertRegexpMatches(output, "|".join(configure_replace['error_map'].keys()))
+        self.cli.send_command = MagicMock(return_value=output)
+        self.assertRaises(Exception, self.handler.configure_replace, 'filename', vrf='vrf')
 
     def test_configure_replace_validates_apply_error_output(self):
         output = """configure replace ftp://admin:KPlab123@10.233.30.222/CloudShell/config
@@ -34,10 +44,12 @@ class CiscoConfigurationOperationsRestore(TestCase):
             configuration. Enter Y if you are sure you want to proceed. ? [no]: y
             Loading CloudShell/configs/3750.cfg !
             [OK - 8973/4096 bytes]
+
             Loading CloudShell/configs/3750.cfg !
             Total number of passes: 0
             Rollback Done
+
             37501#
             """
-        configure_replace = CONFIGURE_REPLACE.get_command(path='ftp://admin:KPlab123@10.233.30.222/CloudShell/config')
-        self.assertRegexpMatches(output, "|".join(configure_replace['error_map'].keys()))
+        self.cli.send_command = MagicMock(return_value=output)
+        self.assertRaises(Exception, self.handler.configure_replace, 'filename', vrf='vrf')
