@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import re
+
+from cloudshell.devices.flows.action_flows import LoadFirmwareFlow
+from cloudshell.devices.networking_utils import UrlParser
+
 from cloudshell.networking.cisco.cisco_command_actions import copy, get_current_boot_config, \
     remove_port_configuration_commands, reload_device, get_current_os_version, install_firmware
-
-from cloudshell.networking.devices.flows.action_flows import LoadFirmwareFlow
-from cloudshell.networking.devices.networking_utils import UrlParser
 
 
 class CiscoLoadFirmwareFlow(LoadFirmwareFlow):

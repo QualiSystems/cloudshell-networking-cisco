@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from cloudshell.devices.flows.action_flows import BaseFlow
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import CiscoGenericSNMPAutoload
 from cloudshell.networking.cisco.cisco_command_actions import get_current_snmp_communities, disable_snmp, enable_snmp
-from cloudshell.networking.devices.flows.action_flows import BaseFlow
 from cloudshell.snmp.quali_snmp import QualiSnmp
 from cloudshell.snmp.snmp_parameters import SNMPV2Parameters
 

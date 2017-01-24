@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from cloudshell.devices.flows.action_flows import AddVlanFlow
+
 from cloudshell.networking.cisco.cisco_command_actions import get_port_name, create_vlan, \
     get_current_interface_config, clean_interface_switchport_config, set_vlan_to_interface, verify_interface_configured
-from cloudshell.networking.devices.flows.action_flows import AddVlanFlow
 
 
 class CiscoAddVlanFlow(AddVlanFlow):

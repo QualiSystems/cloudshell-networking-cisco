@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from collections import OrderedDict
 import re
-from cloudshell.networking.cisco.cisco_command_actions import delete_file, copy, override_running
 
-from cloudshell.networking.devices.flows.action_flows import RestoreConfigurationFlow
+from collections import OrderedDict
+
+from cloudshell.devices.flows.action_flows import RestoreConfigurationFlow
+from cloudshell.networking.cisco.cisco_command_actions import delete_file, copy, override_running
 
 
 class CiscoRestoreFlow(RestoreConfigurationFlow):

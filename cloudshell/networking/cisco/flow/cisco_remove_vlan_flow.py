@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+from cloudshell.devices.flows.action_flows import RemoveVlanFlow
 from cloudshell.networking.cisco.cisco_command_actions import get_port_name, get_current_interface_config, \
     clean_interface_switchport_config, verify_interface_configured
-
-from cloudshell.networking.devices.flows.action_flows import RemoveVlanFlow
 
 
 class CiscoRemoveVlanFlow(RemoveVlanFlow):

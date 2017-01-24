@@ -1,36 +1,47 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import re
 import time
 
 from cloudshell.cli.command_mode_helper import CommandModeHelper
+from cloudshell.devices.cli_handler_impl import CliHandlerImpl
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, DefaultCommandMode, ConfigCommandMode
-from cloudshell.networking.cli_handler_impl import CliHandlerImpl
-from cloudshell.shell.core.api_utils import decrypt_password_from_attribute
 
 
 class CiscoCliHandler(CliHandlerImpl):
-    def __init__(self, cli, context, logger, api):
-        super(CiscoCliHandler, self).__init__(cli, context, logger, api)
-        modes = CommandModeHelper.create_command_mode(context)
-        self.default_mode = modes[DefaultCommandMode]
-        self.enable_mode = modes[EnableCommandMode]
-        self.config_mode = modes[ConfigCommandMode]
+    def __init__(self, cli, resource_config, logger, api):
+        super(CiscoCliHandler, self).__init__(cli, resource_config, logger, api)
+        self.modes = CommandModeHelper.create_command_mode(resource_config, api)
+
+    @property
+    def default_mode(self):
+        return self.modes[DefaultCommandMode]
+
+    @property
+    def enable_mode(self):
+        return self.modes[EnableCommandMode]
+
+    @property
+    def config_mode(self):
+        return self.modes[ConfigCommandMode]
 
     def on_session_start(self, session, logger):
         """Send default commands to configure/clear session outputs
         :return:
         """
 
-        self.enter_enable_mode(session=session, logger=logger)
-        session.hardware_expect('terminal length 0', EnableCommandMode.PROMPT, logger)
-        session.hardware_expect('terminal width 300', EnableCommandMode.PROMPT, logger)
-        session.hardware_expect('terminal no exec prompt timestamp', EnableCommandMode.PROMPT, logger)
+        self._enter_enable_mode(session=session, logger=logger)
+        session.hardware_expect("terminal length 0", EnableCommandMode.PROMPT, logger)
+        session.hardware_expect("terminal width 300", EnableCommandMode.PROMPT, logger)
+        session.hardware_expect("terminal no exec prompt timestamp", EnableCommandMode.PROMPT, logger)
         self._enter_config_mode(session, logger)
-        session.hardware_expect('no logging console', ConfigCommandMode.PROMPT, logger)
-        session.hardware_expect('exit', EnableCommandMode.PROMPT, logger)
+        session.hardware_expect("no logging console", ConfigCommandMode.PROMPT, logger)
+        session.hardware_expect("exit", EnableCommandMode.PROMPT, logger)
 
     def _enter_config_mode(self, session, logger):
         max_retries = 5
-        error_message = 'Failed to enter config mode, please check logs, for details'
+        error_message = "Failed to enter config mode, please check logs, for details"
         output = session.hardware_expect(ConfigCommandMode.ENTER_COMMAND,
                                          '{0}|{1}'.format(ConfigCommandMode.PROMPT, EnableCommandMode.PROMPT), logger)
 
@@ -44,7 +55,7 @@ class CiscoCliHandler(CliHandlerImpl):
             if not re.search(ConfigCommandMode.PROMPT, output):
                 raise Exception('_enter_config_mode', error_message)
 
-    def enter_enable_mode(self, session, logger):
+    def _enter_enable_mode(self, session, logger):
         """
         Enter enable mode
 
@@ -55,9 +66,7 @@ class CiscoCliHandler(CliHandlerImpl):
         result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
                                          logger)
         if not re.search(EnableCommandMode.PROMPT, result):
-            enable_password = decrypt_password_from_attribute(api=self._api,
-                                                              password_attribute_name='Enable Password',
-                                                              context=self._context)
+            enable_password = self._api.DecryptPassword(self.resource_config.enable_password).Value
             expect_map = {'[Pp]assword': lambda session, logger: session.send_line(enable_password, logger)}
             session.hardware_expect('enable', EnableCommandMode.PROMPT, action_map=expect_map, logger=logger)
             result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
