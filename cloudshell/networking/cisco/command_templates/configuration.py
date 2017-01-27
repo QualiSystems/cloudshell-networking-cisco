@@ -31,11 +31,6 @@ CONFIGURE_REPLACE = CommandTemplate('configure replace {path}',
                                             Exception('Configure_Replace', 'Override mode is not supported')
                                     }))
 
-SNMP_SERVER_COMMUNITY = CommandTemplate("snmp-server community {snmp_community} ro")
-NO_SNMP_SERVER_COMMUNITY = CommandTemplate("no snmp-server community {snmp_community}")
-
-BOOT_SYSTEM_FILE = CommandTemplate("boot system flash bootflash:{firmware_file_name}")
-CONFIG_REG = CommandTemplate("config-reg 0x2102")
 
 RELOAD = CommandTemplate("reload", action_map=OrderedDict(
     {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from cloudshell.devices.runners.run_command_runner import RunCommandRunner
-from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
+from cloudshell.networking.cisco.cli.cisco_cli_handler import CiscoCliHandler
 
 
 class CiscoRunCommandRunner(RunCommandRunner):

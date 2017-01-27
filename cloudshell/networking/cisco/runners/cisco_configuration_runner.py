@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from cloudshell.devices.runners.configuration_runner import ConfigurationRunner
-from cloudshell.networking.cisco.cisco_cli_handler import CiscoCliHandler
-from cloudshell.networking.cisco.flow.cisco_restore_flow import CiscoRestoreFlow
-from cloudshell.networking.cisco.flow.cisco_save_flow import CiscoSaveFlow
+from cloudshell.networking.cisco.cli.cisco_cli_handler import CiscoCliHandler
+from cloudshell.networking.cisco.flows.cisco_restore_flow import CiscoRestoreFlow
+from cloudshell.networking.cisco.flows.cisco_save_flow import CiscoSaveFlow
 
 
 class CiscoConfigurationRunner(ConfigurationRunner):
