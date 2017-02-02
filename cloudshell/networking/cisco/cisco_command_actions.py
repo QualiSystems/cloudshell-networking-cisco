@@ -107,8 +107,10 @@ def copy(session, logger, source, destination, vrf=None, action_map=None, error_
     output = session.send_command(
         **COPY.get_command(src=source, dst=destination, vrf=vrf, action_map=action_map, error_map=error_map))
 
-    status_match = re.search(r'\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output,
-                             re.IGNORECASE)
+    status_match = re.search(
+        r'\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|[Cc]opy complete|[\(\[]OK[\]\)]', output,
+        re.IGNORECASE)
+
     if not status_match:
         match_error = re.search('%.*|TFTP put operation failed.*|sysmgr.*not supported.*\n', output, re.IGNORECASE)
         message = 'Copy Command failed. '
