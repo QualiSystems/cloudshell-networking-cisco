@@ -52,17 +52,17 @@ class CiscoCliHandler(CliHandlerImpl):
 
     def _console_ssh_session(self):
         console_port = int(self.console_server_port)
-        if console_port in [0, 22]:
-            raise Exception(self.__class__.__name__, "Connection throguh console server terminal is not supported")
-        session = SSHSession(self.console_server_address, self.username, self.password, self.console_server_port,
+        # if console_port in [0, 22]:
+        #     raise Exception(self.__class__.__name__, "Connection throguh console server terminal is not supported")
+        session = SSHSession(self.console_server_address, self.username, self.password, console_port,
                              self.on_session_start)
         return session
 
     def _console_telnet_session(self):
         console_port = int(self.console_server_port)
-        if console_port in [0, 22]:
-            raise Exception(self.__class__.__name__, "Connection throguh console server terminal is not supported")
-        return TelnetSession(self.console_server_address, self.username, self.password, self.console_server_port,
+        # if console_port in [0, 22]:
+        #     raise Exception(self.__class__.__name__, "Connection throguh console server terminal is not supported")
+        return TelnetSession(self.console_server_address, self.username, self.password, console_port,
                              self.on_session_start)
 
     def _new_sessions(self):
@@ -71,7 +71,7 @@ class CiscoCliHandler(CliHandlerImpl):
         elif self.cli_type.lower() == TelnetSession.SESSION_TYPE.lower():
             new_sessions = self._telnet_session()
         elif self.cli_type.lower() == "console":
-            new_sessions = [self._console_ssh_session(), self._console_telnet_session()]
+            new_sessions = [self._console_telnet_session(), self._console_ssh_session()]
         else:
             new_sessions = [self._ssh_session(), self._telnet_session()]
         return new_sessions

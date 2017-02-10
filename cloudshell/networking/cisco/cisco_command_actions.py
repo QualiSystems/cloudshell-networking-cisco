@@ -3,7 +3,7 @@ from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIG
     SWITCHPORT_MODE, \
     SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, SHOW_VERSION, NO_SHUTDOWN
 from cloudshell.networking.cisco.command_templates.cisco_configuration_templates import COPY, DEL, CONFIGURE_REPLACE, \
-    SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY, BOOT_SYSTEM_FILE, CONFIG_REG, RELOAD
+    SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY, BOOT_SYSTEM_FILE, CONFIG_REG, RELOAD, WRITE_ERASE
 
 
 def install_firmware(config_session, logger, firmware_file_name):
@@ -56,8 +56,18 @@ def set_vlan_to_interface(config_session, logger, vlan_range, port_mode, port_na
                                                                         action_map=action_map,
                                                                         error_map=error_map))
 
+def write_erase(enable_session, logger, action_map=None, error_map=None):
+    """Erase startup configuration
 
-def reload_device(session, logger, timeout, action_map=None, error_map=None):
+    :param enable_session:
+    :param logger:
+    :param action_map:
+    :param error_map:
+    """
+    enable_session.send_command(**WRITE_ERASE.get_command(action_map=action_map, error_map=error_map))
+
+
+def reload_device(session, logger, timeout=500, reconnect=True, action_map=None, error_map=None):
     """Reload device
 
     :param session: current session
@@ -69,8 +79,8 @@ def reload_device(session, logger, timeout, action_map=None, error_map=None):
         session.send_command(**RELOAD.get_command(action_map=action_map, error_map=error_map))
     except Exception as e:
         logger.info("Device rebooted, starting reconnect")
-    session.reconnect(timeout)
-
+    if reconnect:
+        session.reconnect(timeout)
 
 def create_vlan(session, logger, vlan_range, action_map=None, error_map=None):
     """Create vlan entity on the device
