@@ -67,7 +67,7 @@ def write_erase(enable_session, logger, action_map=None, error_map=None):
     enable_session.send_command(**WRITE_ERASE.get_command(action_map=action_map, error_map=error_map))
 
 
-def reload_device(session, logger, timeout=500, reconnect=True, action_map=None, error_map=None):
+def reload_device(session, logger, timeout=500, action_map=None, error_map=None):
     """Reload device
 
     :param session: current session
@@ -79,8 +79,19 @@ def reload_device(session, logger, timeout=500, reconnect=True, action_map=None,
         session.send_command(**RELOAD.get_command(action_map=action_map, error_map=error_map))
     except Exception as e:
         logger.info("Device rebooted, starting reconnect")
-    if reconnect:
-        session.reconnect(timeout)
+    session.reconnect(timeout)
+
+
+def reload_device_via_console(session, logger, timeout=500, action_map=None, error_map=None):
+    """Reload device
+
+    :param session: current session
+    :param logger:  logger
+    :param timeout: session reconnect timeout
+    """
+
+    session.send_command(timeout=timeout, **RELOAD.get_command(action_map=action_map, error_map=error_map))
+
 
 def create_vlan(session, logger, vlan_range, action_map=None, error_map=None):
     """Create vlan entity on the device

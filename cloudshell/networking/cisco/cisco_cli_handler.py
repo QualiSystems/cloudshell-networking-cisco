@@ -40,7 +40,7 @@ class CiscoCliHandler(CliHandlerImpl):
 
         :return:
         """
-        return get_attribute_by_name('Console Port', self._context)
+        return get_attribute_by_name('Console User', self._context)
 
     @property
     def console_server_password(self):
@@ -48,7 +48,7 @@ class CiscoCliHandler(CliHandlerImpl):
 
         :return:
         """
-        return get_attribute_by_name('Console Port', self._context)
+        return get_attribute_by_name('Console Password', self._context)
 
     def _console_ssh_session(self):
         console_port = int(self.console_server_port)
@@ -73,7 +73,8 @@ class CiscoCliHandler(CliHandlerImpl):
         elif self.cli_type.lower() == "console":
             new_sessions = [self._console_telnet_session(), self._console_ssh_session()]
         else:
-            new_sessions = [self._ssh_session(), self._telnet_session()]
+            new_sessions = [self._ssh_session(), self._telnet_session(), self._console_ssh_session(),
+                            self._console_telnet_session()]
         return new_sessions
 
     def on_session_start(self, session, logger):
@@ -84,7 +85,7 @@ class CiscoCliHandler(CliHandlerImpl):
         self.enter_enable_mode(session=session, logger=logger)
         session.hardware_expect('terminal length 0', EnableCommandMode.PROMPT, logger)
         session.hardware_expect('terminal width 300', EnableCommandMode.PROMPT, logger)
-        session.hardware_expect('terminal no exec prompt timestamp', EnableCommandMode.PROMPT, logger)
+        # session.hardware_expect('terminal no exec prompt timestamp', EnableCommandMode.PROMPT, logger)
         self._enter_config_mode(session, logger)
         session.hardware_expect('no logging console', ConfigCommandMode.PROMPT, logger)
         session.hardware_expect('exit', EnableCommandMode.PROMPT, logger)
