@@ -3,7 +3,7 @@ from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIG
     SWITCHPORT_MODE, \
     SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, SHOW_VERSION, NO_SHUTDOWN
 from cloudshell.networking.cisco.command_templates.cisco_configuration_templates import COPY, DEL, CONFIGURE_REPLACE, \
-    SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY, BOOT_SYSTEM_FILE, CONFIG_REG, RELOAD, WRITE_ERASE
+    SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY, BOOT_SYSTEM_FILE, CONFIG_REG, RELOAD, WRITE_ERASE, CONSOLE_RELOAD
 
 
 def install_firmware(config_session, logger, firmware_file_name):
@@ -56,6 +56,7 @@ def set_vlan_to_interface(config_session, logger, vlan_range, port_mode, port_na
                                                                         action_map=action_map,
                                                                         error_map=error_map))
 
+
 def write_erase(enable_session, logger, action_map=None, error_map=None):
     """Erase startup configuration
 
@@ -90,7 +91,7 @@ def reload_device_via_console(session, logger, timeout=500, action_map=None, err
     :param timeout: session reconnect timeout
     """
 
-    session.send_command(timeout=timeout, **RELOAD.get_command(action_map=action_map, error_map=error_map))
+    session.send_command(timeout=timeout, **CONSOLE_RELOAD.get_command(action_map=action_map, error_map=error_map))
 
 
 def create_vlan(session, logger, vlan_range, action_map=None, error_map=None):
@@ -110,7 +111,7 @@ def create_vlan(session, logger, vlan_range, action_map=None, error_map=None):
     session.send_command(**SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
 
 
-def copy(session, logger, source, destination, vrf=None, action_map=None, error_map=None):
+def copy(session, logger, source, destination, vrf=None, action_map=None, error_map=None, timeout=None):
     """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem.
 
     :param session: current session 
@@ -125,8 +126,8 @@ def copy(session, logger, source, destination, vrf=None, action_map=None, error_
 
     if not vrf:
         vrf = None
-    output = session.send_command(
-        **COPY.get_command(src=source, dst=destination, vrf=vrf, action_map=action_map, error_map=error_map))
+    output = session.send_command(timeout=timeout, **COPY.get_command(src=source, dst=destination, vrf=vrf,
+                                                                      action_map=action_map, error_map=error_map))
 
     status_match = re.search(
         r'\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|[Cc]opy complete|[\(\[]OK[\]\)]', output,

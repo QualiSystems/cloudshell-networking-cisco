@@ -37,7 +37,7 @@ NO_SNMP_SERVER_COMMUNITY = CommandTemplate("no snmp-server community {snmp_commu
 BOOT_SYSTEM_FILE = CommandTemplate("boot system flash bootflash:{firmware_file_name}")
 CONFIG_REG = CommandTemplate("config-reg 0x2102")
 
-WRITE_ERASE = CommandTemplate('configure replace {path}',
+WRITE_ERASE = CommandTemplate('write erase',
                               action_map=OrderedDict({
                                   '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session,
                                                                                  logger: session.send_line('yes',
@@ -46,11 +46,14 @@ WRITE_ERASE = CommandTemplate('configure replace {path}',
                                   '[\[\(][Nn]o[\)\]]': lambda session, logger: session.send_line('y', logger),
                                   '[\[\(][Yy]es[\)\]]': lambda session, logger: session.send_line('y', logger),
                                   '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger),
-                                  }))
+                              }))
 
 RELOAD = CommandTemplate("reload", action_map=OrderedDict(
-    {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),
-     '\(y\/n\)|continue': lambda session, logger: session.send_line('y', logger),
-     'reload': lambda session, logger: session.send_line('', logger),
-     '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger)
+    {r"[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]": lambda session, logger: session.send_line('yes', logger),
+     r"\(y\/n\)|continue": lambda session, logger: session.send_line('y', logger),
+     r"[\[\(][Yy]/[Nn][\)\]]": lambda session, logger: session.send_line('y', logger)
      }))
+
+
+CONSOLE_RELOAD = CommandTemplate("reload")
+

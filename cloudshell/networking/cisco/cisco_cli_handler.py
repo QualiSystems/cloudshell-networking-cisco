@@ -5,6 +5,7 @@ from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.cli.session.ssh_session import SSHSession
 from cloudshell.cli.session.telnet_session import TelnetSession
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, DefaultCommandMode, ConfigCommandMode
+from cloudshell.networking.cisco.sessions.console_telnet_session import ConsoleTelnetSession
 from cloudshell.networking.cli_handler_impl import CliHandlerImpl
 from cloudshell.shell.core.api_utils import decrypt_password_from_attribute
 from cloudshell.shell.core.context_utils import get_attribute_by_name
@@ -20,7 +21,7 @@ class CiscoCliHandler(CliHandlerImpl):
 
     @property
     def console_server_address(self):
-        """Resource IP
+        """Resource console server IP address
 
         :return:
         """
@@ -28,7 +29,7 @@ class CiscoCliHandler(CliHandlerImpl):
 
     @property
     def console_server_port(self):
-        """Connection port property, to open socket on
+        """Connection console server port property, to open socket on
 
         :return:
         """
@@ -36,7 +37,7 @@ class CiscoCliHandler(CliHandlerImpl):
 
     @property
     def console_server_user(self):
-        """Connection port property, to open socket on
+        """Connection console username property
 
         :return:
         """
@@ -44,7 +45,7 @@ class CiscoCliHandler(CliHandlerImpl):
 
     @property
     def console_server_password(self):
-        """Connection port property, to open socket on
+        """Connection console password property
 
         :return:
         """
@@ -60,10 +61,10 @@ class CiscoCliHandler(CliHandlerImpl):
 
     def _console_telnet_session(self):
         console_port = int(self.console_server_port)
-        # if console_port in [0, 22]:
-        #     raise Exception(self.__class__.__name__, "Connection throguh console server terminal is not supported")
-        return TelnetSession(self.console_server_address, self.username, self.password, console_port,
-                             self.on_session_start)
+        return [ConsoleTelnetSession(self.console_server_address, self.username, self.password, console_port,
+                                     self.on_session_start),
+                ConsoleTelnetSession(self.console_server_address, self.username, self.password, console_port,
+                                     self.on_session_start, start_with_new_line=True)]
 
     def _new_sessions(self):
         if self.cli_type.lower() == SSHSession.SESSION_TYPE.lower():
@@ -71,10 +72,13 @@ class CiscoCliHandler(CliHandlerImpl):
         elif self.cli_type.lower() == TelnetSession.SESSION_TYPE.lower():
             new_sessions = self._telnet_session()
         elif self.cli_type.lower() == "console":
-            new_sessions = [self._console_telnet_session(), self._console_ssh_session()]
+            new_sessions = list()
+            new_sessions.append(self._console_ssh_session())
+            new_sessions.extend(self._console_telnet_session())
         else:
-            new_sessions = [self._ssh_session(), self._telnet_session(), self._console_ssh_session(),
-                            self._console_telnet_session()]
+            new_sessions = [self._ssh_session(), self._telnet_session(),
+                            self._console_ssh_session()]
+            new_sessions.extend(self._console_telnet_session())
         return new_sessions
 
     def on_session_start(self, session, logger):
@@ -85,7 +89,6 @@ class CiscoCliHandler(CliHandlerImpl):
         self.enter_enable_mode(session=session, logger=logger)
         session.hardware_expect('terminal length 0', EnableCommandMode.PROMPT, logger)
         session.hardware_expect('terminal width 300', EnableCommandMode.PROMPT, logger)
-        # session.hardware_expect('terminal no exec prompt timestamp', EnableCommandMode.PROMPT, logger)
         self._enter_config_mode(session, logger)
         session.hardware_expect('no logging console', ConfigCommandMode.PROMPT, logger)
         session.hardware_expect('exit', EnableCommandMode.PROMPT, logger)
