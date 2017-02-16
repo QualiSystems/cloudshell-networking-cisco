@@ -5,6 +5,7 @@ from cloudshell.cli.command_mode_helper import CommandModeHelper
 from cloudshell.cli.session.ssh_session import SSHSession
 from cloudshell.cli.session.telnet_session import TelnetSession
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, DefaultCommandMode, ConfigCommandMode
+from cloudshell.networking.cisco.sessions.console_ssh_session import ConsoleSSHSession
 from cloudshell.networking.cisco.sessions.console_telnet_session import ConsoleTelnetSession
 from cloudshell.networking.cli_handler_impl import CliHandlerImpl
 from cloudshell.shell.core.api_utils import decrypt_password_from_attribute
@@ -53,9 +54,7 @@ class CiscoCliHandler(CliHandlerImpl):
 
     def _console_ssh_session(self):
         console_port = int(self.console_server_port)
-        # if console_port in [0, 22]:
-        #     raise Exception(self.__class__.__name__, "Connection throguh console server terminal is not supported")
-        session = SSHSession(self.console_server_address, self.username, self.password, console_port,
+        session = ConsoleSSHSession(self.console_server_address, self.username, self.password, console_port,
                              self.on_session_start)
         return session
 

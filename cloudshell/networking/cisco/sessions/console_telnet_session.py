@@ -1,10 +1,7 @@
-import socket
 import telnetlib
 from collections import OrderedDict
 
-from cloudshell.cli.session.connection_params import ConnectionParams
-from cloudshell.cli.session.expect_session import ExpectSession
-from cloudshell.cli.session.session_exceptions import SessionException, SessionReadTimeout, SessionReadEmptyData
+from cloudshell.cli.session.session_exceptions import SessionException
 from cloudshell.cli.session.telnet_session import TelnetSession
 
 
@@ -13,8 +10,6 @@ class TelnetSessionException(SessionException):
 
 
 class ConsoleTelnetSession(TelnetSession):
-    SESSION_TYPE = 'CONSOLE_TELNET'
-
     def __init__(self, host, username, password, port=None, on_session_start=None, start_with_new_line=None, *args, **kwargs):
         super(ConsoleTelnetSession, self).__init__(host, username, password, port, on_session_start,
                                                    loop_detector_max_action_loops=5, *args, **kwargs)
@@ -55,7 +50,7 @@ class ConsoleTelnetSession(TelnetSession):
                                        action_map=action_map)
             if self.on_session_start and callable(self.on_session_start):
                 self.on_session_start(self, logger)
-        except Exception as e:
+        except Exception:
             self.disconnect()
-            raise type(e)(e.args)
+            raise
         self._active = True
