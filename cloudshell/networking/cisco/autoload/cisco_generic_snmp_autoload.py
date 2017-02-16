@@ -40,6 +40,8 @@ class CiscoGenericSNMPAutoload(object):
         self.root_model = None
         self.chassis = None
         self.module = None
+        self._vendor = 'Cisco'
+        self._product_mibs = ['CISCO-PRODUCTS-MIB', 'CISCO-ENTITY-VENDORTYPE-OID-MIB']
 
     def load_cisco_mib(self):
         """
@@ -62,7 +64,7 @@ class CiscoGenericSNMPAutoload(object):
         self.logger.info('Start SNMP discovery process .....')
 
         self.load_cisco_mib()
-        self.snmp.load_mib(['CISCO-PRODUCTS-MIB', 'CISCO-ENTITY-VENDORTYPE-OID-MIB'])
+        self.snmp.load_mib(self._product_mibs)
         self._get_device_details()
         self._load_snmp_tables()
 
@@ -632,6 +634,8 @@ class CiscoGenericSNMPAutoload(object):
                 interface_duplex = self.snmp.get_property('EtherLike-MIB', 'dot3StatsDuplexStatus', key)
                 if 'halfDuplex' in interface_duplex:
                     interface_details[resource_obj.DUPLEX] = 'Half'
+                if 'fullDuplex' in interface_duplex:
+                    interface_details[resource_obj.DUPLEX] = 'Full'
         return interface_details
 
     def _get_device_details(self):
@@ -641,7 +645,7 @@ class CiscoGenericSNMPAutoload(object):
 
         self.logger.info('Load Switch Attributes:')
         result = {self.root_model.SYSTEM_NAME: self.snmp.get_property('SNMPv2-MIB', 'sysName', 0),
-                  self.root_model.VENDOR: 'Cisco',
+                  self.root_model.VENDOR: self._vendor,
                   self.root_model.MODEL: self._get_device_model(),
                   self.root_model.LOCATION: self.snmp.get_property('SNMPv2-MIB', 'sysLocation',
                                                                    0),
