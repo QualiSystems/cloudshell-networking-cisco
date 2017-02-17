@@ -58,23 +58,23 @@ class SystemActions(object):
             action_map[r"(?!/){}(?!/)".format(host)] = lambda session, logger: session.send_line("", logger)
         return action_map
 
-    def copy(self, source, destination, vrf=None, action_map=None, error_map=None):
+    def copy(self, source, destination, vrf=None, action_map=None, error_map=None, timeout=None):
         """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem.
 
-        :param logger:  logger
         :param source: source file
         :param destination: destination file
         :param vrf: vrf management name
         :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
         :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
-        :raise Exception: 
+        :param timeout: session timeout
+        :raise Exception:
         """
 
         if not vrf:
             vrf = None
 
         output = CommandTemplateExecutor(self._cli_service, configuration.COPY).execute_command(
-            src=source, dst=destination, vrf=vrf, action_map=action_map, error_map=error_map)
+            src=source, dst=destination, vrf=vrf, action_map=action_map, error_map=error_map, timeout=timeout)
 
         status_match = re.search(r"\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete", output,
                                  re.IGNORECASE)
@@ -119,6 +119,16 @@ class SystemActions(object):
             error_str = match_error.group()
             raise Exception('Override_Running', 'Configure replace completed with error: ' + error_str)
 
+    def write_erase(self, action_map=None, error_map=None):
+        """Erase startup configuration
+
+        :param action_map:
+        :param error_map:
+        """
+
+        CommandTemplateExecutor(self._cli_service, configuration.WRITE_ERASE).execute_command(action_map=action_map,
+                                                                                              error_map=error_map)
+
     def reload_device(self, timeout, action_map=None, error_map=None):
         """Reload device
 
@@ -133,6 +143,18 @@ class SystemActions(object):
         except Exception as e:
             self._logger.info("Device rebooted, starting reconnect")
         self._cli_service.reconnect(timeout)
+
+    def reload_device_via_console(self, timeout=500, action_map=None, error_map=None):
+        """Reload device
+
+        :param session: current session
+        :param logger:  logger
+        :param timeout: session reconnect timeout
+        """
+
+        CommandTemplateExecutor(self._cli_service, configuration.CONSOLE_RELOAD).execute_command(action_map=action_map,
+                                                                                                 error_map=error_map,
+                                                                                                 timeout=timeout)
 
     def get_current_boot_config(self, action_map=None, error_map=None):
         """Retrieve current boot configuration

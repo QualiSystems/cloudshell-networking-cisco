@@ -619,8 +619,8 @@ class CiscoGenericSNMPAutoload(object):
         for key, value in self.duplex_table.iteritems():
             if 'dot3StatsIndex' in value.keys() and value['dot3StatsIndex'] == str(port_index):
                 interface_duplex = self.snmp_handler.get_property('EtherLike-MIB', 'dot3StatsDuplexStatus', key)
-                if 'halfDuplex' in interface_duplex:
-                    return 'Half'
+                if 'fullDuplex' in interface_duplex:
+                    return 'Full'
 
     def _get_port_autoneg(self, port_index):
         try:
