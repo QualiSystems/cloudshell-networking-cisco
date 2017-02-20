@@ -26,6 +26,7 @@ class CiscoCliHandler(CliHandlerImpl):
 
         :return:
         """
+
         return get_attribute_by_name('Console Server IP Address', self._context)
 
     @property
@@ -54,9 +55,8 @@ class CiscoCliHandler(CliHandlerImpl):
 
     def _console_ssh_session(self):
         console_port = int(self.console_server_port)
-        session = ConsoleSSHSession(self.console_server_address, self.username, self.password, console_port,
-                             self.on_session_start)
-        return session
+        return ConsoleSSHSession(self.console_server_address, self.username, self.password, console_port,
+                                 self.on_session_start)
 
     def _console_telnet_session(self):
         console_port = int(self.console_server_port)
@@ -65,19 +65,29 @@ class CiscoCliHandler(CliHandlerImpl):
                 ConsoleTelnetSession(self.console_server_address, self.username, self.password, console_port,
                                      self.on_session_start, start_with_new_line=True)]
 
+    def _console_sessions(self):
+        console_address = self.console_server_address
+        if not console_address:
+            return []
+        new_sessions = [self._console_ssh_session()]
+        new_sessions.extend(self._console_telnet_session())
+        return new_sessions
+
     def _new_sessions(self):
         if self.cli_type.lower() == SSHSession.SESSION_TYPE.lower():
             new_sessions = self._ssh_session()
         elif self.cli_type.lower() == TelnetSession.SESSION_TYPE.lower():
             new_sessions = self._telnet_session()
         elif self.cli_type.lower() == "console":
-            new_sessions = list()
-            new_sessions.append(self._console_ssh_session())
-            new_sessions.extend(self._console_telnet_session())
+            new_sessions = self._console_sessions()
+            if not new_sessions:
+                raise Exception(self.__class__.__name__,
+                                "Failed to create Console sessions, " +
+                                "please check Console Server IP Address and Console Port Attributes")
         else:
             new_sessions = [self._ssh_session(), self._telnet_session(),
                             self._console_ssh_session()]
-            new_sessions.extend(self._console_telnet_session())
+            new_sessions.extend(self._console_sessions())
         return new_sessions
 
     def on_session_start(self, session, logger):
