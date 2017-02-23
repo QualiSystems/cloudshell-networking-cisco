@@ -78,7 +78,8 @@ class SystemActions(object):
                                          error_map=error_map).execute_command(
             src=source, dst=destination, vrf=vrf, timeout=timeout)
 
-        status_match = re.search(r"\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete", output,
+        copy_ok_pattern = r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|[Cc]opy complete|[\(\[]OK[\]\)]"
+        status_match = re.search(copy_ok_pattern, output,
                                  re.IGNORECASE)
         if not status_match:
             match_error = re.search("%.*|TFTP put operation failed.*|sysmgr.*not supported.*\n", output, re.IGNORECASE)

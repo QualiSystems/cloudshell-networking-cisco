@@ -317,7 +317,9 @@ class CiscoGenericSNMPAutoload(object):
             else:
                 parent_object = self.elements.get("/".join(rel_seq[:-1]), self.resource)
 
-            parent_object.add_sub_resource(rel_seq[-1], resource)
+            rel_path = re.search(r"\d+", rel_seq[-1]).group()
+            parent_object.add_sub_resource(rel_path, resource)
+            # parent_object.add_sub_resource(rel_seq[-1], resource)
 
         self.elements.update({relative_path: resource})
 
@@ -330,7 +332,7 @@ class CiscoGenericSNMPAutoload(object):
         for port in self.port_list:
             modules = []
             modules.extend(self._get_module_parents(port))
-            for module in modules:
+            for module in modules[::-1]:
                 if module in self.module_list:
                     continue
                 vendor_type = self.snmp_handler.get_property('ENTITY-MIB', 'entPhysicalVendorType', module)
@@ -458,7 +460,7 @@ class CiscoGenericSNMPAutoload(object):
             port_id = self.entity_table[port]["entPhysicalParentRelPos"]
             parent_index = int(self.entity_table[port]["entPhysicalContainedIn"])
             chassis_id = self.get_relative_address(parent_index)
-            relative_address = "{0}/{1}".format(chassis_id, port_id)
+            relative_address = "{0}/PP{1}".format(chassis_id, port_id)
 
             power_port = GenericPowerPort(shell_name=self.shell_name,
                                           name="PP{0}".format(self.power_supply_list.index(port)),
