@@ -73,8 +73,10 @@ class SystemActions(object):
         if not vrf:
             vrf = None
 
-        output = CommandTemplateExecutor(self._cli_service, configuration.COPY).execute_command(
-            src=source, dst=destination, vrf=vrf, action_map=action_map, error_map=error_map, timeout=timeout)
+        output = CommandTemplateExecutor(self._cli_service, configuration.COPY,
+                                         action_map=action_map,
+                                         error_map=error_map).execute_command(
+            src=source, dst=destination, vrf=vrf, timeout=timeout)
 
         status_match = re.search(r"\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete", output,
                                  re.IGNORECASE)
@@ -99,8 +101,8 @@ class SystemActions(object):
         :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
         """
 
-        CommandTemplateExecutor(self._cli_service, configuration.DEL).execute_command(
-            target=path, action_map=action_map, error_map=error_map)
+        CommandTemplateExecutor(self._cli_service, configuration.DEL, action_map=action_map,
+                                error_map=error_map).execute_command(target=path)
 
     def override_running(self, path, action_map=None, error_map=None):
         """Override running-config
@@ -112,8 +114,8 @@ class SystemActions(object):
         """
 
         output = CommandTemplateExecutor(self._cli_service,
-                                         configuration.CONFIGURE_REPLACE).execute_command(
-            path=path, action_map=action_map, error_map=error_map)
+                                         configuration.CONFIGURE_REPLACE, action_map=action_map,
+                                         error_map=error_map).execute_command(path=path)
         match_error = re.search(r'[Ee]rror.*$', output)
         if match_error:
             error_str = match_error.group()
@@ -126,8 +128,8 @@ class SystemActions(object):
         :param error_map:
         """
 
-        CommandTemplateExecutor(self._cli_service, configuration.WRITE_ERASE).execute_command(action_map=action_map,
-                                                                                              error_map=error_map)
+        CommandTemplateExecutor(self._cli_service, configuration.WRITE_ERASE, action_map=action_map,
+                                error_map=error_map).execute_command()
 
     def reload_device(self, timeout, action_map=None, error_map=None):
         """Reload device
@@ -152,9 +154,8 @@ class SystemActions(object):
         :param timeout: session reconnect timeout
         """
 
-        CommandTemplateExecutor(self._cli_service, configuration.CONSOLE_RELOAD).execute_command(action_map=action_map,
-                                                                                                 error_map=error_map,
-                                                                                                 timeout=timeout)
+        CommandTemplateExecutor(self._cli_service, configuration.CONSOLE_RELOAD, action_map=action_map,
+                                error_map=error_map).execute_command(timeout=timeout)
 
     def get_current_boot_config(self, action_map=None, error_map=None):
         """Retrieve current boot configuration
@@ -164,8 +165,8 @@ class SystemActions(object):
         :return:
         """
 
-        return CommandTemplateExecutor(self._cli_service, firmware.SHOW_RUNNING).execute_command(action_map=action_map,
-                                                                                                 error_map=error_map)
+        return CommandTemplateExecutor(self._cli_service, firmware.SHOW_RUNNING, action_map=action_map,
+                                       error_map=error_map).execute_command()
 
     def get_current_os_version(self, action_map=None, error_map=None):
         """Retrieve os version
@@ -175,8 +176,8 @@ class SystemActions(object):
         :return:
         """
 
-        return CommandTemplateExecutor(self._cli_service, firmware.SHOW_VERSION).execute_command(action_map=action_map,
-                                                                                                 error_map=error_map)
+        return CommandTemplateExecutor(self._cli_service, firmware.SHOW_VERSION, action_map=action_map,
+                                       error_map=error_map).execute_command()
 
     def shutdown(self):
         """

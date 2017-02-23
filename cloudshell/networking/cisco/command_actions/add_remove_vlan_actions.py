@@ -46,16 +46,18 @@ class AddRemoveVlanActions(object):
         """
 
         CommandTemplateExecutor(self._cli_service,
-                                vlan_command_template.CONFIGURE_VLAN).execute_command(vlan_id=vlan_range,
-                                                                                      action_map=action_map,
-                                                                                      error_map=error_map)
+                                vlan_command_template.CONFIGURE_VLAN,
+                                action_map=action_map,
+                                error_map=error_map).execute_command(vlan_id=vlan_range)
 
         CommandTemplateExecutor(self._cli_service,
-                                iface_command_template.STATE_ACTIVE).execute_command(action_map=action_map,
-                                                                                     error_map=error_map)
+                                iface_command_template.STATE_ACTIVE,
+                                action_map=action_map,
+                                error_map=error_map).execute_command()
         CommandTemplateExecutor(self._cli_service,
-                                iface_command_template.SHUTDOWN).execute_command(action_map=action_map,
-                                                                                 error_map=error_map)
+                                iface_command_template.SHUTDOWN,
+                                action_map=action_map,
+                                error_map=error_map).execute_command()
 
     def set_vlan_to_interface(self, vlan_range, port_mode, port_name, qnq, c_tag,
                               require_single_switchport_cmd=False,
@@ -77,32 +79,32 @@ class AddRemoveVlanActions(object):
                                 iface_command_template.CONFIGURE_INTERFACE).execute_command(port_name=port_name)
 
         CommandTemplateExecutor(self._cli_service,
-                                iface_command_template.NO_SHUTDOWN).execute_command(action_map=action_map,
-                                                                                    error_map=error_map)
+                                iface_command_template.NO_SHUTDOWN,
+                                action_map=action_map,
+                                error_map=error_map).execute_command()
 
         if qnq:
             port_mode = 'dot1q-tunnel'
 
         if require_single_switchport_cmd:
             CommandTemplateExecutor(self._cli_service,
-                                    vlan_command_template.SWITCHPORT_MODE).execute_command(action_map=action_map,
-                                                                                           error_map=error_map)
+                                    vlan_command_template.SWITCHPORT_MODE,
+                                    action_map=action_map,
+                                    error_map=error_map).execute_command()
 
         CommandTemplateExecutor(self._cli_service,
-                                vlan_command_template.SWITCHPORT_MODE).execute_command(port_mode=port_mode,
-                                                                                       action_map=action_map,
-                                                                                       error_map=error_map)
+                                vlan_command_template.SWITCHPORT_MODE,
+                                action_map=action_map,
+                                error_map=error_map).execute_command(port_mode=port_mode)
 
         if 'trunk' not in port_mode:
 
             CommandTemplateExecutor(self._cli_service,
-                                    vlan_command_template.SWITCHPORT_ALLOW_VLAN).execute_command(port_mode_access='',
-                                                                                                 vlan_range=vlan_range,
-                                                                                                 action_map=action_map,
-                                                                                                 error_map=error_map)
+                                    vlan_command_template.SWITCHPORT_ALLOW_VLAN,
+                                    action_map=action_map,
+                                    error_map=error_map).execute_command(port_mode_access='', vlan_range=vlan_range)
         else:
             CommandTemplateExecutor(self._cli_service,
-                                    vlan_command_template.SWITCHPORT_ALLOW_VLAN).execute_command(port_mode_trunk='',
-                                                                                                 vlan_range=vlan_range,
-                                                                                                 action_map=action_map,
-                                                                                                 error_map=error_map)
+                                    vlan_command_template.SWITCHPORT_ALLOW_VLAN,
+                                    action_map=action_map,
+                                    error_map=error_map).execute_command(port_mode_trunk='', vlan_range=vlan_range)

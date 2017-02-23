@@ -49,9 +49,9 @@ class IFaceActions(object):
         """
 
         return CommandTemplateExecutor(self._cli_service,
-                                       iface_command_template.SHOW_RUNNING).execute_command(port_name=port_name,
-                                                                                            action_map=action_map,
-                                                                                            error_map=error_map)
+                                       iface_command_template.SHOW_RUNNING,
+                                       action_map=action_map,
+                                       error_map=error_map).execute_command(port_name=port_name)
 
     def enter_iface_config_mode(self, port_name):
         """ Enter configuration mode for specific interface
@@ -76,8 +76,7 @@ class IFaceActions(object):
         for line in current_config.splitlines():
             if line.strip(" ").startswith('switchport '):
                 CommandTemplateExecutor(self._cli_service,
-                                        iface_command_template.NO).execute_command(command=line.strip(' '),
-                                                                                   action_map=action_map,
-                                                                                   error_map=error_map)
+                                        iface_command_template.NO, action_map=action_map,
+                                        error_map=error_map).execute_command(command=line.strip(' '))
 
                 self._logger.debug("Completed cleaning interface switchport configuration")
