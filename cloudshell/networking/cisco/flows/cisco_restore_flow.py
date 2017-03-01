@@ -48,7 +48,7 @@ class CiscoRestoreFlow(RestoreConfigurationFlow):
 
             elif "running" in configuration_type:
                 if restore_method == "override":
-                    restore_action.override_running(enable_session, path)
+                    restore_action.override_running(path)
                 else:
                     restore_action.copy(path,
                                         configuration_type,
