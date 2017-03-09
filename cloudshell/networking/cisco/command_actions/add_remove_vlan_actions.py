@@ -55,7 +55,7 @@ class AddRemoveVlanActions(object):
                                 action_map=action_map,
                                 error_map=error_map).execute_command()
         CommandTemplateExecutor(self._cli_service,
-                                iface_command_template.SHUTDOWN,
+                                iface_command_template.NO_SHUTDOWN,
                                 action_map=action_map,
                                 error_map=error_map).execute_command()
 
