@@ -131,6 +131,46 @@ class CiscoGenericSNMPAutoload(object):
             self.logger.error(error_message)
             return False
 
+    def _get_device_model(self):
+        """Get device model form snmp SNMPv2 mib
+
+        :return: device model
+        :rtype: str
+        """
+
+        result = ''
+        match_name = re.search(r'::(?P<model>\S+$)', self.snmp_handler.get_property('SNMPv2-MIB', 'sysObjectID', '0'))
+        if match_name:
+            result = match_name.groupdict()['model'].capitalize()
+        return result
+
+    def _get_device_os_version(self):
+        """Get device OS Version form snmp SNMPv2 mib
+
+        :return: device model
+        :rtype: str
+        """
+
+        result = ""
+        matched = re.search(r"Version (?P<os_version>.*?),",
+                            self.snmp_handler.get_property('SNMPv2-MIB', 'sysDescr', '0'))
+        if matched:
+            result = matched.groupdict().get("os_version", "")
+        return result
+
+    def _get_device_details(self):
+        """ Get root element attributes """
+
+        self.logger.info("Building Root")
+        vendor = "Cisco"
+
+        self.resource.contact_name = self.snmp_handler.get_property('SNMPv2-MIB', 'sysContact', '0')
+        self.resource.system_name = self.snmp_handler.get_property('SNMPv2-MIB', 'sysName', '0')
+        self.resource.location = self.snmp_handler.get_property('SNMPv2-MIB', 'sysLocation', '0')
+        self.resource.os_version = self._get_device_os_version()
+        self.resource.model = self._get_device_model()
+        self.resource.vendor = vendor
+
     def _load_snmp_tables(self):
         """ Load all cisco required snmp tables
 
@@ -633,21 +673,6 @@ class CiscoGenericSNMPAutoload(object):
             self.logger.error('Failed to load auto negotiation property for interface {0}'.format(e.message))
             return 'False'
 
-    def _get_device_details(self):
-        """ Get root element attributes """
-
-        self.logger.info("Building Root")
-        vendor = "Cisco"
-        model = self._get_device_model()
-        os_version = ''
-
-        self.resource.contact_name = self.snmp_handler.get_property('SNMPv2-MIB', 'sysContact', '0')
-        self.resource.system_name = self.snmp_handler.get_property('SNMPv2-MIB', 'sysName', '0')
-        self.resource.location = self.snmp_handler.get_property('SNMPv2-MIB', 'sysLocation', '0')
-        self.resource.os_version = os_version
-        self.resource.vendor = vendor
-        self.resource.model = model
-
     def _get_adjacent(self, interface_id):
         """Get connected device interface and device name to the specified port id, using cdp or lldp protocols
 
@@ -676,19 +701,6 @@ class CiscoGenericSNMPAutoload(object):
                                 result = result_template.format(remote_host=remoute_sys_name,
                                                                 remote_port=remoute_port_name)
                                 break
-        return result
-
-    def _get_device_model(self):
-        """Get device model form snmp SNMPv2 mib
-
-        :return: device model
-        :rtype: str
-        """
-
-        result = ''
-        match_name = re.search(r'::(?P<model>\S+$)', self.snmp_handler.get_property('SNMPv2-MIB', 'sysObjectID', '0'))
-        if match_name:
-            result = match_name.groupdict()['model'].capitalize()
         return result
 
     def _get_mapping(self, port_index, port_descr):
