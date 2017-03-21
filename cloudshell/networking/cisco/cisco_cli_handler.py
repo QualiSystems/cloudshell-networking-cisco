@@ -126,9 +126,14 @@ class CiscoCliHandler(CliHandlerImpl):
         :param logger:
         :raise Exception:
         """
-        result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
-                                         logger)
+
+        result = session.hardware_expect('', '{0}|{1}|{2}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT,
+                                                                  ConfigCommandMode.PROMPT), logger)
         if not re.search(EnableCommandMode.PROMPT, result):
+            if re.search(ConfigCommandMode.PROMPT, result):
+                session.hardware_expect('end', EnableCommandMode.PROMPT, logger=logger)
+                return
+
             enable_password = decrypt_password_from_attribute(api=self._api,
                                                               password_attribute_name='Enable Password',
                                                               context=self._context)
