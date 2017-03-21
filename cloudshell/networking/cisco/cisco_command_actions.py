@@ -138,7 +138,7 @@ def copy(session, logger, source, destination, vrf=None, action_map=None, error_
         message = 'Copy Command failed. '
         if match_error:
             logger.error(message)
-            message += re.sub('^%|\\n', '', match_error.group())
+            message += re.sub('^%\s+|\\n|\s*at.*marker.*', '', match_error.group())
         else:
             error_match = re.search(r"error.*\n|fail.*\n", output, re.IGNORECASE)
             if error_match:
