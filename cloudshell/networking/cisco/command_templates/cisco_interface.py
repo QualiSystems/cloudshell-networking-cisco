@@ -5,7 +5,7 @@ from cloudshell.cli.command_template.command_template import CommandTemplate
 
 CONFIGURE_INTERFACE = CommandTemplate('interface {port_name}')
 
-SWITCHPORT_MODE = CommandTemplate('switchport[ mode {port_mode}]',
+SWITCHPORT_MODE = CommandTemplate('switchport [mode {port_mode}]',
                                   action_map=OrderedDict(
                                       {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
                                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}),

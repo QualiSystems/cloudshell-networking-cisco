@@ -108,7 +108,7 @@ def create_vlan(session, logger, vlan_range, action_map=None, error_map=None):
                                                       action_map=action_map,
                                                       error_map=error_map))
     session.send_command(**STATE_ACTIVE.get_command(action_map=action_map, error_map=error_map))
-    session.send_command(**SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
+    session.send_command(**NO_SHUTDOWN.get_command(action_map=action_map, error_map=error_map))
 
 
 def copy(session, logger, source, destination, vrf=None, action_map=None, error_map=None, timeout=None):
