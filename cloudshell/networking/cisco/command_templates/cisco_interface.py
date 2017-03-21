@@ -10,8 +10,8 @@ SWITCHPORT_MODE = CommandTemplate('switchport [mode {port_mode}]',
                                       {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
                                        '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}),
                                   error_map=OrderedDict({
-                                      "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected":
-                                          Exception('SWITCHPORT_MODE', 'Failed to switch port mode'),
+                                      "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected|(ERROR|[Ee]rror).*\n":
+                                          Exception('SWITCHPORT_MODE', 'Failed to configure switchport mode'),
                                   }))
 
 SWITCHPORT_ALLOW_VLAN = CommandTemplate(
