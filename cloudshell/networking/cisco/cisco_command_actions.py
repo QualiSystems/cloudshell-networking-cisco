@@ -215,8 +215,9 @@ def clean_interface_switchport_config(config_session, logger, current_config, po
     config_session.send_command(**CONFIGURE_INTERFACE.get_command(port_name=port_name))
     for line in current_config.splitlines():
         if line.strip(" ").startswith('switchport '):
+            line_to_remove = re.sub(r'\s+\d+[-\d+,]+', '', line).strip(' ')
             config_session.send_command(
-                **NO.get_command(command=line.strip(' '), action_map=action_map, error_map=error_map))
+                **NO.get_command(command=line_to_remove, action_map=action_map, error_map=error_map))
 
     logger.debug("Completed cleaning interface switchport configuration")
 
