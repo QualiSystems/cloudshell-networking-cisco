@@ -106,9 +106,12 @@ class CiscoCliHandler(CliHandlerImpl):
         :param logger:
         :raise Exception:
         """
-        result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
+        result = session.hardware_expect("", "{default}|{enable}|{config}".format(default=DefaultCommandMode.PROMPT,
+                                                                                  enable=EnableCommandMode.PROMPT,
+                                                                                  config=ConfigCommandMode.PROMPT),
                                          logger)
-        if not re.search(EnableCommandMode.PROMPT, result):
+
+        if re.search(DefaultCommandMode.PROMPT, result):
             enable_password = self._api.DecryptPassword(self.resource_config.enable_password).Value
             expect_map = {'[Pp]assword': lambda session, logger: session.send_line(enable_password, logger)}
             session.hardware_expect('enable', EnableCommandMode.PROMPT, action_map=expect_map, logger=logger)
@@ -116,3 +119,7 @@ class CiscoCliHandler(CliHandlerImpl):
                                              logger)
             if not re.search(EnableCommandMode.PROMPT, result):
                 raise Exception('enter_enable_mode', 'Enable password is incorrect')
+        elif re.search(ConfigCommandMode.PROMPT, result):
+            session.hardware_expect("end", EnableCommandMode.PROMPT, logger=logger)
+        else:
+            logger.debug("Session already in Enable Mode")

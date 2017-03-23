@@ -81,11 +81,11 @@ class SystemActions(object):
         copy_ok_pattern = r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|[Cc]opy complete|[\(\[]OK[\]\)]"
         status_match = re.search(copy_ok_pattern, output, re.IGNORECASE)
         if not status_match:
-            match_error = re.search("%.*|TFTP put operation failed.*|sysmgr.*not supported.*\n", output, re.IGNORECASE)
+            match_error = re.search(r"%.*|TFTP put operation failed.*|sysmgr.*not supported.*\n", output, re.IGNORECASE)
             message = "Copy Command failed. "
             if match_error:
                 self._logger.error(message)
-                message += re.sub("^%|\\n", "", match_error.group())
+                message += re.sub(r"^%\s+|\\n|\s*at.*marker.*", "", match_error.group())
             else:
                 error_match = re.search(r"error.*\n|fail.*\n", output, re.IGNORECASE)
                 if error_match:

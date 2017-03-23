@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import re
+
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
 from cloudshell.networking.cisco.command_templates import iface as iface_command_template
 
@@ -75,8 +77,9 @@ class IFaceActions(object):
 
         for line in current_config.splitlines():
             if line.strip(" ").startswith('switchport '):
+                line_to_remove = re.sub(r'\s+\d+[-\d+,]+', '', line).strip(' ')
                 CommandTemplateExecutor(self._cli_service,
                                         iface_command_template.NO, action_map=action_map,
-                                        error_map=error_map).execute_command(command=line.strip(' '))
+                                        error_map=error_map).execute_command(command=line_to_remove)
 
                 self._logger.debug("Completed cleaning interface switchport configuration")
