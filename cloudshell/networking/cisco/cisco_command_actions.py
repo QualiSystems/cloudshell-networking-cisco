@@ -3,7 +3,7 @@ from cloudshell.networking.cisco.command_templates.cisco_interface import CONFIG
     SWITCHPORT_MODE, \
     SWITCHPORT_ALLOW_VLAN, SHOW_RUNNING, NO, STATE_ACTIVE, CONFIGURE_VLAN, SHOW_VERSION, NO_SHUTDOWN
 from cloudshell.networking.cisco.command_templates.cisco_configuration_templates import COPY, DEL, CONFIGURE_REPLACE, \
-    SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY, BOOT_SYSTEM_FILE, CONFIG_REG, RELOAD
+    SNMP_SERVER_COMMUNITY, NO_SNMP_SERVER_COMMUNITY, BOOT_SYSTEM_FILE, CONFIG_REG, RELOAD, WRITE_ERASE, CONSOLE_RELOAD
 
 
 def install_firmware(config_session, logger, firmware_file_name):
@@ -57,7 +57,18 @@ def set_vlan_to_interface(config_session, logger, vlan_range, port_mode, port_na
                                                                         error_map=error_map))
 
 
-def reload_device(session, logger, timeout, action_map=None, error_map=None):
+def write_erase(enable_session, logger, action_map=None, error_map=None):
+    """Erase startup configuration
+
+    :param enable_session:
+    :param logger:
+    :param action_map:
+    :param error_map:
+    """
+    enable_session.send_command(**WRITE_ERASE.get_command(action_map=action_map, error_map=error_map))
+
+
+def reload_device(session, logger, timeout=500, action_map=None, error_map=None):
     """Reload device
 
     :param session: current session
@@ -70,6 +81,17 @@ def reload_device(session, logger, timeout, action_map=None, error_map=None):
     except Exception as e:
         logger.info("Device rebooted, starting reconnect")
     session.reconnect(timeout)
+
+
+def reload_device_via_console(session, logger, timeout=500, action_map=None, error_map=None):
+    """Reload device
+
+    :param session: current session
+    :param logger:  logger
+    :param timeout: session reconnect timeout
+    """
+
+    session.send_command(timeout=timeout, **CONSOLE_RELOAD.get_command(action_map=action_map, error_map=error_map))
 
 
 def create_vlan(session, logger, vlan_range, action_map=None, error_map=None):
@@ -86,10 +108,10 @@ def create_vlan(session, logger, vlan_range, action_map=None, error_map=None):
                                                       action_map=action_map,
                                                       error_map=error_map))
     session.send_command(**STATE_ACTIVE.get_command(action_map=action_map, error_map=error_map))
-    session.send_command(**SHUTDOWN.get_command(no='', action_map=action_map, error_map=error_map))
+    session.send_command(**NO_SHUTDOWN.get_command(action_map=action_map, error_map=error_map))
 
 
-def copy(session, logger, source, destination, vrf=None, action_map=None, error_map=None):
+def copy(session, logger, source, destination, vrf=None, action_map=None, error_map=None, timeout=None):
     """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem.
 
     :param session: current session 
@@ -104,17 +126,19 @@ def copy(session, logger, source, destination, vrf=None, action_map=None, error_
 
     if not vrf:
         vrf = None
-    output = session.send_command(
-        **COPY.get_command(src=source, dst=destination, vrf=vrf, action_map=action_map, error_map=error_map))
+    output = session.send_command(timeout=timeout, **COPY.get_command(src=source, dst=destination, vrf=vrf,
+                                                                      action_map=action_map, error_map=error_map))
 
-    status_match = re.search(r'\d+ bytes copied|copied.*[\[\(].*[0-9]* bytes.*[\)\]]|[Cc]opy complete', output,
-                             re.IGNORECASE)
+    status_match = re.search(
+        r'\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|[Cc]opy complete|[\(\[]OK[\]\)]', output,
+        re.IGNORECASE)
+
     if not status_match:
         match_error = re.search('%.*|TFTP put operation failed.*|sysmgr.*not supported.*\n', output, re.IGNORECASE)
         message = 'Copy Command failed. '
         if match_error:
             logger.error(message)
-            message += re.sub('^%|\\n', '', match_error.group())
+            message += re.sub('^%\s+|\\n|\s*at.*marker.*', '', match_error.group())
         else:
             error_match = re.search(r"error.*\n|fail.*\n", output, re.IGNORECASE)
             if error_match:
@@ -191,8 +215,9 @@ def clean_interface_switchport_config(config_session, logger, current_config, po
     config_session.send_command(**CONFIGURE_INTERFACE.get_command(port_name=port_name))
     for line in current_config.splitlines():
         if line.strip(" ").startswith('switchport '):
+            line_to_remove = re.sub(r'\s+\d+[-\d+,]+', '', line).strip(' ')
             config_session.send_command(
-                **NO.get_command(command=line.strip(' '), action_map=action_map, error_map=error_map))
+                **NO.get_command(command=line_to_remove, action_map=action_map, error_map=error_map))
 
     logger.debug("Completed cleaning interface switchport configuration")
 

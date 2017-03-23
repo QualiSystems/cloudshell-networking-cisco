@@ -2,9 +2,14 @@ import re
 import time
 
 from cloudshell.cli.command_mode_helper import CommandModeHelper
+from cloudshell.cli.session.ssh_session import SSHSession
+from cloudshell.cli.session.telnet_session import TelnetSession
 from cloudshell.networking.cisco.cisco_command_modes import EnableCommandMode, DefaultCommandMode, ConfigCommandMode
+from cloudshell.networking.cisco.sessions.console_ssh_session import ConsoleSSHSession
+from cloudshell.networking.cisco.sessions.console_telnet_session import ConsoleTelnetSession
 from cloudshell.networking.cli_handler_impl import CliHandlerImpl
 from cloudshell.shell.core.api_utils import decrypt_password_from_attribute
+from cloudshell.shell.core.context_utils import get_attribute_by_name
 
 
 class CiscoCliHandler(CliHandlerImpl):
@@ -15,6 +20,76 @@ class CiscoCliHandler(CliHandlerImpl):
         self.enable_mode = modes[EnableCommandMode]
         self.config_mode = modes[ConfigCommandMode]
 
+    @property
+    def console_server_address(self):
+        """Resource console server IP address
+
+        :return:
+        """
+
+        return get_attribute_by_name('Console Server IP Address', self._context)
+
+    @property
+    def console_server_port(self):
+        """Connection console server port property, to open socket on
+
+        :return:
+        """
+        return get_attribute_by_name('Console Port', self._context)
+
+    @property
+    def console_server_user(self):
+        """Connection console username property
+
+        :return:
+        """
+        return get_attribute_by_name('Console User', self._context)
+
+    @property
+    def console_server_password(self):
+        """Connection console password property
+
+        :return:
+        """
+        return get_attribute_by_name('Console Password', self._context)
+
+    def _console_ssh_session(self):
+        console_port = int(self.console_server_port)
+        return ConsoleSSHSession(self.console_server_address, self.username, self.password, console_port,
+                                 self.on_session_start)
+
+    def _console_telnet_session(self):
+        console_port = int(self.console_server_port)
+        return [ConsoleTelnetSession(self.console_server_address, self.username, self.password, console_port,
+                                     self.on_session_start),
+                ConsoleTelnetSession(self.console_server_address, self.username, self.password, console_port,
+                                     self.on_session_start, start_with_new_line=True)]
+
+    def _console_sessions(self):
+        console_address = self.console_server_address
+        if not console_address:
+            return []
+        new_sessions = [self._console_ssh_session()]
+        new_sessions.extend(self._console_telnet_session())
+        return new_sessions
+
+    def _new_sessions(self):
+        if self.cli_type.lower() == SSHSession.SESSION_TYPE.lower():
+            new_sessions = self._ssh_session()
+        elif self.cli_type.lower() == TelnetSession.SESSION_TYPE.lower():
+            new_sessions = self._telnet_session()
+        elif self.cli_type.lower() == "console":
+            new_sessions = self._console_sessions()
+            if not new_sessions:
+                raise Exception(self.__class__.__name__,
+                                "Failed to create Console sessions, " +
+                                "please check Console Server IP Address and Console Port Attributes")
+        else:
+            new_sessions = [self._ssh_session(), self._telnet_session(),
+                            self._console_ssh_session()]
+            new_sessions.extend(self._console_sessions())
+        return new_sessions
+
     def on_session_start(self, session, logger):
         """Send default commands to configure/clear session outputs
         :return:
@@ -23,7 +98,6 @@ class CiscoCliHandler(CliHandlerImpl):
         self.enter_enable_mode(session=session, logger=logger)
         session.hardware_expect('terminal length 0', EnableCommandMode.PROMPT, logger)
         session.hardware_expect('terminal width 300', EnableCommandMode.PROMPT, logger)
-        session.hardware_expect('terminal no exec prompt timestamp', EnableCommandMode.PROMPT, logger)
         self._enter_config_mode(session, logger)
         session.hardware_expect('no logging console', ConfigCommandMode.PROMPT, logger)
         session.hardware_expect('exit', EnableCommandMode.PROMPT, logger)
@@ -52,9 +126,14 @@ class CiscoCliHandler(CliHandlerImpl):
         :param logger:
         :raise Exception:
         """
-        result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
-                                         logger)
+
+        result = session.hardware_expect('', '{0}|{1}|{2}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT,
+                                                                  ConfigCommandMode.PROMPT), logger)
         if not re.search(EnableCommandMode.PROMPT, result):
+            if re.search(ConfigCommandMode.PROMPT, result):
+                session.hardware_expect('end', EnableCommandMode.PROMPT, logger=logger)
+                return
+
             enable_password = decrypt_password_from_attribute(api=self._api,
                                                               password_attribute_name='Enable Password',
                                                               context=self._context)
