@@ -25,7 +25,6 @@ class SystemActions(object):
     @staticmethod
     def prepare_action_map(source_file, destination_file):
         action_map = OrderedDict()
-        host = None
         if "://" in destination_file:
             destination_file_data_list = re.sub("/+", "/", destination_file).split("/")
             host = destination_file_data_list[1]
@@ -37,7 +36,9 @@ class SystemActions(object):
                                                                                                                logger)
         else:
             destination_file_name = destination_file.split(":")[-1].split("/")[-1]
-            source_file_name = source_file.split(":")[-1].split("/")[-1]
+            source_file_data_list = re.sub("/+", "/", source_file).split("/")
+            host = source_file_data_list[1]
+            source_file_name = source_file_data_list[-1]
             action_map[r"(?!/)[\[\(]{}[\)\]]".format(
                 destination_file_name)] = lambda session, logger: session.send_line("", logger)
             action_map[r"(?!/)[\[\(]{}[\)\]]".format(

@@ -11,7 +11,8 @@ ERROR_MAP = OrderedDict({"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected
                          })
 
 CONFIGURE_VLAN = CommandTemplate("vlan {vlan_id}",
-                                 error_map=OrderedDict({"%.*\.": Exception("CONFIGURE_VLAN", "Error")}))
+                                 error_map=OrderedDict({"%.*\.|Error": Exception("CONFIGURE_VLAN",
+                                                                                 "Error creating/editing vlan")}))
 
 SWITCHPORT_ALLOW_VLAN = CommandTemplate(
     "switchport [trunk allowed{port_mode_trunk}] [access{port_mode_access}] vlan {vlan_range}",
