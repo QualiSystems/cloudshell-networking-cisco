@@ -1,4 +1,8 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import telnetlib
+
 from collections import OrderedDict
 
 from cloudshell.cli.session.session_exceptions import SessionException

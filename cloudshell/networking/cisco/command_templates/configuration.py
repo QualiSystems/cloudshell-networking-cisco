@@ -1,3 +1,6 @@
+# !/usr/bin/python
+# -*- coding: utf-8 -*-
+
 from collections import OrderedDict
 from cloudshell.cli.command_template.command_template import CommandTemplate
 
@@ -31,20 +34,6 @@ CONFIGURE_REPLACE = CommandTemplate('configure replace {path}',
                                             Exception('Configure_Replace', 'Override mode is not supported')
                                     }))
 
-SNMP_SERVER_COMMUNITY = CommandTemplate("snmp-server community {snmp_community} ro",
-                                        action_map=OrderedDict({
-                                            'commit.*[\[\(][Yy]es/[Nn]o.*[\)\]]': lambda session,
-                                                                                         logger: session.send_line(
-                                                'yes', logger)}))
-NO_SNMP_SERVER_COMMUNITY = CommandTemplate("no snmp-server community {snmp_community}",
-                                           action_map=OrderedDict({
-                                               'commit.*[\[\(][Yy]es/[Nn]o.*[\)\]]': lambda session,
-                                                                                            logger: session.send_line(
-                                                   'yes', logger)}))
-
-BOOT_SYSTEM_FILE = CommandTemplate("boot system flash bootflash:{firmware_file_name}")
-CONFIG_REG = CommandTemplate("config-reg 0x2102")
-
 WRITE_ERASE = CommandTemplate('write erase',
                               action_map=OrderedDict({
                                   '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session,
@@ -57,9 +46,10 @@ WRITE_ERASE = CommandTemplate('write erase',
                               }))
 
 RELOAD = CommandTemplate("reload", action_map=OrderedDict(
-    {r"[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]": lambda session, logger: session.send_line('yes', logger),
-     r"\(y\/n\)|continue": lambda session, logger: session.send_line('y', logger),
-     r"[\[\(][Yy]/[Nn][\)\]]": lambda session, logger: session.send_line('y', logger)
+    {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),
+     '\(y\/n\)|continue': lambda session, logger: session.send_line('y', logger),
+     'reload': lambda session, logger: session.send_line('', logger),
+     '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger)
      }))
 
 CONSOLE_RELOAD = CommandTemplate("reload")

@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 from cloudshell.cli.session.ssh_session import SSHSession
 
 
