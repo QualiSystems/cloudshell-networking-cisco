@@ -10,6 +10,9 @@ from cloudshell.networking.cisco.command_actions.system_actions import SystemAct
 
 
 class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
+    RUNNING_CONF = "running-config"
+    STARTUP_CONF = "startup-config"
+
     def __init__(self, cli_handler, logger):
         super(CiscoLoadFirmwareFlow, self).__init__(cli_handler, logger)
 
@@ -30,7 +33,9 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
         with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as enable_session:
             system_action = SystemActions(enable_session, self._logger)
             iface_action = IFaceActions(enable_session, self._logger)
-            system_action.copy(path, "flash:/", vrf=vrf)
+            dst_firmware_name = "flash:/{0}".format(firmware_file_name)
+            system_action.copy(path, dst_firmware_name, vrf=vrf,
+                               action_map=system_action.prepare_action_map(path, dst_firmware_name))
 
             current_boot_settings = system_action.get_current_boot_config()
             current_boot_settings = re.sub("boot-start-marker|boot-end-marker", "", current_boot_settings)
@@ -45,7 +50,8 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
                 raise Exception(self.__class__.__name__,
                                 "Can't add firmware '{}' for boot!".format(firmware_file_name))
 
-            system_action.copy("running-config", "startup-config", vrf=vrf)
+            system_action.copy(self.RUNNING_CONF, self.STARTUP_CONF, vrf=vrf,
+                               action_map=system_action.prepare_action_map(self.RUNNING_CONF, self.STARTUP_CONF))
             system_action.reload_device(timeout)
 
             os_version = system_action.get_current_os_version()
