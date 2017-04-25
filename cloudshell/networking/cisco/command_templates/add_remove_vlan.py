@@ -18,6 +18,6 @@ SWITCHPORT_ALLOW_VLAN = CommandTemplate(
     action_map=ACTION_MAP,
     error_map=ERROR_MAP)
 
-SWITCHPORT_MODE = CommandTemplate("switchport[ mode {port_mode}]",
+SWITCHPORT_MODE = CommandTemplate("switchport [mode {port_mode}]",
                                   action_map=ACTION_MAP,
                                   error_map=ERROR_MAP)

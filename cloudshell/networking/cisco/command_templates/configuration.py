@@ -62,6 +62,6 @@ NO = CommandTemplate("no {command}")
 
 SHOW_FILE_SYSTEMS = CommandTemplate("show file systems")
 
-SHOW_VERSION_WITH_FILTERS = CommandTemplate("[do{do}] show version[ | include {filter}]")
+SHOW_VERSION_WITH_FILTERS = CommandTemplate("[do{do}] show version [| include {filter}]")
 
 CONSOLE_RELOAD = CommandTemplate("reload")
