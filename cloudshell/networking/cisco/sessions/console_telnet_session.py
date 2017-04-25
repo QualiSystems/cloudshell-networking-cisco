@@ -14,6 +14,8 @@ class TelnetSessionException(SessionException):
 
 
 class ConsoleTelnetSession(TelnetSession):
+    SESSION_TYPE = 'CONSOLE_TELNET'
+
     def __init__(self, host, username, password, port=None, on_session_start=None, start_with_new_line=None, *args, **kwargs):
         super(ConsoleTelnetSession, self).__init__(host, username, password, port, on_session_start,
                                                    loop_detector_max_action_loops=5, *args, **kwargs)
