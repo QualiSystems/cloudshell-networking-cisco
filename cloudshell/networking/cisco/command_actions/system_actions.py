@@ -144,7 +144,7 @@ class SystemActions(object):
 
         try:
             redundancy_reload = CommandTemplateExecutor(self._cli_service, configuration.REDUNDANCY_PEER_RELOAD
-                                                       ).execute_command(action_map=action_map, error_map=error_map)
+                                                        ).execute_command(action_map=action_map, error_map=error_map)
             if re.search("[Ii]nvalid\s*([Ii]nput|[Cc]ommand)", redundancy_reload, re.IGNORECASE):
                 CommandTemplateExecutor(self._cli_service, configuration.RELOAD).execute_command(
                     action_map=action_map, error_map=error_map)
@@ -245,25 +245,24 @@ class FirmwareActions(object):
     def add_boot_config(self, boot_config_line):
         """Set boot firmware file.
 
-        :param firmware_file_name: firmware file name
+        :param boot_config_line: firmware file name
         """
 
         self._cli_service.send_command(boot_config_line)
 
-    def clean_boot_config(self, current_config, action_map=None, error_map=None):
+    def clean_boot_config(self, config_line_to_remove, action_map=None, error_map=None):
         """Remove current boot from device
 
-        :param current_config: current boot configuration
+        :param config_line_to_remove: current boot configuration
         :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
         :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
         """
 
         self._logger.debug("Start cleaning boot configuration")
 
-        for line in current_config.splitlines():
-            if ".bin" in line:
-                CommandTemplateExecutor(self._cli_service,
-                                        configuration.NO, action_map=action_map,
-                                        error_map=error_map).execute_command(command=line.strip(' '))
+        self._logger.info("Removing '{}' boot config line".format(config_line_to_remove))
+        CommandTemplateExecutor(self._cli_service,
+                                configuration.NO, action_map=action_map,
+                                error_map=error_map).execute_command(command=config_line_to_remove.strip(' '))
 
-            self._logger.debug("Completed cleaning boot configuration")
+        self._logger.debug("Completed cleaning boot configuration")
