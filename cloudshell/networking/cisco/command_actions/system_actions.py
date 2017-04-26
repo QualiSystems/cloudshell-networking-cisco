@@ -29,14 +29,14 @@ class SystemActions(object):
         if "://" in destination_file:
             url = UrlParser.parse_url(destination_file)
             dst_file_name = url.get(UrlParser.FILENAME)
-            source_file_name = source_file.split(":")[-1].split("/")[-1]
+            source_file_name = UrlParser.parse_url(source_file).get(UrlParser.FILENAME)
             action_map[r"[\[\(].*{}[\)\]]".format(
                 dst_file_name)] = lambda session, logger: session.send_line("", logger)
 
             action_map[r"[\[\(]{}[\)\]]".format(source_file_name)] = lambda session, logger: session.send_line("",
                                                                                                                logger)
         else:
-            destination_file_name = destination_file.split(":")[-1].split("/")[-1]
+            destination_file_name = UrlParser.parse_url(destination_file).get(UrlParser.FILENAME)
             url = UrlParser.parse_url(source_file)
 
             source_file_name = url.get(UrlParser.FILENAME)
