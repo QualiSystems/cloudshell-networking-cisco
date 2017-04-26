@@ -117,8 +117,10 @@ class SystemActions(object):
         """
 
         output = CommandTemplateExecutor(self._cli_service,
-                                         configuration.CONFIGURE_REPLACE, action_map=action_map,
-                                         error_map=error_map, timeout=timeout).execute_command(path=path)
+                                         configuration.CONFIGURE_REPLACE,
+                                         action_map=action_map,
+                                         error_map=error_map,
+                                         timeout=timeout).execute_command(path=path)
         match_error = re.search(r'[Ee]rror.*$', output)
         if match_error:
             error_str = match_error.group()
@@ -131,7 +133,9 @@ class SystemActions(object):
         :param error_map:
         """
 
-        CommandTemplateExecutor(self._cli_service, configuration.WRITE_ERASE, action_map=action_map,
+        CommandTemplateExecutor(self._cli_service,
+                                configuration.WRITE_ERASE,
+                                action_map=action_map,
                                 error_map=error_map).execute_command()
 
     def reload_device(self, timeout, action_map=None, error_map=None):
@@ -143,14 +147,22 @@ class SystemActions(object):
         """
 
         try:
-            redundancy_reload = CommandTemplateExecutor(self._cli_service, configuration.REDUNDANCY_PEER_RELOAD
-                                                        ).execute_command(action_map=action_map, error_map=error_map)
+            redundancy_reload = CommandTemplateExecutor(self._cli_service,
+                                                        configuration.REDUNDANCY_PEER_RELOAD,
+                                                        action_map=action_map,
+                                                        error_map=error_map
+                                                        ).execute_command()
             if re.search("[Ii]nvalid\s*([Ii]nput|[Cc]ommand)", redundancy_reload, re.IGNORECASE):
-                CommandTemplateExecutor(self._cli_service, configuration.RELOAD).execute_command(
-                    action_map=action_map, error_map=error_map)
+                CommandTemplateExecutor(self._cli_service,
+                                        configuration.RELOAD,
+                                        action_map=action_map,
+                                        error_map=error_map).execute_command()
             else:
-                CommandTemplateExecutor(self._cli_service, configuration.REDUNDANCY_SWITCHOVER
-                                        ).execute_command(action_map=action_map, error_map=error_map)
+                CommandTemplateExecutor(self._cli_service,
+                                        configuration.REDUNDANCY_SWITCHOVER,
+                                        action_map=action_map,
+                                        error_map=error_map
+                                        ).execute_command()
         except Exception as e:
             self._logger.info("Device rebooted, starting reconnect")
         self._cli_service.reconnect(timeout)
@@ -171,8 +183,11 @@ class SystemActions(object):
         :param timeout: session reconnect timeout
         """
 
-        CommandTemplateExecutor(self._cli_service, configuration.CONSOLE_RELOAD, action_map=action_map,
-                                error_map=error_map).execute_command(timeout=timeout)
+        CommandTemplateExecutor(self._cli_service,
+                                configuration.CONSOLE_RELOAD,
+                                action_map=action_map,
+                                error_map=error_map,
+                                timeout=timeout).execute_command()
 
     def get_current_boot_config(self, action_map=None, error_map=None):
         """Retrieve current boot configuration
@@ -182,7 +197,9 @@ class SystemActions(object):
         :return:
         """
 
-        return CommandTemplateExecutor(self._cli_service, firmware.SHOW_RUNNING, action_map=action_map,
+        return CommandTemplateExecutor(self._cli_service,
+                                       firmware.SHOW_RUNNING,
+                                       action_map=action_map,
                                        error_map=error_map).execute_command()
 
     def get_current_os_version(self, action_map=None, error_map=None):
@@ -193,7 +210,9 @@ class SystemActions(object):
         :return:
         """
 
-        return CommandTemplateExecutor(self._cli_service, firmware.SHOW_VERSION, action_map=action_map,
+        return CommandTemplateExecutor(self._cli_service,
+                                       firmware.SHOW_VERSION,
+                                       action_map=action_map,
                                        error_map=error_map).execute_command()
 
     def get_current_boot_image(self):
