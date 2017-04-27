@@ -114,7 +114,8 @@ class SystemActions(object):
                                          configuration.CONFIGURE_REPLACE,
                                          action_map=action_map,
                                          error_map=error_map,
-                                         timeout=timeout).execute_command(path=path)
+                                         timeout=timeout,
+                                         check_action_loop_detector=False).execute_command(path=path)
         match_error = re.search(r'[Ee]rror.*$', output)
         if match_error:
             error_str = match_error.group()
@@ -177,11 +178,24 @@ class SystemActions(object):
         :param timeout: session reconnect timeout
         """
 
-        CommandTemplateExecutor(self._cli_service,
-                                configuration.CONSOLE_RELOAD,
-                                action_map=action_map,
-                                error_map=error_map,
-                                timeout=timeout).execute_command()
+        redundancy_reload = CommandTemplateExecutor(self._cli_service,
+                                                    configuration.REDUNDANCY_PEER_RELOAD,
+                                                    action_map=action_map,
+                                                    error_map=error_map
+                                                    ).execute_command()
+        if re.search("([Ii]nvalid\s*([Ii]nput|[Cc]ommand)|SIMPLEX\smode)", redundancy_reload, re.IGNORECASE) or "":
+            CommandTemplateExecutor(self._cli_service,
+                                    configuration.CONSOLE_RELOAD,
+                                    action_map=action_map,
+                                    error_map=error_map,
+                                    timeout=timeout).execute_command()
+        else:
+            CommandTemplateExecutor(self._cli_service,
+                                    configuration.REDUNDANCY_SWITCHOVER,
+                                    action_map=action_map,
+                                    error_map=error_map,
+                                    timeout=timeout).execute_command()
+        self._cli_service.session.on_session_start(self._cli_service.session, self._logger)
 
     def get_current_boot_config(self, action_map=None, error_map=None):
         """Retrieve current boot configuration

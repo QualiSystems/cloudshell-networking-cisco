@@ -91,7 +91,7 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
 
             system_action.copy(self.RUNNING_CONFIG, self.STARTUP_CONFIG, vrf=vrf,
                                action_map=system_action.prepare_action_map(self.RUNNING_CONFIG, self.STARTUP_CONFIG))
-            if "CONSOLE" in enable_session.SESSION_TYPE:
+            if "CONSOLE" in enable_session.session.SESSION_TYPE:
                 system_action.reload_device_via_console(timeout)
             else:
                 system_action.reload_device(timeout)
