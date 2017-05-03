@@ -18,9 +18,9 @@ DEL = CommandTemplate('del {target}', action_map=OrderedDict(
 
 CONFIGURE_REPLACE = CommandTemplate('configure replace {path}',
                                     action_map=OrderedDict({
-                                        '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session,
-                                                                                       logger: session.send_line('yes',
+                                        '[\[\(][Yy]es/[Nn]o[\)\]]': lambda session, logger: session.send_line('yes',
                                                                                                                  logger),
+                                        '\[confirm\]': lambda session, logger: session.send_line('', logger),
                                         '\(y\/n\)': lambda session, logger: session.send_line('y', logger),
                                         '[\[\(][Nn]o[\)\]]': lambda session, logger: session.send_line('y', logger),
                                         '[\[\(][Yy]es[\)\]]': lambda session, logger: session.send_line('y', logger),
@@ -36,9 +36,10 @@ CONFIGURE_REPLACE = CommandTemplate('configure replace {path}',
 
 WRITE_ERASE = CommandTemplate('write erase',
                               action_map=OrderedDict({
-                                  '[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session,
+                                  '[\[\(][Yy]es/[Nn]o[\)\]]': lambda session,
                                                                                  logger: session.send_line('yes',
                                                                                                            logger),
+                                  '\[confirm\]': lambda session, logger: session.send_line('', logger),
                                   '\(y\/n\)': lambda session, logger: session.send_line('y', logger),
                                   '[\[\(][Nn]o[\)\]]': lambda session, logger: session.send_line('y', logger),
                                   '[\[\(][Yy]es[\)\]]': lambda session, logger: session.send_line('y', logger),
@@ -46,10 +47,21 @@ WRITE_ERASE = CommandTemplate('write erase',
                               }))
 
 RELOAD = CommandTemplate("reload", action_map=OrderedDict(
-    {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session, logger: session.send_line('yes', logger),
+    {'[\[\(][Yy]es/[Nn]o[\)\]]': lambda session, logger: session.send_line('yes', logger),
+     '\[confirm\]': lambda session, logger: session.send_line('', logger),
      '\(y\/n\)|continue': lambda session, logger: session.send_line('y', logger),
      'reload': lambda session, logger: session.send_line('', logger),
      '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger)
      }))
+
+REDUNDANCY_PEER_RELOAD = CommandTemplate("redundancy reload peer")
+
+REDUNDANCY_SWITCHOVER = CommandTemplate("redundancy force-switchover")
+
+NO = CommandTemplate("no {command}")
+
+SHOW_FILE_SYSTEMS = CommandTemplate("show file systems")
+
+SHOW_VERSION_WITH_FILTERS = CommandTemplate("[do{do}] show version [| include {filter}]")
 
 CONSOLE_RELOAD = CommandTemplate("reload")
