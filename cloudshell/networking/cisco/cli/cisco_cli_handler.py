@@ -17,6 +17,7 @@ class CiscoCliHandler(CliHandlerImpl):
     def __init__(self, cli, resource_config, logger, api):
         super(CiscoCliHandler, self).__init__(cli, resource_config, logger, api)
         self.modes = CommandModeHelper.create_command_mode(resource_config, api)
+        self._enable_password = None
 
     @property
     def default_mode(self):
@@ -29,6 +30,13 @@ class CiscoCliHandler(CliHandlerImpl):
     @property
     def config_mode(self):
         return self.modes[ConfigCommandMode]
+
+    @property
+    def enable_password(self):
+        if not self._enable_password:
+            password = self.resource_config.enable_password
+            self._enable_password = self._api.DecryptPassword(password).Value
+        return self._enable_password
 
     def _console_ssh_session(self):
         console_port = int(self.resource_config.console_port)
@@ -112,8 +120,7 @@ class CiscoCliHandler(CliHandlerImpl):
                                          logger)
 
         if re.search(DefaultCommandMode.PROMPT, result):
-            enable_password = self._api.DecryptPassword(self.resource_config.enable_password).Value
-            expect_map = {'[Pp]assword': lambda session, logger: session.send_line(enable_password, logger)}
+            expect_map = {'[Pp]assword': lambda session, logger: session.send_line(self.enable_password, logger)}
             session.hardware_expect('enable', EnableCommandMode.PROMPT, action_map=expect_map, logger=logger)
             result = session.hardware_expect('', '{0}|{1}'.format(DefaultCommandMode.PROMPT, EnableCommandMode.PROMPT),
                                              logger)

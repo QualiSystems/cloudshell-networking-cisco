@@ -60,7 +60,6 @@ class AddRemoveVlanActions(object):
                                 error_map=error_map).execute_command()
 
     def set_vlan_to_interface(self, vlan_range, port_mode, port_name, qnq, c_tag,
-                              require_single_switchport_cmd=False,
                               action_map=None,
                               error_map=None):
 
@@ -86,11 +85,10 @@ class AddRemoveVlanActions(object):
         if qnq:
             port_mode = 'dot1q-tunnel'
 
-        if require_single_switchport_cmd:
-            CommandTemplateExecutor(self._cli_service,
-                                    vlan_command_template.SWITCHPORT_MODE,
-                                    action_map=action_map,
-                                    error_map=error_map).execute_command()
+        CommandTemplateExecutor(self._cli_service,
+                                vlan_command_template.SWITCHPORT_MODE,
+                                action_map=action_map,
+                                error_map=error_map).execute_command()
 
         CommandTemplateExecutor(self._cli_service,
                                 vlan_command_template.SWITCHPORT_MODE,
