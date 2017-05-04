@@ -29,12 +29,13 @@ class CiscoEnableSnmpFlow(EnableSnmpFlow):
             raise Exception(self.__class__.__name__, message)
 
         snmp_community = snmp_parameters.snmp_community
+        with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as session:
+            with session.enter_mode(self._cli_handler.config_mode) as config_session:
+                snmp_actions = EnableDisableSnmpActions(config_session, self._logger)
 
-        with self._cli_handler.get_cli_service(self._cli_handler.config_mode) as session:
-            snmp_actions = EnableDisableSnmpActions(session, self._logger)
+                current_snmp_config = snmp_actions.get_current_snmp_communities(session)
+                if snmp_community not in current_snmp_config:
+                    snmp_actions.enable_snmp(snmp_community)
+                else:
+                    self._logger.debug("SNMP Community '{}' already configured".format(snmp_community))
 
-            current_snmp_config = snmp_actions.get_current_snmp_communities(session)
-            if snmp_community not in current_snmp_config:
-                snmp_actions.enable_snmp(snmp_community)
-            else:
-                self._logger.debug("SNMP Community '{}' already configured".format(snmp_community))
