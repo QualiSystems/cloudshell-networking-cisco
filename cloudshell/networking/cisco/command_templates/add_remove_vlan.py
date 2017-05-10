@@ -10,6 +10,8 @@ ERROR_MAP = OrderedDict({"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected
                          Exception("SWITCHPORT_MODE", "Failed to switch port mode"),
                          })
 
+VLAN_SUB_IFACE = CommandTemplate(command="encapsulation dot1q {vlan_id} [, untagged{untagged}] [second-dot1q any{qnq}]")
+
 CONFIGURE_VLAN = CommandTemplate("vlan {vlan_id}",
                                  error_map=OrderedDict({"%.*\.": Exception("CONFIGURE_VLAN", "Error")}))
 
