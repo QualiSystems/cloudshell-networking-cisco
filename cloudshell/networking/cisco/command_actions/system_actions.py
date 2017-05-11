@@ -169,7 +169,7 @@ class SystemActions(object):
         output = CommandTemplateExecutor(self._cli_service, configuration.SHOW_FILE_SYSTEMS
                                          ).execute_command()
 
-        match_dir = re.findall(r"(bootflash:|flash-\d+\S+)", output, re.MULTILINE)
+        match_dir = re.findall(r"(bootflash:|bootdisk:|flash-\d+\S+)", output, re.MULTILINE)
         if match_dir:
             return match_dir
 
