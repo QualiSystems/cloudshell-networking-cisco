@@ -8,6 +8,7 @@ from cloudshell.cli.command_template.command_template_executor import CommandTem
 from cloudshell.devices.networking_utils import UrlParser
 from cloudshell.networking.cisco.command_templates import configuration
 from cloudshell.networking.cisco.command_templates import firmware
+from cloudshell.cli.session.session_exceptions import ExpectedSessionException, CommandExecutionException
 
 
 class SystemActions(object):
@@ -101,7 +102,7 @@ class SystemActions(object):
         CommandTemplateExecutor(self._cli_service, configuration.DEL, action_map=action_map,
                                 error_map=error_map).execute_command(target=path)
 
-    def override_running(self, path, action_map=None, error_map=None, timeout=120):
+    def override_running(self, path, action_map=None, error_map=None, timeout=300, reconnect_timeout=1600):
         """Override running-config
 
         :param path: relative path to the file on the remote host tftp://server/sourcefile
@@ -110,16 +111,23 @@ class SystemActions(object):
         :raise Exception:
         """
 
-        output = CommandTemplateExecutor(self._cli_service,
-                                         configuration.CONFIGURE_REPLACE,
-                                         action_map=action_map,
-                                         error_map=error_map,
-                                         timeout=timeout,
-                                         check_action_loop_detector=False).execute_command(path=path)
-        match_error = re.search(r'[Ee]rror.*$', output)
-        if match_error:
-            error_str = match_error.group()
-            raise Exception('Override_Running', 'Configure replace completed with error: ' + error_str)
+        try:
+            output = CommandTemplateExecutor(self._cli_service,
+                                             configuration.CONFIGURE_REPLACE,
+                                             action_map=action_map,
+                                             error_map=error_map,
+                                             timeout=timeout,
+                                             check_action_loop_detector=False).execute_command(path=path)
+            match_error = re.search(r'[Ee]rror.*$', output)
+            if match_error:
+                error_str = match_error.group()
+                raise CommandExecutionException('Override_Running',
+                                                'Configure replace completed with error: ' + error_str)
+        except ExpectedSessionException as e:
+            self._logger.warning(e.args)
+            if isinstance(e, CommandExecutionException):
+                raise
+            self._cli_service.reconnect(reconnect_timeout)
 
     def write_erase(self, action_map=None, error_map=None):
         """Erase startup configuration
@@ -143,7 +151,7 @@ class SystemActions(object):
 
         try:
             redundancy_reload = CommandTemplateExecutor(self._cli_service,
-                                                        configuration.REDUNDANCY_PEER_RELOAD,
+                                                        configuration.REDUNDANCY_PEER_SHELF,
                                                         action_map=action_map,
                                                         error_map=error_map
                                                         ).execute_command()
@@ -152,12 +160,7 @@ class SystemActions(object):
                                         configuration.RELOAD,
                                         action_map=action_map,
                                         error_map=error_map).execute_command()
-            else:
-                CommandTemplateExecutor(self._cli_service,
-                                        configuration.REDUNDANCY_SWITCHOVER,
-                                        action_map=action_map,
-                                        error_map=error_map
-                                        ).execute_command()
+
         except Exception as e:
             self._logger.info("Device rebooted, starting reconnect")
         self._cli_service.reconnect(timeout)
@@ -166,7 +169,7 @@ class SystemActions(object):
         output = CommandTemplateExecutor(self._cli_service, configuration.SHOW_FILE_SYSTEMS
                                          ).execute_command()
 
-        match_dir = re.findall(r"(bootflash:|flash-\d+\S+)", output, re.MULTILINE)
+        match_dir = re.findall(r"(bootflash:|bootdisk:|flash-\d+\S+)", output, re.MULTILINE)
         if match_dir:
             return match_dir
 
@@ -178,24 +181,12 @@ class SystemActions(object):
         :param timeout: session reconnect timeout
         """
 
-        redundancy_reload = CommandTemplateExecutor(self._cli_service,
-                                                    configuration.REDUNDANCY_PEER_RELOAD,
-                                                    action_map=action_map,
-                                                    error_map=error_map
-                                                    ).execute_command()
-        if re.search("([Ii]nvalid\s*([Ii]nput|[Cc]ommand)|SIMPLEX\smode)", redundancy_reload, re.IGNORECASE) or "":
-            CommandTemplateExecutor(self._cli_service,
-                                    configuration.CONSOLE_RELOAD,
-                                    action_map=action_map,
-                                    error_map=error_map,
-                                    timeout=timeout).execute_command()
-        else:
-            CommandTemplateExecutor(self._cli_service,
-                                    configuration.REDUNDANCY_SWITCHOVER,
-                                    action_map=action_map,
-                                    error_map=error_map,
-                                    timeout=timeout).execute_command()
-        self._cli_service.session.on_session_start(self._cli_service.session, self._logger)
+        CommandTemplateExecutor(self._cli_service,
+                                configuration.CONSOLE_RELOAD,
+                                action_map=action_map,
+                                error_map=error_map,
+                                timeout=timeout).execute_command()
+        self._cli_service.on_session_start(self._cli_service, self._logger)
 
     def get_current_boot_config(self, action_map=None, error_map=None):
         """Retrieve current boot configuration

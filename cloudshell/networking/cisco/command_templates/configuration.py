@@ -54,9 +54,19 @@ RELOAD = CommandTemplate("reload", action_map=OrderedDict(
      '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger)
      }))
 
-REDUNDANCY_PEER_RELOAD = CommandTemplate("redundancy reload peer")
+REDUNDANCY_PEER_SHELF = CommandTemplate("redundancy reload shelf", action_map=OrderedDict(
+    {'[\[\(][Yy]es/[Nn]o[\)\]]': lambda session, logger: session.send_line('yes', logger),
+     '\[confirm\]': lambda session, logger: session.send_line('', logger),
+     '\(y\/n\)|continue': lambda session, logger: session.send_line('y', logger),
+     '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger)
+     }))
 
-REDUNDANCY_SWITCHOVER = CommandTemplate("redundancy force-switchover")
+REDUNDANCY_SWITCHOVER = CommandTemplate("redundancy force-switchover", action_map=OrderedDict(
+    {'[\[\(][Yy]es/[Nn]o[\)\]]': lambda session, logger: session.send_line('yes', logger),
+     '\[confirm\]': lambda session, logger: session.send_line('', logger),
+     '\(y\/n\)|continue': lambda session, logger: session.send_line('y', logger),
+     '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger)
+     }))
 
 NO = CommandTemplate("no {command}")
 

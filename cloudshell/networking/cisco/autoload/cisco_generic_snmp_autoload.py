@@ -36,7 +36,7 @@ class CiscoGenericSNMPAutoload(object):
         self.port_mapping = {}
         self.entity_table_black_list = ["alarm", "fan", "sensor"]
         self.port_exclude_pattern = r"stack|engine|management|mgmt|voice|foreign|cpu"
-        self.module_exclude_pattern = r"cevsfp"
+        self.module_exclude_pattern = r"cevsfp|cevxfr|cevxfp"
 
         self.elements = {}
         self.resource = GenericResource(shell_name=shell_name,
@@ -152,7 +152,7 @@ class CiscoGenericSNMPAutoload(object):
         """
 
         result = ""
-        matched = re.search(r"Version (?P<os_version>.*?),",
+        matched = re.search(r"Version (?P<os_version>\S+)[\s,]",
                             self.snmp_handler.get_property('SNMPv2-MIB', 'sysDescr', '0'))
         if matched:
             result = matched.groupdict().get("os_version", "")

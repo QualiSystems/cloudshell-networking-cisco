@@ -23,7 +23,8 @@ class CiscoDisableSnmpFlow(DisableSnmpFlow):
         if not isinstance(snmp_parameters, SNMPV2Parameters):
             self._logger.debug("Unsupported SNMP version. Disable SNMP skipped")
 
-        with self._cli_handler.config_mode_service() as session:
-            snmp_actions = EnableDisableSnmpActions(session, self._logger)
-            self._logger.debug("Start Disable SNMP")
-            snmp_actions.disable_snmp(snmp_parameters.snmp_community)
+        with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as session:
+            with session.enter_mode(self._cli_handler.config_mode) as config_session:
+                snmp_actions = EnableDisableSnmpActions(config_session, self._logger)
+                self._logger.debug("Start Disable SNMP")
+                snmp_actions.disable_snmp(snmp_parameters.snmp_community)
