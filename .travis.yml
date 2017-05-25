@@ -4,15 +4,18 @@ python:
 
 before_install:
     - pip install coveralls
-    - pip install -r requirements.txt
+    - 'if [ ${TRAVIS_BRANCH} = "master" ]; then
+        pip install -r requirements.txt;
+    else
+        pip install -r dev_requirements.txt;
+    fi'
     - pip install -r test_requirements.txt
 
 install:
-    - python setup.py install
+    - python setup.py develop --no-deps
 
 script:
-    - nosetests
-    - python setup.py develop
+    - nosetests --with-coverage --cover-package=cloudshell.networking.cisco --where=tests
     - python setup.py sdist --format zip
 
 after_success:

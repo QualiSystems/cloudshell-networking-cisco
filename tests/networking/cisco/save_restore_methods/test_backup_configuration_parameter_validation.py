@@ -1,6 +1,8 @@
 from unittest import TestCase
 
 from mock import MagicMock
+from cloudshell.devices.standards.networking.configuration_attributes_structure import \
+    create_networking_resource_from_context
 
 from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
@@ -31,7 +33,8 @@ class TestCiscoConfigurationOperationsParameterValidation(TestCase):
         context.resource.attributes = dict()
         context.resource.attributes['CLI Connection Type'] = 'Telnet'
         context.resource.attributes['Sessions Concurrency Limit'] = '1'
-        return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, context=context)
+        resource_config = create_networking_resource_from_context("", ["supported_os"], context)
+        return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, resource_config=resource_config)
 
     def test_save_validates_source_filename_parameter(self):
         handler = self._get_handler()
