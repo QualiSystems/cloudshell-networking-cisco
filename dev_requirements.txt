@@ -1,0 +1,2 @@
+-e git+https://github.com/QualiSystems/cloudshell-networking.git@dev#egg=cloudshell-networking
+-e git+https://github.com/QualiSystems/cloudshell-networking-devices.git@dev#egg=cloudshell-networking-devices
