@@ -12,7 +12,7 @@ before_install:
     - pip install -r test_requirements.txt
 
 install:
-    - python setup.py install
+    - python setup.py develop --no-deps
 
 script:
     - nosetests --with-coverage --cover-package=cloudshell.networking.cisco --where=tests
