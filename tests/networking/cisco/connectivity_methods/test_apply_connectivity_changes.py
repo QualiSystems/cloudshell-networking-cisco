@@ -1,6 +1,8 @@
 from unittest import TestCase
 
 from mock import MagicMock
+from cloudshell.devices.standards.networking.configuration_attributes_structure import \
+    create_networking_resource_from_context
 
 from cloudshell.networking.apply_connectivity.apply_connectivity_operation import apply_connectivity_changes
 from cloudshell.networking.cisco.runners.cisco_connectivity_runner import CiscoConnectivityRunner
@@ -22,8 +24,9 @@ class TestCiscoConnectivityOperations(TestCase):
         context.resource.attributes['CLI Connection Type'] = 'Telnet'
         context.resource.attributes['Sessions Concurrency Limit'] = '1'
         supported_os = ["CAT[ -]?OS", "IOS[ -]?X?[ER]?"]
+        resource_config = create_networking_resource_from_context("", ["supported_os"], context)
         return CiscoConnectivityRunner(cli=self.cli, logger=self.logger, api=self.api,
-                                       context=context)
+                                       resource_config=resource_config)
 
     def test_apply_connectivity_changes_validates_request_parameter(self):
         request = """{

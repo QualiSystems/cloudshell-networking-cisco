@@ -2,14 +2,16 @@ from unittest import TestCase
 import re
 
 from mock import MagicMock
+from cloudshell.devices.standards.networking.configuration_attributes_structure import \
+    create_networking_resource_from_context
 
 from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
-from cloudshell.tests.networking.cisco.save_restore_methods.test_copy_output import TEST_COPY_OUTPUT
+from tests.networking.cisco.save_restore_methods.test_copy_output import TEST_COPY_OUTPUT
 
 
 class TestCiscoConfigurationOperations(TestCase):
-    def _get_handler(self, output):
+    def _get_handler(self, output, resource_name='resource_name'):
         cli = MagicMock()
         session = MagicMock()
         session.send_command.return_value = output
@@ -21,13 +23,14 @@ class TestCiscoConfigurationOperations(TestCase):
         logger = MagicMock()
         context = ResourceCommandContext()
         context.resource = ResourceContextDetails()
-        context.resource.name = 'resource_name'
+        context.resource.name = resource_name
         context.reservation = ReservationContextDetails()
         context.reservation.reservation_id = 'c3b410cb-70bd-4437-ae32-15ea17c33a74'
         context.resource.attributes = dict()
         context.resource.attributes['CLI Connection Type'] = 'Telnet'
         context.resource.attributes['Sessions Concurrency Limit'] = '1'
-        return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, context=context)
+        resource_config = create_networking_resource_from_context("", ["supported_os"], context)
+        return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, resource_config=resource_config)
 
     def test_save_raises_exception(self):
         # output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
@@ -76,7 +79,7 @@ class TestCiscoConfigurationOperations(TestCase):
          TFTP put operation was successful
          Copy complete, now saving to disk (please wait)...
          N5K-L3-Sw1#"""
-        handler = self._get_handler(output)
+        handler = self._get_handler(output, resource_name)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
         responce = handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
@@ -100,7 +103,7 @@ class TestCiscoConfigurationOperations(TestCase):
          Copy complete, now saving to disk (please wait)...
 
         N6K-Sw1-S1#"""
-        handler = self._get_handler(output)
+        handler = self._get_handler(output, resource_name)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
         responce = handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
@@ -130,7 +133,7 @@ class TestCiscoConfigurationOperations(TestCase):
         !!
         23518 bytes copied in 0.904 secs (26015 bytes/sec)
         C6504e-1-CE7#"""
-        handler = self._get_handler(output)
+        handler = self._get_handler(output, resource_name)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
         responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
@@ -148,7 +151,7 @@ class TestCiscoConfigurationOperations(TestCase):
         [OK - 1811552 bytes]
         1811552 bytes copied in 53.511 secs (34180 bytes/sec)
         C6504e-1-CE7#"""
-        handler = self._get_handler(output)
+        handler = self._get_handler(output, resource_name)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
         responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
@@ -175,7 +178,7 @@ class TestCiscoConfigurationOperations(TestCase):
         config_type = 'running'
         output = TEST_COPY_OUTPUT
         self.output = output
-        handler = self._get_handler(output)
+        handler = self._get_handler(output, resource_name)
         handler._resource_name = resource_name
         response_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
         response = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
