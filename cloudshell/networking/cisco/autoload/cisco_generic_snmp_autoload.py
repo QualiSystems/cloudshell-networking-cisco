@@ -36,7 +36,7 @@ class CiscoGenericSNMPAutoload(object):
         self.port_mapping = {}
         self.entity_table_black_list = ["alarm", "fan", "sensor"]
         self.port_exclude_pattern = r"stack|engine|management|mgmt|voice|foreign|cpu"
-        self.module_exclude_pattern = r"cevsfp|cevxfr|cevxfp"
+        self.module_exclude_pattern = r"cevsfp|cevxfr|cevxfp|cevContainer10GigBasePort"
 
         self.elements = {}
         self.resource = GenericResource(shell_name=shell_name,
@@ -235,7 +235,7 @@ class CiscoGenericSNMPAutoload(object):
             temp_entity_table.update(self.snmp_handler.get_properties('ENTITY-MIB', index, entity_table_optional_port_attr)
                                      [index])
 
-            if temp_entity_table['entPhysicalClass'] == '':
+            if temp_entity_table['entPhysicalClass'] == '' or "other" in temp_entity_table['entPhysicalClass']:
                 vendor_type = self.snmp_handler.get_property('ENTITY-MIB', 'entPhysicalVendorType', index)
                 index_entity_class = None
                 if vendor_type == '':
