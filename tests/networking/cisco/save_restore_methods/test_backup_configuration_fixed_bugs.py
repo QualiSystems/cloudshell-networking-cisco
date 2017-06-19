@@ -5,7 +5,7 @@ from mock import MagicMock
 
 from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
-from cloudshell.tests.networking.cisco.save_restore_methods.test_copy_output import TEST_COPY_OUTPUT
+from tests.networking.cisco.save_restore_methods.test_copy_output import TEST_COPY_OUTPUT
 
 
 class TestCiscoConfigurationOperations(TestCase):
