@@ -22,7 +22,6 @@ class TestCiscoConfigurationOperationsParameterValidation(TestCase):
         cliservice = MagicMock()
         cliservice.__enter__.return_value = session
         cli.get_session.return_value = cliservice
-        #cli.return_value.get_session.return_value = session
         api = MagicMock()
         logger = MagicMock()
         context = ResourceCommandContext()
@@ -47,13 +46,3 @@ class TestCiscoConfigurationOperationsParameterValidation(TestCase):
                                           'running'))
         self.assertIsNotNone(handler.save('tftp://10.10.10.10//////CloudShell/Configs/Gold/Test1/',
                                           'RUNNING'))
-
-        # def test_save_validates_destination_host_host_parameter(self):
-        #     handler = self._get_handler()
-        #     handler.send_command_operations.send_command = MagicMock(return_value=self.output)
-        #     self.assertRaises(Exception, handler.save, 'tftp://10.10.1as0.10//////CloudShell/Configs/Gold/Test1/',
-        #                       'running')
-        #     self.assertRaises(Exception, handler.save, 'tftp://10.10.1120.10//////CloudShell/Configs/Gold/Test1/',
-        #                       'running')
-        #     self.assertRaises(Exception, handler.save, 'tftp://10.10.10//////CloudShell/Configs/Gold/Test1/',
-        #                       'running')

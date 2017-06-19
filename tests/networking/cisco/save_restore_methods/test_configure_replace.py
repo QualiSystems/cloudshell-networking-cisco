@@ -1,10 +1,5 @@
 from unittest import TestCase
-
-from mock import MagicMock
 from cloudshell.networking.cisco.command_templates.configuration import CONFIGURE_REPLACE
-
-from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
-from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
 
 class CiscoConfigurationOperationsRestore(TestCase):

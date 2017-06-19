@@ -18,7 +18,6 @@ class TestCiscoHandlerBase(TestCase):
         cliservice = MagicMock()
         cliservice.__enter__.return_value = session
         cli.get_session.return_value = cliservice
-        #cli.return_value.get_session.return_value = session
         api = MagicMock()
         logger = MagicMock()
         context = ResourceCommandContext()
@@ -33,14 +32,12 @@ class TestCiscoHandlerBase(TestCase):
         return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, resource_config=resource_config)
 
     def test_save_raises_exception(self):
-        #output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         output = '%Error opening tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         handler = self._get_handler(output)
         self.assertRaises(Exception, handler.save, 'tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
                           'running')
 
     def test_save_raises_exception_error_message(self):
-        # output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         output = '%Error opening tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         handler = self._get_handler(output)
         try:

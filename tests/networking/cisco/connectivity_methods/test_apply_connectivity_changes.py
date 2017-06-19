@@ -4,7 +4,6 @@ from mock import MagicMock
 from cloudshell.devices.standards.networking.configuration_attributes_structure import \
     create_networking_resource_from_context
 
-from cloudshell.networking.apply_connectivity.apply_connectivity_operation import apply_connectivity_changes
 from cloudshell.networking.cisco.runners.cisco_connectivity_runner import CiscoConnectivityRunner
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
