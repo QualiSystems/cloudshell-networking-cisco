@@ -41,7 +41,8 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
             device_file_system = system_action.get_flash_folders_list()
             self._logger.info("Discovered folders: {}".format(device_file_system))
             if device_file_system:
-                for flash in device_file_system.sort():
+                device_file_system.sort()
+                for flash in device_file_system:
                     if flash in self.BOOTFOLDER:
                         self._logger.info("Device has a {} folder".format(flash))
                         firmware_dst_path = "{0}/{1}".format(flash, firmware_file_name)
