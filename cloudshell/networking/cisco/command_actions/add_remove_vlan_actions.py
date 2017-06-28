@@ -38,8 +38,6 @@ class AddRemoveVlanActions(object):
     def create_vlan(self, vlan_range, action_map=None, error_map=None):
         """Create vlan entity on the device
 
-        :param session: current session
-        :param logger:  logger
         :param vlan_range: range of vlans to be created
         :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
         :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
