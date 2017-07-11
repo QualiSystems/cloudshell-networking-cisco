@@ -275,7 +275,7 @@ def override_running(session, path, action_map=None, error_map=None):
 
     conf_replace = CONFIGURE_REPLACE.get_command(path=path, action_map=action_map, error_map=error_map)
     output = session.send_command(**conf_replace)
-    match_error = re.search(r'[Ee]rror.*$', output)
+    match_error = re.search(r'[Ee]rror.*', output, flags=re.DOTALL)
     if match_error:
         error_str = match_error.group()
         raise Exception('Override_Running', 'Configure replace completed with error: ' + error_str)
