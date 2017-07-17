@@ -118,7 +118,7 @@ class SystemActions(object):
                                              error_map=error_map,
                                              timeout=timeout,
                                              check_action_loop_detector=False).execute_command(path=path)
-            match_error = re.search(r'[Ee]rror.*$', output)
+            match_error = re.search(r'[Ee]rror.*', output, flags=re.DOTALL)
             if match_error:
                 error_str = match_error.group()
                 raise CommandExecutionException('Override_Running',
