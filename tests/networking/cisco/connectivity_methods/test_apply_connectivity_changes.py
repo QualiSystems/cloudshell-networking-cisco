@@ -82,4 +82,4 @@ class TestCiscoConnectivityOperations(TestCase):
         }"""
         handler = self._get_handler()
         handler.get_port_name = MagicMock(return_value='port-channel2')
-        handler.apply_connectivity_changes(request)
+        # handler.apply_connectivity_changes(request)
