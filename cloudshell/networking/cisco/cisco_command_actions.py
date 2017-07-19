@@ -111,7 +111,7 @@ def create_vlan(session, logger, vlan_range, action_map=None, error_map=None):
     session.send_command(**NO_SHUTDOWN.get_command(action_map=action_map, error_map=error_map))
 
 
-def copy(session, logger, source, destination, vrf=None, action_map=None, error_map=None, timeout=None):
+def copy(session, logger, source, destination, vrf=None, action_map=None, error_map=None, timeout=120):
     """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem.
 
     :param session: current session 
@@ -121,7 +121,8 @@ def copy(session, logger, source, destination, vrf=None, action_map=None, error_
     :param vrf: vrf management name
     :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
     :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
-    :raise Exception: 
+    :param timeout: session timeout
+    :raise Exception:
     """
 
     if not vrf:
