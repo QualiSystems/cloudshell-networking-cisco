@@ -21,7 +21,19 @@ SWITCHPORT_ALLOW_VLAN = CommandTemplate(
          '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}),
     error_map=OrderedDict({
         "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected": Exception('SWITCHPORT_MODE',
-                                                                            'Failed to switch port mode')}))
+                                                                            'Failed to change port mode')}))
+
+SWITCHPORT_ENABLE_TRUNK = CommandTemplate(
+    'switchport trunk encapsulation dot1q',
+    action_map=OrderedDict(
+        {'[\[\(][Yy]es/[Nn]o[\)\]]|\[confirm\]': lambda session: session.send_line('yes'),
+         '[\[\(][Yy]/[Nn][\)\]]': lambda session: session.send_line('y')}),
+    error_map=OrderedDict({
+        "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected": Exception('SWITCHPORT_MODE',
+                                                                            'Failed to change port mode to trunk')}))
+
+
+
 
 # </editor-fold>
 
