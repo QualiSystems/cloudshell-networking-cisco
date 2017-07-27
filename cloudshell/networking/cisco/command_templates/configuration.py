@@ -27,7 +27,9 @@ CONFIGURE_REPLACE = CommandTemplate('configure replace {path}',
                                         '[\[\(][Yy]/[Nn][\)\]]': lambda session, logger: session.send_line('y', logger),
                                         'overwrit+e': lambda session, logger: session.send_line('yes', logger)}),
                                     error_map=OrderedDict({
-                                        "[Rr]ollback\s*[Dd]one|(?<=%).*(not.*|in)valid.*(?=\n)":
+                                        "[Aa]borting\s*[Rr]ollback|"
+                                        "[Rr]ollback\s*[Aa]borted|"
+                                        "(?<=%).*(not.*|in)valid.*(?=\n)":
                                             Exception("Configure_Replace",
                                                       "Configure replace completed with error"),
                                         "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected":
