@@ -121,7 +121,7 @@ def create_vlan(session, logger, vlan_range, action_map=None, error_map=None):
     session.send_command(**NO_SHUTDOWN.get_command(action_map=action_map, error_map=error_map))
 
 
-def copy(session, logger, source, destination, vrf=None, action_map=None, error_map=None, timeout=None):
+def copy(session, logger, source, destination, vrf=None, action_map=None, error_map=None, timeout=120):
     """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem.
 
     :param session: current session 
@@ -131,7 +131,8 @@ def copy(session, logger, source, destination, vrf=None, action_map=None, error_
     :param vrf: vrf management name
     :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
     :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
-    :raise Exception: 
+    :param timeout: session timeout
+    :raise Exception:
     """
 
     if not vrf:
@@ -273,19 +274,19 @@ def verify_interface_configured(vlan_range, current_config):
                      re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
 
-def override_running(session, path, action_map=None, error_map=None):
+def override_running(session, path, action_map=None, error_map=None, timeout=300):
     """Override running-config
 
     :param session: current session current cli session
     :param path: relative path to the file on the remote host tftp://server/sourcefile
     :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
     :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+    :param int timeout: session timeout
     :raise Exception:
     """
-
     conf_replace = CONFIGURE_REPLACE.get_command(path=path, action_map=action_map, error_map=error_map)
-    output = session.send_command(**conf_replace)
-    match_error = re.search(r'[Ee]rror.*$', output)
+    output = session.send_command(timeout=timeout, **conf_replace)
+    match_error = re.search(r'[Ee]rror.*', output, flags=re.DOTALL)
     if match_error:
         error_str = match_error.group()
         raise Exception('Override_Running', 'Configure replace completed with error: ' + error_str)
