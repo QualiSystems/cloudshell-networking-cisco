@@ -1,11 +1,13 @@
 import re
-from cloudshell.networking.cisco.autoload.snmp_entity_table_filter import SnmpEntityTableFilterContainer
-from cloudshell.shell.core.driver_context import AutoLoadDetails
+
 from cloudshell.snmp.quali_snmp import QualiMibTable
 
 
 class CiscoSNMPEntityTable(object):
     ENTITY_PHYSICAL = "entPhysicalDescr"
+    # ENTITY_VENDOR_TYPE_TO_CLASS_MAP = OrderedDict(("cevcontainer", "container"), ("cevchassis", "chassis"),
+    #                                               ("cevmodule", "module"), ("cevport", "port"), ("cevpowersupply",
+    #                                                                                              "powerSupply"))
 
     def __init__(self, snmp_handler, logger):
         self._snmp = snmp_handler
@@ -23,17 +25,18 @@ class CiscoSNMPEntityTable(object):
         self._power_supply_list = []
         self._filtered_power_supply_list = []
         self.entity_table_black_list = []
-        self.port_exclude_pattern = r'stack|engine|management|mgmt|voice|foreign|cpu'  # |control\s*ethernet\s*port
+        self.port_exclude_pattern = r'stack|engine|management|mgmt|voice|foreign|cpu|control\s*ethernet\s*port'
         self.module_exclude_pattern = r'cevsfp|cevxfr|cevxfp|cevContainer10GigBasePort'
-        self.entity_to_container_pattern = "powershelf|cevModulePseAsicPlim|cevModuleCommonCards$|cevModuleCommonCards.611|cevModule$"
-        # PSEASIC|
+        self.entity_to_container_pattern = "powershelf|cevModuleCommonCards$"
+        self.ignore_entity_pattern = "cevModulePseAsicPlim|cevModule$"
+        self.ignore_entities_dict = dict()
 
     @property
     def get_chassis(self):
         if not self._filtered_chassis_list:
             if len(self._chassis_list) < 1:
                 self._logger.error('Entity table error, no chassis found')
-                return AutoLoadDetails(list(), list())
+                raise Exception('Cannot load entPhysicalTable. Autoload cannot continue')
 
             for chassis in self._chassis_list:
                 if chassis not in self.exclusion_list:
@@ -43,7 +46,7 @@ class CiscoSNMPEntityTable(object):
                     self.relative_address[chassis] = chassis_id
                     self._filtered_chassis_list.append(chassis)
 
-        return self._chassis_list
+        return self._filtered_chassis_list
 
     @property
     def get_port_list(self):
@@ -119,7 +122,9 @@ class CiscoSNMPEntityTable(object):
                                      [index])
 
             if temp_entity_table['entPhysicalClass'] == '' or "other" in temp_entity_table['entPhysicalClass']:
-                vendor_type = self._snmp.get_property('ENTITY-MIB', 'entPhysicalVendorType', index)
+                vendor_type = temp_entity_table['entPhysicalVendorType']
+                if not vendor_type:
+                    vendor_type = self._snmp.get_property('ENTITY-MIB', 'entPhysicalVendorType', index)
                 index_entity_class = None
                 if vendor_type == '':
                     continue
@@ -135,11 +140,19 @@ class CiscoSNMPEntityTable(object):
                     index_entity_class = 'powerSupply'
                 if index_entity_class:
                     temp_entity_table['entPhysicalClass'] = index_entity_class
-            elif re.search(self.entity_to_container_pattern, temp_entity_table['entPhysicalVendorType'].lower(),
+            if re.search(self.entity_to_container_pattern, temp_entity_table['entPhysicalVendorType'].lower(),
                            re.IGNORECASE):
                 temp_entity_table['entPhysicalClass'] = 'container'
             else:
                 temp_entity_table['entPhysicalClass'] = temp_entity_table['entPhysicalClass'].replace("'", "")
+
+            if re.search(self.ignore_entity_pattern, temp_entity_table['entPhysicalVendorType'].lower(),
+                         re.IGNORECASE):
+                # parent_id = temp_entity_table['entPhysicalContainedIn']
+                # if int(parent_id) in self.ignore_entities_dict:
+                #     self.ignore_entities_dict[index] = self.ignore_entities_dict[parent_id]
+                # else:
+                self.ignore_entities_dict[index] = temp_entity_table['entPhysicalContainedIn']
 
             if re.search(r'stack|chassis|module|port|powerSupply|container|backplane',
                          temp_entity_table['entPhysicalClass']):
@@ -226,12 +239,16 @@ class CiscoSNMPEntityTable(object):
         :param raw_entity_table: entity table with unfiltered elements
         """
 
-        elements = raw_entity_table.filter_by_column('ContainedIn').sort_by_column('ParentRelPos').keys()
+        elements = raw_entity_table.sort_by_column('ParentRelPos').keys()
         for element in reversed(elements):
-            parent_id = int(self._entity_table[element]['entPhysicalContainedIn'])
-
-            if parent_id not in raw_entity_table or parent_id in self.exclusion_list:
-                self.exclusion_list.append(element)
+            parent_id = int(raw_entity_table[element]['entPhysicalContainedIn'])
+            if parent_id in self.ignore_entities_dict.keys():
+                raw_entity_table[element]["entPhysicalContainedIn"] = self.ignore_entities_dict[parent_id]
+                parent_id = self.ignore_entities_dict[parent_id]
+            if self.exclusion_list and raw_entity_table[element]["entPhysicalContainedIn"] != "chassis":
+                if parent_id not in raw_entity_table or parent_id in self.exclusion_list:
+                    self.exclusion_list.append(element)
+        return raw_entity_table
 
     def add_relative_addresss(self):
         """Build dictionary of relative paths for each module and port

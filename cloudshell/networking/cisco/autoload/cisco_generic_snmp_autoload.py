@@ -56,7 +56,11 @@ class CiscoGenericSNMPAutoload(object):
         self._load_snmp_tables()
         port_list = self.cisco_entity.get_port_list
         module_list = self.cisco_entity.get_module_list
-        self._get_chassis_attributes(self.cisco_entity.get_chassis)
+        chassis_list = self.cisco_entity.get_chassis
+        if not chassis_list:
+            raise Exception(self.__class__.__name__, "Failed to load chassis, cannot continue")
+
+        self._get_chassis_attributes(chassis_list)
         self.cisco_entity.add_relative_addresss()
         self._get_ports_attributes(port_list)
         self._get_module_attributes(module_list)
@@ -113,10 +117,9 @@ class CiscoGenericSNMPAutoload(object):
 
         self.logger.info('Start loading MIB tables:')
         self.if_table = self.snmp.get_table('IF-MIB', self.IF_ENTITY)
+        self.if_type_table = self.snmp.get_table('IF-MIB', "ifType")
         self.logger.info('{0} table loaded'.format(self.IF_ENTITY))
         self.entity_table = self.cisco_entity.get_entity_table()
-        if len(self.entity_table.keys()) < 1:
-            raise Exception('Cannot load entPhysicalTable. Autoload cannot continue')
         self.logger.info('Entity table loaded')
 
         self.lldp_remote_table = self.snmp.get_table('LLDP-MIB', 'lldpRemSysName')
@@ -236,7 +239,7 @@ class CiscoGenericSNMPAutoload(object):
             port_id = self.entity_table[port]['entPhysicalParentRelPos']
             parent_index = int(self.entity_table[port]['entPhysicalContainedIn'])
             parent_id = self._get_power_supply_parent_id(port=port)
-            chassis_id = self.cisco_entity.relative_address.get(parent_index)
+            chassis_id = self.cisco_entity.get_relative_address(parent_index)
             relative_address = '{0}/PP{1}-{2}'.format(chassis_id, parent_id, port_id)
             port_name = 'PP{0}'.format(power_supply_list.index(port))
             port_details = {self.power_port.MODEL: self.snmp.get_property('ENTITY-MIB', 'entPhysicalModelName', port, ),
@@ -470,10 +473,13 @@ class CiscoGenericSNMPAutoload(object):
             self.logger.error(e.message)
 
             if_table_re = "/".join(re.findall('\d+', port_descr))
-            for interface in self.if_table.values():
-                if "ethernet|other" in self.snmp.get_property("IF-MIB", "ifType", int(interface['suffix'])):
-                    if re.search(r"^(?!.*null|.*{0})\D*{1}(\D+|$)".format(port_exclude_list, if_table_re),
-                                 interface[self.IF_ENTITY], re.IGNORECASE):
-                        port_id = int(interface['suffix'])
-                        break
+            for interface_id, interface_value in self.if_table.iteritems():
+                port_type = self.if_type_table.get(interface_id)
+                if port_type:
+                    if "ethernet|other" not in port_type:
+                        continue
+                if re.search(r"^(?!.*null|.*{0})\D*{1}(\D+|$)".format(port_exclude_list, if_table_re),
+                             interface_value[self.IF_ENTITY], re.IGNORECASE):
+                    port_id = int(interface_value['suffix'])
+                    break
         return port_id
