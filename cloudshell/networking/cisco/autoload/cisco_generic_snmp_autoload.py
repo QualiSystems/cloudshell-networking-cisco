@@ -471,15 +471,18 @@ class CiscoGenericSNMPAutoload(object):
             port_id = int(ent_alias_mapping_identifier['entAliasMappingIdentifier'].split('.')[-1])
         except Exception as e:
             self.logger.error(e.message)
+            port_id = None
 
-            if_table_re = "/".join(re.findall('\d+', port_descr))
-            for interface_id, interface_value in self.if_table.iteritems():
-                port_type = self.if_type_table.get(interface_id)
-                if port_type:
-                    if "ethernet|other" not in port_type:
-                        continue
-                if re.search(r"^(?!.*null|.*{0})\D*{1}(\D+|$)".format(port_exclude_list, if_table_re),
-                             interface_value[self.IF_ENTITY], re.IGNORECASE):
-                    port_id = int(interface_value['suffix'])
-                    break
+            port_if_re = re.findall('\d+', port_descr)
+            if port_if_re:
+                if_table_re = "/".join(port_if_re)
+                for interface_id, interface_value in self.if_table.iteritems():
+                    port_type = self.if_type_table.get(interface_id)
+                    if port_type:
+                        if not re.search("ethernet|other", port_type.get("ifType", ""), re.IGNORECASE):
+                            continue
+                    if re.search(r"^(?!.*null|.*{0})\D*{1}(/\D+|$)".format(port_exclude_list, if_table_re),
+                                 interface_value[self.IF_ENTITY], re.IGNORECASE):
+                        port_id = int(interface_value['suffix'])
+                        break
         return port_id
