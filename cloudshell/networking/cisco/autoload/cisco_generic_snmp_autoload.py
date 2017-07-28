@@ -471,7 +471,6 @@ class CiscoGenericSNMPAutoload(object):
             port_id = int(ent_alias_mapping_identifier['entAliasMappingIdentifier'].split('.')[-1])
         except Exception as e:
             self.logger.error(e.message)
-            port_id = None
 
             port_if_re = re.findall('\d+', port_descr)
             if port_if_re:
