@@ -62,3 +62,4 @@ target/
 .ipynb_checkpoints
 .pypirc
 tests/networking/cisco/autoload/test_cisco_autoload.py
+tests/networking/cisco/autoload/autoload_structure.py
