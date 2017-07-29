@@ -4,14 +4,17 @@ from cloudshell.snmp.quali_snmp import QualiMibTable
 
 
 class CiscoSNMPEntityTable(object):
+    IF_ENTITY = "ifDescr"
     ENTITY_PHYSICAL = "entPhysicalDescr"
     # ENTITY_VENDOR_TYPE_TO_CLASS_MAP = OrderedDict(("cevcontainer", "container"), ("cevchassis", "chassis"),
     #                                               ("cevmodule", "module"), ("cevport", "port"), ("cevpowersupply",
     #                                                                                              "powerSupply"))
 
-    def __init__(self, snmp_handler, logger):
+    def __init__(self, snmp_handler, logger, if_table, if_type_table):
         self._snmp = snmp_handler
         self._logger = logger
+        self._if_table = if_table
+        self._if_type_table = if_type_table
         self._entity_table = None
         self._port_list = []
         self._chassis_list = []
@@ -157,6 +160,7 @@ class CiscoSNMPEntityTable(object):
             if re.search(r'stack|chassis|module|port|powerSupply|container|backplane',
                          temp_entity_table['entPhysicalClass']):
                 result_dict[index] = temp_entity_table
+                self._logger.debug("Successfully loaded '{0}'".format(temp_entity_table["entPhysicalDescr"]))
 
             if temp_entity_table['entPhysicalClass'] == 'chassis':
                 self._chassis_list.append(index)
@@ -164,7 +168,10 @@ class CiscoSNMPEntityTable(object):
                 if not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalName'], re.IGNORECASE) \
                         and not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalDescr'],
                                           re.IGNORECASE):
-                    self._port_list.append(index)
+                    port_id = self._get_mapping(index, temp_entity_table[self.ENTITY_PHYSICAL])
+                    if port_id and port_id in self._if_table and port_id not in self.port_mapping.values():
+                        self.port_mapping[index] = port_id
+                        self._port_list.append(index)
             elif temp_entity_table['entPhysicalClass'] == 'powerSupply':
                 self._power_supply_list.append(index)
 
@@ -309,3 +316,35 @@ class CiscoSNMPEntityTable(object):
             else:
                 result.extend(self._get_module_parents(parent_id))
         return result
+
+    def _get_mapping(self, port_index, port_descr):
+        """Get mapping from entPhysicalTable to ifTable.
+        Build mapping based on ent_alias_mapping_table if exists else build manually based on
+        entPhysicalDescr <-> ifDescr mapping.
+
+        :return: simple mapping from entPhysicalTable index to ifTable index:
+        |        {entPhysicalTable index: ifTable index, ...}
+        """
+
+        port_id = None
+        port_exclude_list = self.port_exclude_pattern.replace("|", "|.*")
+
+        try:
+            ent_alias_mapping_identifier = self._snmp.get(('ENTITY-MIB', 'entAliasMappingIdentifier', port_index, 0))
+            port_id = int(ent_alias_mapping_identifier['entAliasMappingIdentifier'].split('.')[-1])
+        except Exception as e:
+            self._logger.error(e.message)
+
+            port_if_re = re.findall('\d+', port_descr)
+            if port_if_re:
+                if_table_re = "/".join(port_if_re)
+                for interface_id, interface_value in self._if_table.iteritems():
+                    port_type = self._if_type_table.get(interface_id)
+                    if port_type:
+                        if not re.search("ethernet|other", port_type.get("ifType", ""), re.IGNORECASE):
+                            continue
+                    if re.search(r"^(?!.*null|.*{0})\D*{1}(/\D+|$)".format(port_exclude_list, if_table_re),
+                                 interface_value[self.IF_ENTITY], re.IGNORECASE):
+                        port_id = int(interface_value['suffix'])
+                        break
+        return port_id

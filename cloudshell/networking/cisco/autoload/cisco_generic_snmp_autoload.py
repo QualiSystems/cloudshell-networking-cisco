@@ -6,8 +6,7 @@ from cloudshell.shell.core.driver_context import AutoLoadDetails
 
 class CiscoGenericSNMPAutoload(object):
     IF_ENTITY = "ifDescr"
-    ENTITY_PHYSICAL = "entPhysicalDescr"
-
+    
     def __init__(self, snmp_handler, logger, supported_os, resource_name):
         """Basic init with injected snmp handler and logger
 
@@ -20,7 +19,7 @@ class CiscoGenericSNMPAutoload(object):
         self.resource_name = resource_name
         self.logger = logger
         self.supported_os = supported_os
-        self.cisco_entity = CiscoSNMPEntityTable(snmp_handler, logger)
+        self.cisco_entity = None
         self.resources = list()
         self.attributes = list()
         self.port = None
@@ -119,6 +118,7 @@ class CiscoGenericSNMPAutoload(object):
         self.if_table = self.snmp.get_table('IF-MIB', self.IF_ENTITY)
         self.if_type_table = self.snmp.get_table('IF-MIB', "ifType")
         self.logger.info('{0} table loaded'.format(self.IF_ENTITY))
+        self.cisco_entity = CiscoSNMPEntityTable(self.snmp, self.logger, self.if_table, self.if_type_table)
         self.entity_table = self.cisco_entity.get_entity_table()
         self.logger.info('Entity table loaded')
 
@@ -310,12 +310,15 @@ class CiscoGenericSNMPAutoload(object):
         :return:
         """
 
+        mapped_port_list = list()
+
         self.logger.info('Load Ports:')
         for port in port_list:
             if_table_port_attr = {'ifType': 'str', 'ifPhysAddress': 'str', 'ifMtu': 'int', 'ifHighSpeed': 'int'}
-            port_if_index = self._get_mapping(port, self.entity_table[port][self.ENTITY_PHYSICAL])
-            if not port_if_index or port_if_index not in self.if_table:
+            port_if_index = self.cisco_entity.port_mapping.get(port)
+            if not port_if_index:
                 continue
+            mapped_port_list.append(port_if_index)
             if_table = self.if_table[port_if_index].copy()
             if_table.update(self.snmp.get_properties('IF-MIB', port_if_index, if_table_port_attr))
             interface_name = self.if_table[port_if_index][self.IF_ENTITY].replace("'", '')
@@ -454,34 +457,4 @@ class CiscoGenericSNMPAutoload(object):
             result = match_name.groupdict()['model'].capitalize()
         return result
 
-    def _get_mapping(self, port_index, port_descr):
-        """Get mapping from entPhysicalTable to ifTable.
-        Build mapping based on ent_alias_mapping_table if exists else build manually based on
-        entPhysicalDescr <-> ifDescr mapping.
 
-        :return: simple mapping from entPhysicalTable index to ifTable index:
-        |        {entPhysicalTable index: ifTable index, ...}
-        """
-
-        port_id = None
-        port_exclude_list = self.cisco_entity.port_exclude_pattern.replace("|", "|.*")
-
-        try:
-            ent_alias_mapping_identifier = self.snmp.get(('ENTITY-MIB', 'entAliasMappingIdentifier', port_index, 0))
-            port_id = int(ent_alias_mapping_identifier['entAliasMappingIdentifier'].split('.')[-1])
-        except Exception as e:
-            self.logger.error(e.message)
-
-            port_if_re = re.findall('\d+', port_descr)
-            if port_if_re:
-                if_table_re = "/".join(port_if_re)
-                for interface_id, interface_value in self.if_table.iteritems():
-                    port_type = self.if_type_table.get(interface_id)
-                    if port_type:
-                        if not re.search("ethernet|other", port_type.get("ifType", ""), re.IGNORECASE):
-                            continue
-                    if re.search(r"^(?!.*null|.*{0})\D*{1}(/\D+|$)".format(port_exclude_list, if_table_re),
-                                 interface_value[self.IF_ENTITY], re.IGNORECASE):
-                        port_id = int(interface_value['suffix'])
-                        break
-        return port_id
