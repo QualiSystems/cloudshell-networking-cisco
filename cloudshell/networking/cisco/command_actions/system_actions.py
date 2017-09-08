@@ -176,8 +176,6 @@ class SystemActions(object):
     def reload_device_via_console(self, timeout=500, action_map=None, error_map=None):
         """Reload device
 
-        :param session: current session
-        :param logger:  logger
         :param timeout: session reconnect timeout
         """
 
@@ -186,7 +184,7 @@ class SystemActions(object):
                                 action_map=action_map,
                                 error_map=error_map,
                                 timeout=timeout).execute_command()
-        self._cli_service.on_session_start(self._cli_service, self._logger)
+        self._cli_service.session.on_session_start(self._cli_service.session, self._logger)
 
     def get_current_boot_config(self, action_map=None, error_map=None):
         """Retrieve current boot configuration
