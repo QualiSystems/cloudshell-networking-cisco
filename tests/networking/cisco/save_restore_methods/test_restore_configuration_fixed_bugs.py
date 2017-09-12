@@ -8,7 +8,6 @@ from cloudshell.devices.standards.networking.configuration_attributes_structure 
 from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
-__author__ = 'CoYe'
 
 class TestCiscoHandlerBase(TestCase):
     def _get_handler(self, output, resource_name='resource_name'):
@@ -119,8 +118,36 @@ class TestCiscoHandlerBase(TestCase):
         C6504e-1-CE7#"""
         handler = self._get_handler(output, resource_name=resource_name)
         handler._resource_name = resource_name
-        responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+        response_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
+        response = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
-        self.assertIsNotNone(responce)
-        self.assertTrue(re.search(responce_template, responce))
+        self.assertIsNotNone(response)
+        self.assertTrue(re.search(response_template, response))
+
+    def test_override_restore(self):
+        resource_name = 'Very_long name with Spaces'
+        config_type = 'running'
+        output = """changename#
+configure replace ftp://Cloudshell:KPlab123@10.233.30.222/Cloudshell/2951-2-Test-running-250817-093706
+This will apply all necessary additions and deletions
+to replace the current running configuration with the
+    contents of the specified configuration file, which is
+assumed to be a complete configuration, not a partial
+configuration. Enter Y if you are sure you want to proceed. ? [no]:
+y
+Loading Cloudshell/2951-2-Test-running-250817-093706 !
+[OK - 7782/4096 bytes]
+
+Loading Cloudshell/2951-2-Test-running-250817-093706 !
+
+
+
+
+
+
+Total number of passes: 1
+Rollback Done
+
+ISR2951-2#"""
+        handler = self._get_handler(output, resource_name=resource_name)
+        handler.restore('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/2951-2-Test-running-250817-093706')
