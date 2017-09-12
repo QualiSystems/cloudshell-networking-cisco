@@ -1,6 +1,5 @@
 import re
 from cloudshell.networking.cisco.autoload.snmp_if_entity import SnmpIfEntity
-from cloudshell.networking.cisco.autoload.snmp_if_port_entity import SnmpIfPortEntity
 from cloudshell.networking.cisco.autoload.snmp_port_attr_tables import SnmpPortAttrTables
 
 
