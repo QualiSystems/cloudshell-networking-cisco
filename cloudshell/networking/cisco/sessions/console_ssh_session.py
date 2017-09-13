@@ -15,6 +15,7 @@ class ConsoleSSHSession(SSHSession):
         :param prompt: expected string in output
         :param logger: logger
         """
+
         try:
             super(ConsoleSSHSession, self).connect(prompt, logger)
         except Exception:

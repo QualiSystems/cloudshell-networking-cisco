@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from mock import MagicMock
-from cloudshell.networking.cisco.flow.cisco_save_flow import CiscoSaveFlow
+from cloudshell.networking.cisco.flows.cisco_save_flow import CiscoSaveFlow
 
 
 class TestCiscoSaveConfigurationFlow(TestCase):

@@ -2,42 +2,41 @@ from unittest import TestCase
 import re
 
 from mock import MagicMock
+from cloudshell.devices.standards.networking.configuration_attributes_structure import \
+    create_networking_resource_from_context
 
 from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
 from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
-__author__ = 'CoYe'
 
 class TestCiscoHandlerBase(TestCase):
-    def _get_handler(self, output):
+    def _get_handler(self, output, resource_name='resource_name'):
         cli = MagicMock()
         session = MagicMock()
         session.send_command.return_value = output
         cliservice = MagicMock()
         cliservice.__enter__.return_value = session
         cli.get_session.return_value = cliservice
-        #cli.return_value.get_session.return_value = session
         api = MagicMock()
         logger = MagicMock()
         context = ResourceCommandContext()
         context.resource = ResourceContextDetails()
-        context.resource.name = 'resource_name'
+        context.resource.name = resource_name
         context.reservation = ReservationContextDetails()
         context.reservation.reservation_id = 'c3b410cb-70bd-4437-ae32-15ea17c33a74'
         context.resource.attributes = dict()
         context.resource.attributes['CLI Connection Type'] = 'Telnet'
         context.resource.attributes['Sessions Concurrency Limit'] = '1'
-        return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, context=context)
+        resource_config = create_networking_resource_from_context("", ["supported_os"], context)
+        return CiscoConfigurationRunner(cli=cli, logger=logger, api=api, resource_config=resource_config)
 
     def test_save_raises_exception(self):
-        #output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         output = '%Error opening tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         handler = self._get_handler(output)
         self.assertRaises(Exception, handler.save, 'tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
                           'running')
 
     def test_save_raises_exception_error_message(self):
-        # output = '%Error opening tftp://10.10.10.10//CloudShell\n/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         output = '%Error opening tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/ASR1004-2-running-180516-101627 (Timed out)'
         handler = self._get_handler(output)
         try:
@@ -63,13 +62,13 @@ class TestCiscoHandlerBase(TestCase):
          TFTP put operation was successful
          Copy complete, now saving to disk (please wait)...
          N5K-L3-Sw1#"""
-        handler = self._get_handler(output)
+        handler = self._get_handler(output, resource_name=resource_name)
         handler._resource_name = resource_name
-        responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        responce = handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
+        response_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+-\d+')
+        response = handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
-        self.assertIsNotNone(responce)
-        self.assertTrue(re.search(responce_template, responce))
+        self.assertIsNotNone(response)
+        self.assertTrue(re.search(response_template, response))
 
     def test_save_cisco_nexus_6k_customer_report(self):
         resource_name = 'Very_long name with Spaces'
@@ -87,7 +86,7 @@ class TestCiscoHandlerBase(TestCase):
          Copy complete, now saving to disk (please wait)...
 
         N6K-Sw1-S1#"""
-        handler = self._get_handler(output)
+        handler = self._get_handler(output, resource_name=resource_name)
         handler._resource_name = resource_name
         responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
         responce = handler.save('tftp://10.10.10.10//CloudShell/Configs/Gold/Test1/',
@@ -117,10 +116,38 @@ class TestCiscoHandlerBase(TestCase):
         !!
         23518 bytes copied in 0.904 secs (26015 bytes/sec)
         C6504e-1-CE7#"""
-        handler = self._get_handler(output)
+        handler = self._get_handler(output, resource_name=resource_name)
         handler._resource_name = resource_name
-        responce_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
-        responce = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
+        response_template = '{0}-{1}-{2}'.format(resource_name.replace(' ', '_')[:23], config_type, '\d+\-\d+')
+        response = handler.save('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/',
                                 config_type, 'management')
-        self.assertIsNotNone(responce)
-        self.assertTrue(re.search(responce_template, responce))
+        self.assertIsNotNone(response)
+        self.assertTrue(re.search(response_template, response))
+
+    def test_override_restore(self):
+        resource_name = 'Very_long name with Spaces'
+        config_type = 'running'
+        output = """changename#
+configure replace ftp://Cloudshell:KPlab123@10.233.30.222/Cloudshell/2951-2-Test-running-250817-093706
+This will apply all necessary additions and deletions
+to replace the current running configuration with the
+    contents of the specified configuration file, which is
+assumed to be a complete configuration, not a partial
+configuration. Enter Y if you are sure you want to proceed. ? [no]:
+y
+Loading Cloudshell/2951-2-Test-running-250817-093706 !
+[OK - 7782/4096 bytes]
+
+Loading Cloudshell/2951-2-Test-running-250817-093706 !
+
+
+
+
+
+
+Total number of passes: 1
+Rollback Done
+
+ISR2951-2#"""
+        handler = self._get_handler(output, resource_name=resource_name)
+        handler.restore('tftp://10.10.10.10/CloudShell/Configs/Gold/Test1/2951-2-Test-running-250817-093706')

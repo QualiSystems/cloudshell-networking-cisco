@@ -96,15 +96,17 @@ class CiscoCliHandler(CliHandlerImpl):
         output = session.hardware_expect(ConfigCommandMode.ENTER_COMMAND,
                                          '{0}|{1}'.format(ConfigCommandMode.PROMPT, EnableCommandMode.PROMPT), logger)
 
-        if not re.search(ConfigCommandMode.PROMPT, output):
-            retries = 0
-            while not re.search(r"[Cc]onfiguration [Ll]ocked", output, re.IGNORECASE) or retries == max_retries:
-                time.sleep(5)
-                output = session.hardware_expect(ConfigCommandMode.ENTER_COMMAND,
-                                                 '{0}|{1}'.format(ConfigCommandMode.PROMPT, EnableCommandMode.PROMPT),
-                                                 logger)
-            if not re.search(ConfigCommandMode.PROMPT, output):
-                raise Exception('_enter_config_mode', error_message)
+        config_mode_match = re.search(ConfigCommandMode.PROMPT, output)
+        retries = 0
+        while (not config_mode_match) and retries <= max_retries:
+            time.sleep(5)
+            output = session.hardware_expect(ConfigCommandMode.ENTER_COMMAND,
+                                             '{0}|{1}'.format(ConfigCommandMode.PROMPT, EnableCommandMode.PROMPT),
+                                             logger)
+            config_mode_match = re.search(ConfigCommandMode.PROMPT, output)
+            retries += 1
+        if not config_mode_match:
+            raise Exception('_enter_config_mode', error_message)
 
     def _enter_enable_mode(self, session, logger):
         """
