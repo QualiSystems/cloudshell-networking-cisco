@@ -5,6 +5,7 @@ import re
 
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
 from cloudshell.networking.cisco.command_templates import iface as iface_command_template
+from cloudshell.networking.cisco.command_templates import add_remove_vlan as vlan_command_template
 from cloudshell.networking.cisco.command_templates import configuration
 
 
@@ -82,5 +83,8 @@ class IFaceActions(object):
                 CommandTemplateExecutor(self._cli_service,
                                         configuration.NO, action_map=action_map,
                                         error_map=error_map).execute_command(command=line_to_remove)
-
-                self._logger.debug("Completed cleaning interface switchport configuration")
+        if "switchport mode dot1q-tunnel" in current_config.lower():
+            CommandTemplateExecutor(self._cli_service,
+                                    vlan_command_template.NO_L2_TUNNEL, action_map=action_map,
+                                    error_map=error_map).execute_command()
+        self._logger.debug("Completed cleaning interface switchport configuration")

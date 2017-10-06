@@ -7,8 +7,8 @@ from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import Cis
 
 class CiscoSnmpAutoloadFlow(AutoloadFlow):
     def execute_flow(self, supported_os, shell_name, shell_type, resource_name):
-        with self._snmp_handler.get_snmp_service() as snpm_service:
-            cisco_snmp_autoload = CiscoGenericSNMPAutoload(snpm_service,
+        with self._snmp_handler.get_snmp_service() as snmp_service:
+            cisco_snmp_autoload = CiscoGenericSNMPAutoload(snmp_service,
                                                            shell_name,
                                                            shell_type,
                                                            resource_name,

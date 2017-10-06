@@ -14,6 +14,7 @@ from cloudshell.devices.standards.networking.autoload_structure import *
 class CiscoGenericSNMPAutoload(object):
     IF_ENTITY = "ifDescr"
     ENTITY_PHYSICAL = "entPhysicalDescr"
+    SNMP_ERRORS = [r'No\s+Such\s+Object\s+currently\s+exists']
 
     def __init__(self, snmp_handler, shell_name, shell_type, resource_name, logger):
         """Basic init with injected snmp handler and logger
@@ -29,6 +30,7 @@ class CiscoGenericSNMPAutoload(object):
         self.resource_name = resource_name
         self.logger = logger
         self.elements = {}
+        self.snmp_handler.set_snmp_errors(self.SNMP_ERRORS)
         self.resource = GenericResource(shell_name=shell_name,
                                         shell_type=shell_type,
                                         name=resource_name,

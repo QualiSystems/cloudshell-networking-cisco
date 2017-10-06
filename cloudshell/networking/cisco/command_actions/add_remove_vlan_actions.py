@@ -92,6 +92,11 @@ class AddRemoveVlanActions(object):
                                 vlan_command_template.SWITCHPORT_MODE,
                                 action_map=action_map,
                                 error_map=error_map).execute_command(port_mode=port_mode)
+        if qnq:
+            CommandTemplateExecutor(self._cli_service,
+                                    vlan_command_template.L2_TUNNEL,
+                                    action_map=action_map,
+                                    error_map=error_map).execute_command()
 
         if 'trunk' not in port_mode:
 
