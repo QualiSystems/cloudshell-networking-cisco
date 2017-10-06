@@ -27,3 +27,7 @@ SWITCHPORT_MODE = CommandTemplate("switchport [mode {port_mode}]",
 L2_TUNNEL = CommandTemplate("l2protocol-tunnel",
                             action_map=ACTION_MAP,
                             error_map=ERROR_MAP)
+
+NO_L2_TUNNEL = CommandTemplate("no l2protocol-tunnel",
+                               action_map=ACTION_MAP,
+                               error_map=ERROR_MAP)
