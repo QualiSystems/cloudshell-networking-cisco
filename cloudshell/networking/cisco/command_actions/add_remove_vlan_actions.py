@@ -93,13 +93,9 @@ class AddRemoveVlanActions(object):
                                 action_map=action_map,
                                 error_map=error_map).execute_command(port_mode=port_mode)
         if qnq:
-            CommandTemplateExecutor(self._cli_service,
-                                    vlan_command_template.L2_TUNNEL,
-                                    action_map=action_map,
-                                    error_map=error_map).execute_command()
+            self._get_l2_protocol_tunnel_cmd(action_map, error_map).execute_command()
 
         if 'trunk' not in port_mode:
-
             CommandTemplateExecutor(self._cli_service,
                                     vlan_command_template.SWITCHPORT_ALLOW_VLAN,
                                     action_map=action_map,
@@ -109,3 +105,9 @@ class AddRemoveVlanActions(object):
                                     vlan_command_template.SWITCHPORT_ALLOW_VLAN,
                                     action_map=action_map,
                                     error_map=error_map).execute_command(port_mode_trunk='', vlan_range=vlan_range)
+
+    def _get_l2_protocol_tunnel_cmd(self, action_map=None, error_map=None):
+        return CommandTemplateExecutor(self._cli_service,
+                                vlan_command_template.L2_TUNNEL,
+                                action_map=action_map,
+                                error_map=error_map)

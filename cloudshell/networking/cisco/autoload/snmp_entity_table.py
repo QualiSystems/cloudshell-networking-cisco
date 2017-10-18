@@ -70,7 +70,8 @@ class CiscoSNMPEntityTable(object):
             if len(modules) > 1 and modules[-1] not in self._module_list:
                 self._analyze_module(modules[-1])
         module_relative_paths = sorted(self.relative_address, key=self.relative_address.get)
-        self._sorted_module_list = [module for module in module_relative_paths if module in self._module_list]
+        self._sorted_module_list = [module for module in module_relative_paths if
+                                    module in self._module_list and module not in self.exclusion_list]
 
     def _analyze_module(self, module):
         if module not in self.exclusion_list:
@@ -220,11 +221,13 @@ class CiscoSNMPEntityTable(object):
         result = ''
         if int(item_id) not in self._filtered_chassis_list:
             parent_id = int(self._entity_table[item_id]['entPhysicalContainedIn'])
+            if parent_id in self.exclusion_list:
+                return result
             if parent_id not in self.relative_address.keys():
                 if parent_id in self._sorted_module_list:
                     result = self.get_resource_id(parent_id)
                 if result != '':
-                    result = self.get_relative_address(parent_id) + '/' + result
+                    result = "{}/{}".format(self.get_relative_address(parent_id), result)
                 else:
                     result = self.get_relative_address(parent_id)
             else:
@@ -243,12 +246,9 @@ class CiscoSNMPEntityTable(object):
         elements = raw_entity_table.sort_by_column('ParentRelPos').keys()
         for element in reversed(elements):
             parent_id = int(raw_entity_table[element]['entPhysicalContainedIn'])
-            # while parent_id in self.ignore_entities_dict.keys():
-            #     parent_id = int(raw_entity_table[parent_id]['entPhysicalContainedIn'])
-            #     raw_entity_table[element]["entPhysicalContainedIn"] = parent_id
-            if self.exclusion_list:
-                if parent_id not in raw_entity_table or parent_id in self.exclusion_list:
-                    self.exclusion_list.append(element)
+            if (parent_id not in raw_entity_table and "chassis" not in raw_entity_table[element][
+                "entPhysicalClass"]) or parent_id in self.exclusion_list:
+                self.exclusion_list.append(element)
         return raw_entity_table
 
     def _populate_relative_addresses(self):
@@ -258,49 +258,11 @@ class CiscoSNMPEntityTable(object):
         """
 
         port_list = list(self._port_list)
-        # module_list = list(self._module_list)
-        # for module in module_list:
-        #     if module in self.exclusion_list:
-        #         self._filtered_module_list.remove(module)
-        #         continue
-        #     module_parent_address = self.get_relative_address(module)
-        #     if len(module_parent_address.split("/")) > 2:
-        #         module_parent_address = module_parent_address[:3]
-        #
-        #     module_rel_path = module_parent_address + '/' + self.get_resource_id(module)
-        #     i = 1
-        #     while module_rel_path in self.relative_address.values():
-        #         i += 1
-        #         module_rel_path = '{0}/{1}'.format(module_parent_address, (int(self.get_resource_id(module)) + i))
-        #     self.relative_address[module] = module_rel_path
-        #     self._filtered_module_list.append(module)
-
         for port in port_list:
             if port not in self.exclusion_list:
-                self.relative_address[port] = self._get_port_relative_address(
-                    self.get_relative_address(port) + '/' + self.get_resource_id(port))
+                self.relative_address[port] = self.get_relative_address(port) + '/' + self.get_resource_id(port)
             else:
                 self._port_list.remove(port)
-
-    def _get_port_relative_address(self, relative_id):
-        """
-        Workaround for an issue when port and sub-module located on the same module and have same relative ids
-
-        :param relative_id:
-        :return: relative_address
-        """
-        if relative_id in self.relative_address.values():
-            if '/' in relative_id:
-                ids = relative_id.split('/')
-                ids[-1] = str(int(ids[-1]) + 1000)
-                result = '/'.join(ids)
-            else:
-                result = str(int(relative_id.split()[-1]) + 1000)
-            if relative_id in self.relative_address.values():
-                result = self._get_port_relative_address(result)
-        else:
-            result = relative_id
-        return result
 
     def _get_module_parents(self, module_id):
         """

@@ -10,6 +10,12 @@ class CiscoRemoveVlanFlow(RemoveVlanFlow):
     def __init__(self, cli_handler, logger):
         super(CiscoRemoveVlanFlow, self).__init__(cli_handler, logger)
 
+    def _get_vlan_actions(self, config_session):
+        return AddRemoveVlanActions(config_session, self._logger)
+
+    def _get_iface_actions(self, config_session):
+        return IFaceActions(config_session, self._logger)
+
     def execute_flow(self, vlan_range, port_name, port_mode, action_map=None, error_map=None):
         """ Remove configuration of VLANs on multiple ports or port-channels
 
@@ -23,8 +29,8 @@ class CiscoRemoveVlanFlow(RemoveVlanFlow):
 
         self._logger.info("Remove Vlan {} configuration started".format(vlan_range))
         with self._cli_handler.get_cli_service(self._cli_handler.config_mode) as config_session:
-            iface_action = IFaceActions(config_session, self._logger)
-            vlan_actions = AddRemoveVlanActions(config_session, self._logger)
+            iface_action = self._get_iface_actions(config_session)
+            vlan_actions = self._get_vlan_actions(config_session)
             port_name = iface_action.get_port_name(port_name)
 
             current_config = iface_action.get_current_interface_config(port_name)

@@ -84,7 +84,11 @@ class IFaceActions(object):
                                         configuration.NO, action_map=action_map,
                                         error_map=error_map).execute_command(command=line_to_remove)
         if "switchport mode dot1q-tunnel" in current_config.lower():
-            CommandTemplateExecutor(self._cli_service,
-                                    vlan_command_template.NO_L2_TUNNEL, action_map=action_map,
-                                    error_map=error_map).execute_command()
+            self._get_no_l2_protocol_tunnel_cmd(action_map, error_map).execute_command()
         self._logger.debug("Completed cleaning interface switchport configuration")
+
+    def _get_no_l2_protocol_tunnel_cmd(self, action_map=None, error_map=None):
+        return CommandTemplateExecutor(self._cli_service,
+                                vlan_command_template.NO_L2_TUNNEL,
+                                action_map=action_map,
+                                error_map=error_map)
