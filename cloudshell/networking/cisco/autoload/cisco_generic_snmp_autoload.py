@@ -7,6 +7,7 @@ from cloudshell.networking.cisco.autoload.snmp_entity_table import CiscoSNMPEnti
 from cloudshell.networking.cisco.autoload.snmp_if_table import SnmpIfTable
 
 from cloudshell.devices.autoload.autoload_builder import AutoloadDetailsBuilder
+from cloudshell.devices.autoload.device_names import get_device_name
 from cloudshell.devices.standards.networking.autoload_structure import *
 
 
@@ -15,6 +16,7 @@ class CiscoGenericSNMPAutoload(object):
     IF_ENTITY = "ifDescr"
     ENTITY_PHYSICAL = "entPhysicalDescr"
     SNMP_ERRORS = [r'No\s+Such\s+Object\s+currently\s+exists']
+    DEVICE_NAMES_MAP_FILE = os.path.join(os.path.dirname(__file__), os.pardir, "mibs", "device_names_map.csv")
 
     def __init__(self, snmp_handler, shell_name, shell_type, resource_name, logger):
         """Basic init with injected snmp handler and logger
@@ -122,7 +124,9 @@ class CiscoGenericSNMPAutoload(object):
         result = ''
         match_name = re.search(r'::(?P<model>\S+$)', self.snmp_handler.get_property('SNMPv2-MIB', 'sysObjectID', '0'))
         if match_name:
-            result = match_name.groupdict()['model'].capitalize()
+            match_name = match_name.groupdict()['model'].capitalize()
+            result = get_device_name(file_name=self.DEVICE_NAMES_MAP_FILE, sys_obj_id=match_name)
+
         return result
 
     def _get_device_os_version(self):
@@ -305,7 +309,7 @@ class CiscoGenericSNMPAutoload(object):
 
             else:
                 self.logger.error("Adding of {0} failed. Name is invalid".format(interface_model))
- 
+
         self.logger.info("Building Port Channels completed")
 
     def _get_ports_attributes(self, port_list):
