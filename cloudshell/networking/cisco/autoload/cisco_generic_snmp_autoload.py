@@ -115,19 +115,26 @@ class CiscoGenericSNMPAutoload(object):
             return False
 
     def _get_device_model(self):
-        """Get device model form snmp SNMPv2 mib
+        """Get device model from the SNMPv2 mib
 
         :return: device model
         :rtype: str
         """
-
         result = ''
         match_name = re.search(r'::(?P<model>\S+$)', self.snmp_handler.get_property('SNMPv2-MIB', 'sysObjectID', '0'))
         if match_name:
-            match_name = match_name.groupdict()['model']
-            result = get_device_name(file_name=self.DEVICE_NAMES_MAP_FILE, sys_obj_id=match_name)
+            result = match_name.group('model')
 
         return result
+
+    def _get_device_model_name(self, device_model):
+        """Get device model name from the CSV file map
+
+        :param str device_model:  device model
+        :return: device model model
+        :rtype: str
+        """
+        return get_device_name(file_name=self.DEVICE_NAMES_MAP_FILE, sys_obj_id=device_model)
 
     def _get_device_os_version(self):
         """Get device OS Version form snmp SNMPv2 mib
@@ -154,6 +161,7 @@ class CiscoGenericSNMPAutoload(object):
         self.resource.location = self.snmp_handler.get_property('SNMPv2-MIB', 'sysLocation', '0')
         self.resource.os_version = self._get_device_os_version()
         self.resource.model = self._get_device_model()
+        self.resource.model_name = self._get_device_model_name(self.resource.model)
         self.resource.vendor = vendor
 
     def _load_snmp_tables(self):
