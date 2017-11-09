@@ -124,7 +124,7 @@ class CiscoGenericSNMPAutoload(object):
         result = ''
         match_name = re.search(r'::(?P<model>\S+$)', self.snmp_handler.get_property('SNMPv2-MIB', 'sysObjectID', '0'))
         if match_name:
-            match_name = match_name.groupdict()['model'].capitalize()
+            match_name = match_name.groupdict()['model']
             result = get_device_name(file_name=self.DEVICE_NAMES_MAP_FILE, sys_obj_id=match_name)
 
         return result
