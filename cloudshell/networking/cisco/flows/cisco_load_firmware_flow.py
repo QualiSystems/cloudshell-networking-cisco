@@ -15,8 +15,9 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
     FLASH = "flash:"
     KICKSTART_IMAGE = "kickstart"
 
-    def __init__(self, cli_handler, logger):
+    def __init__(self, cli_handler, logger, default_file_system=None):
         super(CiscoLoadFirmwareFlow, self).__init__(cli_handler, logger)
+        self._file_system = default_file_system or self.FLASH
 
     def execute_flow(self, path, vrf, timeout):
         """Load a firmware onto the device
@@ -34,7 +35,7 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
 
         with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as enable_session:
             system_action = SystemActions(enable_session, self._logger)
-            dst_file_system = self.FLASH
+            dst_file_system = self._file_system
 
             firmware_dst_path = "{0}/{1}".format(dst_file_system, firmware_file_name)
 

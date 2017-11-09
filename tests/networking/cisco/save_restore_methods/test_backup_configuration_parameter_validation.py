@@ -5,7 +5,7 @@ from cloudshell.devices.standards.networking.configuration_attributes_structure 
     create_networking_resource_from_context
 
 from cloudshell.networking.cisco.runners.cisco_configuration_runner import CiscoConfigurationRunner
-from cloudshell.shell.core.context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
+from cloudshell.shell.core.driver_context import ResourceCommandContext, ResourceContextDetails, ReservationContextDetails
 
 
 class TestCiscoConfigurationOperationsParameterValidation(TestCase):

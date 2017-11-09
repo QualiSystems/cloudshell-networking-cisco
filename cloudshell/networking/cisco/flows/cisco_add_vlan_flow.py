@@ -10,6 +10,12 @@ class CiscoAddVlanFlow(AddVlanFlow):
     def __init__(self, cli_handler, logger):
         super(CiscoAddVlanFlow, self).__init__(cli_handler, logger)
 
+    def _get_vlan_actions(self, config_session):
+        return AddRemoveVlanActions(config_session, self._logger)
+
+    def _get_iface_actions(self, config_session):
+        return IFaceActions(config_session, self._logger)
+
     def execute_flow(self, vlan_range, port_mode, port_name, qnq, c_tag):
         """ Configures VLANs on multiple ports or port-channels
 
@@ -24,8 +30,8 @@ class CiscoAddVlanFlow(AddVlanFlow):
         self._logger.info("Add VLAN(s) {} configuration started".format(vlan_range))
 
         with self._cli_handler.get_cli_service(self._cli_handler.config_mode) as config_session:
-            iface_action = IFaceActions(config_session, self._logger)
-            vlan_actions = AddRemoveVlanActions(config_session, self._logger)
+            iface_action = self._get_iface_actions(config_session)
+            vlan_actions = self._get_vlan_actions(config_session)
             port_name = iface_action.get_port_name(port_name)
             vlan_actions.create_vlan(vlan_range)
 
