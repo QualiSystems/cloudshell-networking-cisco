@@ -8,14 +8,9 @@ from cloudshell.devices.snmp_handler import SnmpHandler
 
 
 class CiscoSnmpHandler(SnmpHandler):
-    def __init__(self, cli, resource_config, logger, api):
+    def __init__(self, resource_config, logger, api, cli_handler):
         super(CiscoSnmpHandler, self).__init__(resource_config, logger, api)
-        self._cli = cli
-        self._api = api
-
-    @property
-    def cli_handler(self):
-        return CiscoCliHandler(self._cli, self.resource_config, self._logger, self._api)
+        self.cli_handler = cli_handler
 
     def _create_enable_flow(self):
         return CiscoEnableSnmpFlow(self.cli_handler, self._logger)

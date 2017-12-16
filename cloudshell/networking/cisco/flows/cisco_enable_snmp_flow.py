@@ -40,6 +40,7 @@ class CiscoEnableSnmpFlow(EnableSnmpFlow):
                 if isinstance(snmp_parameters, SNMPV3Parameters):
                     current_snmp_user = snmp_actions.get_current_snmp_user()
                     if snmp_parameters.snmp_user not in current_snmp_user:
+                        self._validate_snmp_v3_params(snmp_parameters)
                         if self._create_group:
                             current_snmp_config = snmp_actions.get_current_snmp_config()
                             if "snmp-server view {}".format(self.DEFAULT_SNMP_VIEW) not in current_snmp_config:
@@ -88,3 +89,32 @@ class CiscoEnableSnmpFlow(EnableSnmpFlow):
                     if snmp_parameters.snmp_community not in updated_snmp_communities:
                         raise Exception(self.__class__.__name__, "Failed to create SNMP community." +
                                         " Please check Logs for details")
+
+    def _validate_snmp_v3_params(self, snmp_v3_params):
+        message = "Failed to enable SNMP v3, '{}' attribute cannot be empty"
+        is_failed = False
+        if not snmp_v3_params.private_key_protocol or self.SNMP_PRIV_MAP[snmp_v3_params.private_key_protocol] == 'No Privacy Protocol':
+            # SNMP V3 Privacy Protocol
+            is_failed = True
+            message = message.format("SNMP V3 Privacy Protocol") + " or set to 'No Privacy Protocol'"
+
+        if not snmp_v3_params.auth_protocol or self.SNMP_AUTH_MAP[snmp_v3_params.auth_protocol] == 'No Authentication Protocol':
+            # SNMP V3 Authentication Protocol
+            is_failed = True
+            message = message.format("SNMP V3 Authentication Protocol") + " or set to 'No Authentication Protocol'"
+
+        if not snmp_v3_params.snmp_user:
+            is_failed = True
+            message.format("SNMP V3 User")
+
+        if not snmp_v3_params.snmp_private_key:
+            is_failed = True
+            message.format("SNMP V3 Private Key")
+
+        if not snmp_v3_params.snmp_password:
+            is_failed = True
+            message.format("SNMP V3 Password")
+
+        if is_failed:
+            self._logger.error(message)
+            raise Exception(self.__class__.__name__, message)
