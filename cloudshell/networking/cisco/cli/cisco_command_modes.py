@@ -118,7 +118,7 @@ class ConfigCommandMode(CommandMode):
                              exit_error_map=self.exit_error_map())
 
     def enter_action_map(self):
-        return {EnableCommandMode.PROMPT: self._check_config_mode}
+        return {r"{}.*$".format(EnableCommandMode.PROMPT): self._check_config_mode}
 
     def enter_error_map(self):
         return OrderedDict()
@@ -139,14 +139,14 @@ class ConfigCommandMode(CommandMode):
                                                                               ConfigCommandMode.PROMPT),
                                          logger=logger)
         retry = 0
-        while re.search(ConfigCommandMode.PROMPT, output) or retry < self.MAX_ENTER_CONFIG_MODE_RETRIES:
+        while (not re.search(ConfigCommandMode.PROMPT, output)) and retry < self.MAX_ENTER_CONFIG_MODE_RETRIES:
             output = session.hardware_expect(ConfigCommandMode.ENTER_COMMAND,
                                              expected_string="{0}|{1}".format(EnableCommandMode.PROMPT,
                                                                               ConfigCommandMode.PROMPT),
                                              logger=logger)
             time.sleep(self.ENTER_CONFIG_RETRY_TIMEOUT)
             retry += 1
-        else:
+        if not re.search(ConfigCommandMode.PROMPT, output):
             raise Exception(error_message)
 
 
