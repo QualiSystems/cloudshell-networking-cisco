@@ -2,13 +2,13 @@ from unittest import TestCase
 from cloudshell.networking.cisco.command_templates.configuration import CONFIGURE_REPLACE
 
 
-class CiscoConfigurationOperationsRestore(TestCase):
+class TestCiscoConfigurationTemplates(TestCase):
 
     def setUp(self):
-        self.path = "ftp://admin:KPlab123@10.233.30.222/CloudShell/config"
+        self.path = "ftp://admin:password@10.10.10.10/CloudShell/config"
 
     def test_configure_replace_validates_error_output(self):
-        output = """Command: configure replace ftp://admin:KPlab123@10.233.30.222/CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg
+        output = """Command: configure replace ftp://admin:password@10.3.3.22/CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg
             This will apply all necessary additions and deletions
             to replace the current running configuration with the
             contents of the specified configuration file, which is
@@ -25,7 +25,7 @@ class CiscoConfigurationOperationsRestore(TestCase):
         self.assertRegexpMatches(output, "|".join(configure_replace['error_map'].keys()))
 
     def test_configure_replace_ignores_rollback_done_output(self):
-        output = """configure replace ftp://admin:KPlab123@10.233.30.222/CloudShell/config
+        output = """configure replace ftp://admin:password@10.33.3.22/CloudShell/config
             This will apply all necessary additions and deletions
             to replace the current running configuration with the
             contents of the specified configuration file, which is

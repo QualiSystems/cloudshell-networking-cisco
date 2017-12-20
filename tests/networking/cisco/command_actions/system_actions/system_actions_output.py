@@ -1,3 +1,94 @@
+SUCCESS_OUTPUT = """N6K-Sw1-S1# copy running-config tftp:
+        Enter destination filename: [N6K-Sw1-S1-running-config] TestName
+        Enter vrf (If no input, current vrf 'default' is considered): management
+        Enter hostname for the tftp server: 10.10.10.10Trying to connect to tftp server......
+        Connection to Server Established.
+
+        [                         ]         0.50KB
+        [#                        ]         4.50KB
+
+         TFTP put operation was successful
+         Copy complete, now saving to disk (please wait)...
+
+        N6K-Sw1-S1#"""
+
+
+SUCCESS_OUTPUT_IOS = """C6504e-1-CE7#copy running-config tftp:
+        Address or name of remote host []? 10.10.10.10
+        Destination filename [c6504e-1-ce7-confg]? 6504e1
+        !!
+        23518 bytes copied in 0.904 secs (26015 bytes/sec)
+        C6504e-1-CE7#"""
+
+
+ERROR_OPENING_OUTPUT = """ASR1004-2#copy running-config tftp:
+        Address or name of remote host []?
+        10.10.10.10
+        Destination filename [asr1004-2-confg]?
+        ASR1004-2-running-100516-084841
+        .....
+        %Error opening tftp://10.10.10.10/ASR1004-2-running-100516-084841 (Timed out)
+        ASR1004-2#"""
+
+ERROR_ACCESS_VIOLATION = '''sw9003-vpp-10-3# copy running-config tftp://10.87.42.120
+        Enter destination filename: [sw9003-vpp-10-3-running-config] 123123
+        Enter vrf (If no input, current vrf 'default' is considered):
+        Trying to connect to tftp server......
+        Connection to Server Established.
+        TFTP put operation failed:Access violation'''
+
+SUCCESS_OUTPUT_CONFIG_OVERRIDE = """changename#
+        configure replace ftp://Cloudshell:KPlab123@10.233.30.222/Cloudshell/2951-2-Test-running-250817-093706
+        This will apply all necessary additions and deletions
+        to replace the current running configuration with the
+            contents of the specified configuration file, which is
+        assumed to be a complete configuration, not a partial
+        configuration. Enter Y if you are sure you want to proceed. ? [no]:
+        y
+        Loading Cloudshell/2951-2-Test-running-250817-093706 !
+        [OK - 7782/4096 bytes]
+
+        Loading Cloudshell/2951-2-Test-running-250817-093706 !
+
+
+
+
+
+
+        Total number of passes: 1
+        Rollback Done
+
+        ISR2951-2#"""
+
+
+ERROR_OVERRIDE_RUNNING = """Command: configure replace ftp://admin:KPlab123@10.233.30.222/CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg
+            This will apply all necessary additions and deletions
+            to replace the current running configuration with the
+            contents of the specified configuration file, which is
+            assumed to be a complete configuration, not a partial
+            configuration. Enter Y if you are sure you want to proceed. ? [no]: y
+            Loading CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg !
+            [OK - 3569/4096 bytes]
+            Loading CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg !
+            [OK - 3569/4096 bytes]
+            %The input file is not a valid config file.
+            37501#
+            """
+
+ERROR_ROLL_BACK = """configure replace flash:candidate_config.txt force
+            The rollback configlet from the last pass is listed below:
+            ********
+            !List of Rollback Commands:
+            adfjasdfadfa
+            end
+            ********
+            Rollback aborted after 5 passes
+            The following commands are failed to apply to the IOS image.
+            ********
+            adfjasdfadfa
+            ********
+            """
+
 TEST_COPY_OUTPUT = """
 
 Trying to connect to tftp server......

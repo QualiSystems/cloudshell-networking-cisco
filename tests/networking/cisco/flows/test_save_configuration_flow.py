@@ -52,3 +52,4 @@ class TestCiscoSaveConfigurationFlow(TestCase):
 
         save_flow.execute_flow('tftp://127.0.0.1', 'running', vrf_management_name='management')
         self.session.send_command.assert_called_once()
+
