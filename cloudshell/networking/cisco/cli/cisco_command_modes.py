@@ -17,7 +17,7 @@ class DefaultCommandMode(CommandMode):
         """
         Initialize Default command mode, only for cases when session started not in enable mode
 
-        :param context:
+        :param resource_config:
         """
 
         self.resource_config = resource_config
@@ -54,7 +54,7 @@ class EnableCommandMode(CommandMode):
         """
         Initialize Enable command mode - default command mode for Cisco Shells
 
-        :param context:
+        :param resource_config:
         """
 
         self.resource_config = resource_config
