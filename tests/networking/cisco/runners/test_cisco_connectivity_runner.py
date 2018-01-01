@@ -1,11 +1,11 @@
 from unittest import TestCase
 
-from mock import MagicMock, create_autospec, patch
+from mock import MagicMock, patch
 
 from cloudshell.networking.cisco.runners.cisco_connectivity_runner import CiscoConnectivityRunner
 
 
-class TestCiscoConnectivityOperations(TestCase):
+class TestCiscoConnectivityRunner(TestCase):
     def _get_handler(self):
         logger = MagicMock()
         cli_handler = MagicMock()
