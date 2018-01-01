@@ -19,7 +19,7 @@ class TestCiscoAddVlanFlow(TestCase):
         c_tag = ""
         iface_mock.return_value.get_port_name.return_value = converted_port_name
 
-        self._handler.execute_flow("45", port_mode, port_name, qnq, c_tag)
+        self._handler.execute_flow(vlan_id, port_mode, port_name, qnq, c_tag)
         iface_mock.return_value.get_port_name.assert_called_once_with(port_name)
         vlan_actions_mock.return_value.create_vlan.assert_called_once_with(vlan_id)
         iface_mock.return_value.get_current_interface_config.assert_called_with(converted_port_name)
