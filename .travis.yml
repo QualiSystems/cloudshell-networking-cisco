@@ -10,10 +10,10 @@ install:
         python setup.py install;
       fi'
     - pip install -r test_requirements.txt
-    - pip install coveralls
+    - pip install codecov
 
 script:
     - nosetests --with-coverage --cover-package=cloudshell.networking.cisco tests
 
 after_success:
-    - coveralls
+    - codecov
