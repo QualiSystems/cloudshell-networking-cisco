@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import re
 
 from cloudshell.devices.flows.cli_action_flows import EnableSnmpFlow
 from cloudshell.networking.cisco.command_actions.enable_disable_snmp_actions import EnableDisableSnmpActions
@@ -69,9 +70,10 @@ class CiscoEnableSnmpFlow(EnableSnmpFlow):
                                                         snmp_group=None)
 
                 else:
-                    current_snmp_communities = snmp_actions.get_current_snmp_communities()
+                    current_snmp_communities = snmp_actions.get_current_snmp_config()
                     snmp_community = snmp_parameters.snmp_community
-                    if snmp_community not in current_snmp_communities:
+                    if not re.search("snmp-server community {}".format(snmp_parameters.snmp_community),
+                                     current_snmp_communities):
                         snmp_actions.enable_snmp(snmp_community, read_only_community)
                     else:
                         self._logger.debug("SNMP Community '{}' already configured".format(snmp_community))
@@ -85,8 +87,9 @@ class CiscoEnableSnmpFlow(EnableSnmpFlow):
                         raise Exception(self.__class__.__name__, "Failed to create SNMP v3 Configuration." +
                                         " Please check Logs for details")
                 else:
-                    updated_snmp_communities = updated_snmp_actions.get_current_snmp_communities()
-                    if snmp_parameters.snmp_community not in updated_snmp_communities:
+                    updated_snmp_communities = updated_snmp_actions.get_current_snmp_config()
+                    if not re.search("snmp-server community {}".format(snmp_parameters.snmp_community),
+                                     updated_snmp_communities):
                         raise Exception(self.__class__.__name__, "Failed to create SNMP community." +
                                         " Please check Logs for details")
 
