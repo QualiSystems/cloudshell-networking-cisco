@@ -54,7 +54,7 @@ class SystemActions(object):
                 source_file)] = lambda session, logger: session.send_line(password, logger)
         return action_map
 
-    def copy(self, source, destination, vrf=None, action_map=None, error_map=None, timeout=120):
+    def copy(self, source, destination, vrf=None, action_map=None, error_map=None, timeout=180):
         """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem.
 
         :param source: source file

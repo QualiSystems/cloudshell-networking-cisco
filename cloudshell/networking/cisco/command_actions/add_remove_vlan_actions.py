@@ -32,7 +32,7 @@ class AddRemoveVlanActions(object):
         :return: True or False
         """
 
-        return re.search("switchport.*vlan.*{0}".format(str(vlan_range)), current_config,
+        return re.search("switchport.*vlan\s+{0}$".format(str(vlan_range)), current_config,
                          re.MULTILINE | re.IGNORECASE | re.DOTALL)
 
     def create_vlan(self, vlan_range, action_map=None, error_map=None):
@@ -108,6 +108,6 @@ class AddRemoveVlanActions(object):
 
     def _get_l2_protocol_tunnel_cmd(self, action_map=None, error_map=None):
         return CommandTemplateExecutor(self._cli_service,
-                                vlan_command_template.L2_TUNNEL,
-                                action_map=action_map,
-                                error_map=error_map)
+                                       vlan_command_template.L2_TUNNEL,
+                                       action_map=action_map,
+                                       error_map=error_map)

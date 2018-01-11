@@ -9,7 +9,7 @@ def return_cmd(cmd, **kwargs):
     return cmd
 
 
-class TestCiscoSystemActions(TestCase):
+class TestCiscoEnableSNMPActions(TestCase):
     def set_up(self, response):
         cli_service = create_autospec(CliService)
         if callable(response):
