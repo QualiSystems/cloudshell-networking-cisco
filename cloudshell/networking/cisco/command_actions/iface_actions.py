@@ -34,7 +34,7 @@ class IFaceActions(object):
         if not port:
             err_msg = 'Failed to get port name.'
             self._logger.error(err_msg)
-            raise Exception('CiscoConnectivityOperations: get_port_name', err_msg)
+            raise Exception('get_port_name', err_msg)
 
         temp_port_name = port.split('/')[-1]
         if 'port-channel' not in temp_port_name.lower():
@@ -89,6 +89,6 @@ class IFaceActions(object):
 
     def _get_no_l2_protocol_tunnel_cmd(self, action_map=None, error_map=None):
         return CommandTemplateExecutor(self._cli_service,
-                                vlan_command_template.NO_L2_TUNNEL,
-                                action_map=action_map,
-                                error_map=error_map)
+                                       vlan_command_template.NO_L2_TUNNEL,
+                                       action_map=action_map,
+                                       error_map=error_map)
