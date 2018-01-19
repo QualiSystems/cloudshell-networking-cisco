@@ -31,6 +31,7 @@ class TestCiscoEnableSNMPFlow(TestCase):
         enable_snmp_view_mock = MagicMock()
         enable_actions_mock.return_value.get_current_snmp_user.side_effect = ["", self.SNMP_USER]
         enable_actions_mock.return_value.enable_snmp_v3 = enable_snmp_mock
+        enable_actions_mock.return_value.get_current_snmp_config.return_value = ""
         enable_actions_mock.return_value.enable_snmp_group = enable_snmp_group_mock
         enable_actions_mock.return_value.enable_snmp_view = enable_snmp_view_mock
 
@@ -81,8 +82,9 @@ class TestCiscoEnableSNMPFlow(TestCase):
         enable_flow = self._get_handler()
         enable_snmp_mock = MagicMock()
         is_read_only = True
-        enable_actions_mock.return_value.get_current_snmp_communities.side_effect = ["",
-                                                                                     self.snmp_v2_read_parameters.snmp_community]
+        enable_actions_mock.return_value.get_current_snmp_config.side_effect = ["",
+                                                                                "snmp-server community {}".format(
+                                                                                    self.snmp_v2_read_parameters.snmp_community)]
         enable_snmp_mock.return_value.enable_snmp.return_value = enable_snmp_mock
         enable_actions_mock.return_value.enable_snmp = enable_snmp_mock
 
@@ -95,8 +97,9 @@ class TestCiscoEnableSNMPFlow(TestCase):
         enable_flow = self._get_handler()
         enable_snmp_mock = MagicMock()
         is_read_only = False
-        enable_actions_mock.return_value.get_current_snmp_communities.side_effect = ["",
-                                                                                     self.snmp_v2_write_parameters.snmp_community]
+        enable_actions_mock.return_value.get_current_snmp_config.side_effect = ["",
+                                                                                "snmp-server community {}".format(
+                                                                                    self.snmp_v2_write_parameters.snmp_community)]
         enable_snmp_mock.return_value.enable_snmp.return_value = enable_snmp_mock
         enable_actions_mock.return_value.enable_snmp = enable_snmp_mock
 

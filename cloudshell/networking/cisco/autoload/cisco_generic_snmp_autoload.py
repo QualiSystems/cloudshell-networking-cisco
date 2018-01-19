@@ -11,7 +11,6 @@ from cloudshell.devices.autoload.device_names import get_device_name
 from cloudshell.devices.standards.networking.autoload_structure import *
 
 
-
 class CiscoGenericSNMPAutoload(object):
     IF_ENTITY = "ifDescr"
     ENTITY_PHYSICAL = "entPhysicalDescr"
@@ -74,6 +73,11 @@ class CiscoGenericSNMPAutoload(object):
             self.logger.error("Entity table error, no chassis found")
 
         autoload_details = AutoloadDetailsBuilder(self.resource).autoload_details()
+        if not self.shell_name:
+            root_model_name = [x for x in autoload_details.attributes if
+                               x.relative_address == "" and x.attribute_name == "Model Name"][0]
+            if root_model_name:
+                autoload_details.attributes.remove(root_model_name)
         self._log_autoload_details(autoload_details)
         return autoload_details
 

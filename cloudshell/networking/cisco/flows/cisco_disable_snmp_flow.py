@@ -52,7 +52,8 @@ class CiscoDisableSnmpFlow(DisableSnmpFlow):
                         raise Exception(self.__class__.__name__, "Failed to remove SNMP v3 Configuration." +
                                         " Please check Logs for details")
                 else:
-                    updated_snmp_communities = updated_snmp_actions.get_current_snmp_communities()
-                    if snmp_parameters.snmp_community in updated_snmp_communities:
+                    updated_snmp_communities = updated_snmp_actions.get_current_snmp_config()
+                    if re.search("snmp-server community {}".format(snmp_parameters.snmp_community),
+                                 updated_snmp_communities):
                         raise Exception(self.__class__.__name__, "Failed to remove SNMP community." +
                                         " Please check Logs for details")
