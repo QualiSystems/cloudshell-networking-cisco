@@ -24,9 +24,9 @@ class IFaceActions(object):
         self._logger = logger
 
     def get_port_name(self, port):
-        """ Get port name from port resource full address
+        """ Get port name from port resource full name
 
-        :param port: port resource full address (192.168.1.1/0/34)
+        :param port: port resource full address (PerfectSwitch/Chassis 0/FastEthernet0-23)
         :return: port name (FastEthernet0/23)
         :rtype: string
         """

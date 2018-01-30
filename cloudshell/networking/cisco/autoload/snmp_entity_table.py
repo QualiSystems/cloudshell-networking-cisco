@@ -138,8 +138,9 @@ class CiscoSNMPEntityTable(object):
                     continue
                 if index_entity_class:
                     temp_entity_table['entPhysicalClass'] = index_entity_class
-            if re.search(self.entity_to_container_pattern, temp_entity_table['entPhysicalVendorType'].lower(),
-                         re.IGNORECASE):
+            if "module" in temp_entity_table['entPhysicalClass'].lower() \
+                    and re.search(self.entity_to_container_pattern, temp_entity_table['entPhysicalVendorType'].lower(),
+                                  re.IGNORECASE):
                 temp_entity_table['entPhysicalClass'] = 'container'
             else:
                 temp_entity_table['entPhysicalClass'] = temp_entity_table['entPhysicalClass'].replace("'", "")

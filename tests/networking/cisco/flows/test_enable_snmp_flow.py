@@ -114,7 +114,7 @@ class TestCiscoEnableSNMPFlow(TestCase):
         try:
             enable_flow._validate_snmp_v3_params(snmp_v3_parameters)
         except Exception as e:
-            self.assertIn("Failed to enable SNMP v3, 'SNMP V3 User' attribute cannot be empty", e.args)
+            self.assertIn("Failed to enable SNMP v3: 'SNMP V3 User' attribute cannot be empty", e.args)
 
     def test_validate_snmp_v3_params_validates_password_and_raise(self):
         enable_flow = CiscoEnableSnmpFlow(cli_handler=MagicMock(), logger=MagicMock())
@@ -123,7 +123,7 @@ class TestCiscoEnableSNMPFlow(TestCase):
         try:
             enable_flow._validate_snmp_v3_params(snmp_v3_parameters)
         except Exception as e:
-            self.assertIn("Failed to enable SNMP v3, 'SNMP V3 Password' attribute cannot be empty", e.args)
+            self.assertIn("Failed to enable SNMP v3: 'SNMP V3 Password' attribute cannot be empty", e.args)
 
     def test_validate_snmp_v3_params_validates_private_key_and_raise(self):
         enable_flow = CiscoEnableSnmpFlow(cli_handler=MagicMock(), logger=MagicMock())
@@ -132,7 +132,7 @@ class TestCiscoEnableSNMPFlow(TestCase):
         try:
             enable_flow._validate_snmp_v3_params(snmp_v3_parameters)
         except Exception as e:
-            self.assertIn("Failed to enable SNMP v3, 'SNMP V3 Private Key' attribute cannot be empty", e.args)
+            self.assertIn("Failed to enable SNMP v3: 'SNMP V3 Private Key' attribute cannot be empty", e.args)
 
     def test_validate_snmp_v3_params_validates_private_protocol_and_raise(self):
         enable_flow = CiscoEnableSnmpFlow(cli_handler=MagicMock(), logger=MagicMock())
@@ -142,7 +142,7 @@ class TestCiscoEnableSNMPFlow(TestCase):
         try:
             enable_flow._validate_snmp_v3_params(snmp_v3_parameters)
         except Exception as e:
-            self.assertIn("Failed to enable SNMP v3, 'SNMP V3 Privacy Protocol' attribute cannot be empty"
+            self.assertIn("Failed to enable SNMP v3: 'SNMP V3 Privacy Protocol' attribute cannot be empty"
                           " or set to 'No Privacy Protocol'", e.args)
 
     def test_validate_snmp_v3_params_validates_auth_protocol_and_raise(self):
@@ -153,5 +153,5 @@ class TestCiscoEnableSNMPFlow(TestCase):
         try:
             enable_flow._validate_snmp_v3_params(snmp_v3_parameters)
         except Exception as e:
-            self.assertIn("Failed to enable SNMP v3, 'SNMP V3 Authentication Protocol' attribute cannot be empty"
+            self.assertIn("Failed to enable SNMP v3: 'SNMP V3 Authentication Protocol' attribute cannot be empty"
                           " or set to 'No Authentication Protocol'", e.args)
