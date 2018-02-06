@@ -1,6 +1,8 @@
 from unittest import TestCase
 
 from mock import MagicMock, patch
+from cloudshell.networking.cisco.flows.cisco_add_vlan_flow import CiscoAddVlanFlow
+from cloudshell.networking.cisco.flows.cisco_remove_vlan_flow import CiscoRemoveVlanFlow
 
 from cloudshell.networking.cisco.runners.cisco_connectivity_runner import CiscoConnectivityRunner
 
@@ -32,6 +34,14 @@ class TestCiscoConnectivityRunner(TestCase):
             request = self._get_request().replace("vlan_config_type", "setVlan")
             handler.apply_connectivity_changes(request)
             add_vlan_exec_flow_mock.assert_called_once()
+
+    def test_add_vlan_returns_correct_object(self):
+        handler = self._get_handler()
+        self.assertIsInstance(handler.add_vlan_flow, CiscoAddVlanFlow)
+
+    def test_remove_vlan_returns_correct_object(self):
+        handler = self._get_handler()
+        self.assertIsInstance(handler.remove_vlan_flow, CiscoRemoveVlanFlow)
 
     def _get_request(self):
         return """{
