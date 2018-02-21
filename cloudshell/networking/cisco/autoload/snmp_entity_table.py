@@ -25,7 +25,8 @@ class CiscoSNMPEntityTable(object):
         self._sorted_module_list = []
         self._power_supply_list = []
         self._filtered_power_supply_list = []
-        self.port_exclude_pattern = r'stack|engine|management|mgmt|voice|foreign|cpu|control\s*ethernet\s*port'
+        self.port_exclude_pattern = r'stack|engine|management|mgmt|voice|foreign|' \
+                                    r'cpu|control\s*ethernet\s*port|console\s*port'
         # self.module_exclude_pattern = r''
         self.entity_to_container_pattern = "powershelf|cevsfp|cevxfr|cevxfp|cevContainer10GigBasePort|cevModulePseAsicPlim"
         # self.ignore_entity_pattern = "cevModule$|cevModuleDaughterCard$"
@@ -76,7 +77,9 @@ class CiscoSNMPEntityTable(object):
     def _analyze_module(self, module):
         if module not in self.exclusion_list:
             module_parent_address = self.get_relative_address(module)
-            module_parent_address = module_parent_address[:3]
+            module_parent_address_list = module_parent_address.split("/")
+            if len(module_parent_address_list) > 2:
+                module_parent_address = '{0}/{1}'.format(module_parent_address[0], module_parent_address[1])
 
             module_rel_path = module_parent_address + '/' + self.get_resource_id(module)
             i = 1
@@ -107,8 +110,8 @@ class CiscoSNMPEntityTable(object):
 
         result_dict = QualiMibTable('entPhysicalTable')
 
-        entity_table_critical_port_attr = {'entPhysicalContainedIn': 'str', 'entPhysicalClass': 'str',
-                                           'entPhysicalVendorType': 'str'}
+        # entity_table_critical_port_attr = {'entPhysicalContainedIn': 'str', 'entPhysicalClass': 'str',
+        #                                    'entPhysicalVendorType': 'str'}
         entity_table_optional_port_attr = {'entPhysicalDescr': 'str', 'entPhysicalName': 'str'}
 
         physical_indexes = self._snmp.get_table('ENTITY-MIB', 'entPhysicalParentRelPos')
@@ -119,25 +122,36 @@ class CiscoSNMPEntityTable(object):
                 self.exclusion_list.append(index)
                 continue
             temp_entity_table = physical_indexes[index].copy()
-            temp_entity_table.update(self._snmp.get_properties('ENTITY-MIB', index, entity_table_critical_port_attr)
+            temp_entity_table.update(self._snmp.get_properties('ENTITY-MIB', index, {"entPhysicalClass": "str"})
+                                     [index])
+            if re.search(r"cpu|fan|sensor", temp_entity_table['entPhysicalClass'].lower()):
+                self._logger.debug("Loaded {}, skipping.".format(temp_entity_table['entPhysicalClass']))
+                continue
+            temp_entity_table.update(self._snmp.get_properties('ENTITY-MIB', index, {"entPhysicalVendorType": "str"})
                                      [index])
             if re.search(r"cevsensor|cevfan", temp_entity_table['entPhysicalVendorType'].lower()):
+                self._logger.debug("Loaded {}, skipping.".format(temp_entity_table['entPhysicalVendorType']))
                 continue
+            temp_entity_table.update(self._snmp.get_properties('ENTITY-MIB', index, {"entPhysicalContainedIn": "str"})
+                                     [index])
             if temp_entity_table['entPhysicalContainedIn'] == '':
                 self.exclusion_list.append(index)
                 continue
 
-            if temp_entity_table['entPhysicalClass'] == '' or "other" in temp_entity_table['entPhysicalClass']:
+            if not temp_entity_table['entPhysicalClass'] or "other" in temp_entity_table['entPhysicalClass'] or \
+                            temp_entity_table['entPhysicalClass'] == "''":
                 vendor_type = temp_entity_table['entPhysicalVendorType']
                 if not vendor_type:
                     continue
                 vendor_type_match = re.search(vendor_type_match_pattern, vendor_type.lower())
+                index_entity_class = None
                 if vendor_type_match:
                     index_entity_class = self.ENTITY_VENDOR_TYPE_TO_CLASS_MAP[vendor_type_match.group()]
-                else:
-                    continue
                 if index_entity_class:
                     temp_entity_table['entPhysicalClass'] = index_entity_class
+                else:
+                    self.exclusion_list.append(index)
+                    continue
             if "module" in temp_entity_table['entPhysicalClass'].lower() \
                     and re.search(self.entity_to_container_pattern, temp_entity_table['entPhysicalVendorType'].lower(),
                                   re.IGNORECASE):
@@ -166,6 +180,8 @@ class CiscoSNMPEntityTable(object):
                         and not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalDescr'],
                                           re.IGNORECASE):
                     port_entity = self._get_mapping(index, temp_entity_table[self.ENTITY_PHYSICAL])
+                    if not port_entity:
+                        port_entity = self._get_mapping(index, temp_entity_table["entPhysicalName"])
                     if port_entity and port_entity not in self.port_mapping.values():
                         self.port_mapping[index] = port_entity
                         self._port_list.append(index)
