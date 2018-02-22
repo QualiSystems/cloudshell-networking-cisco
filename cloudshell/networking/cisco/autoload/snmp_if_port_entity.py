@@ -17,7 +17,7 @@ class SnmpIfPortEntity(SnmpIfEntity):
         self._if_name = name
         self._port_attributes_snmp_tables = port_attributes_snmp_tables
         self._logger = logger
-        self._if_type = "other"
+        self._if_type = ""
         self._if_speed = 0
         self._if_mtu = 0
         self._if_mac = ""
@@ -30,7 +30,7 @@ class SnmpIfPortEntity(SnmpIfEntity):
     def if_type(self):
         if not self._if_type:
             self._if_type = self._snmp.get_property(self.IF_MIB, self.IF_TYPE, self.if_index).replace('/', '').replace(
-                "'", '')
+                "'", '') or "other"
         return self._if_type
 
     @property
@@ -60,13 +60,13 @@ class SnmpIfPortEntity(SnmpIfEntity):
     @property
     def duplex(self):
         if not self._duplex:
-            self._duplex = self._get_duplex() or "False"
+            self._duplex = self._get_duplex() or "Half"
         return self._duplex
 
     @property
     def auto_negotiation(self):
         if not self._auto_neg:
-            self._auto_neg = self._get_auto_neg() or "Half"
+            self._auto_neg = self._get_auto_neg() or "False"
         return self._auto_neg
 
     def _get_adjacent(self):
