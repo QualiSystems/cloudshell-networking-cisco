@@ -122,22 +122,21 @@ class CiscoSNMPEntityTable(object):
                 self.exclusion_list.append(index)
                 continue
             temp_entity_table = physical_indexes[index].copy()
+
             temp_entity_table.update(self._snmp.get_properties('ENTITY-MIB', index, {"entPhysicalClass": "str"})
                                      [index])
             if re.search(r"cpu|fan|sensor", temp_entity_table['entPhysicalClass'].lower()):
                 self._logger.debug("Loaded {}, skipping.".format(temp_entity_table['entPhysicalClass']))
                 continue
-            temp_entity_table.update(self._snmp.get_properties('ENTITY-MIB', index, {"entPhysicalVendorType": "str"})
-                                     [index])
-            if re.search(r"cevsensor|cevfan", temp_entity_table['entPhysicalVendorType'].lower()):
-                self._logger.debug("Loaded {}, skipping.".format(temp_entity_table['entPhysicalVendorType']))
-                continue
+
             temp_entity_table.update(self._snmp.get_properties('ENTITY-MIB', index, {"entPhysicalContainedIn": "str"})
                                      [index])
             if temp_entity_table['entPhysicalContainedIn'] == '':
                 self.exclusion_list.append(index)
                 continue
 
+            temp_entity_table.update(self._snmp.get_properties('ENTITY-MIB', index, {"entPhysicalVendorType": "str"})
+                                     [index])
             if not temp_entity_table['entPhysicalClass'] or "other" in temp_entity_table['entPhysicalClass'] or \
                             temp_entity_table['entPhysicalClass'] == "''":
                 vendor_type = temp_entity_table['entPhysicalVendorType']
