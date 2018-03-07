@@ -77,6 +77,9 @@ class CiscoSNMPEntityTable(object):
     def _analyze_module(self, module):
         if module not in self.exclusion_list:
             module_parent_address = self.get_relative_address(module)
+            if not module_parent_address:
+                self._excluded_models.append(module)
+                return
             module_parent_address_list = module_parent_address.split("/")
             if len(module_parent_address_list) > 2:
                 module_parent_address = '{0}/{1}'.format(module_parent_address[0], module_parent_address[1])
@@ -137,8 +140,8 @@ class CiscoSNMPEntityTable(object):
 
             temp_entity_table.update(self._snmp.get_properties('ENTITY-MIB', index, {"entPhysicalVendorType": "str"})
                                      [index])
-            if not temp_entity_table['entPhysicalClass'] or "other" in temp_entity_table['entPhysicalClass'] or \
-                            temp_entity_table['entPhysicalClass'] == "''":
+            ent_physical_class = temp_entity_table.get("entPhysicalClass")
+            if not ent_physical_class or ent_physical_class == "''" or "other" in ent_physical_class:
                 vendor_type = temp_entity_table['entPhysicalVendorType']
                 if not vendor_type:
                     continue
@@ -148,7 +151,7 @@ class CiscoSNMPEntityTable(object):
                     index_entity_class = self.ENTITY_VENDOR_TYPE_TO_CLASS_MAP[vendor_type_match.group()]
                 if index_entity_class:
                     temp_entity_table['entPhysicalClass'] = index_entity_class
-                else:
+                elif not ent_physical_class or ent_physical_class == "''":
                     self.exclusion_list.append(index)
                     continue
             if "module" in temp_entity_table['entPhysicalClass'].lower() \
@@ -262,8 +265,9 @@ class CiscoSNMPEntityTable(object):
         elements = raw_entity_table.sort_by_column('ParentRelPos').keys()
         for element in reversed(elements):
             parent_id = int(raw_entity_table[element]['entPhysicalContainedIn'])
-            if (parent_id not in raw_entity_table and "chassis" not in raw_entity_table[element][
-                "entPhysicalClass"]) or parent_id in self.exclusion_list:
+            element_class = raw_entity_table.get(element, dict()).get("entPhysicalClass")
+            if (parent_id not in raw_entity_table and element_class not in ["chassis",
+                                                                           "stack"]) or parent_id in self.exclusion_list:
                 self.exclusion_list.append(element)
         return raw_entity_table
 
