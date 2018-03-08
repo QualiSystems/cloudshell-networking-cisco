@@ -24,9 +24,9 @@ class IFaceActions(object):
         self._logger = logger
 
     def get_port_name(self, port):
-        """ Get port name from port resource full address
+        """ Get port name from port resource full name
 
-        :param port: port resource full address (192.168.1.1/0/34)
+        :param port: port resource full address (PerfectSwitch/Chassis 0/FastEthernet0-23)
         :return: port name (FastEthernet0/23)
         :rtype: string
         """
@@ -34,7 +34,7 @@ class IFaceActions(object):
         if not port:
             err_msg = 'Failed to get port name.'
             self._logger.error(err_msg)
-            raise Exception('CiscoConnectivityOperations: get_port_name', err_msg)
+            raise Exception('get_port_name', err_msg)
 
         temp_port_name = port.split('/')[-1]
         if 'port-channel' not in temp_port_name.lower():
@@ -89,6 +89,6 @@ class IFaceActions(object):
 
     def _get_no_l2_protocol_tunnel_cmd(self, action_map=None, error_map=None):
         return CommandTemplateExecutor(self._cli_service,
-                                vlan_command_template.NO_L2_TUNNEL,
-                                action_map=action_map,
-                                error_map=error_map)
+                                       vlan_command_template.NO_L2_TUNNEL,
+                                       action_map=action_map,
+                                       error_map=error_map)

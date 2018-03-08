@@ -290,12 +290,10 @@ class CiscoGenericSNMPAutoload(object):
         :return:
         """
 
-        if not self.if_table:
+        if not self.if_table.if_port_channels:
             return
-        port_channel_list = [if_entity for if_entity in self.if_table.if_entities if
-                             "port-channel" in if_entity.if_name.lower()]
         self.logger.info("Building Port Channels")
-        for if_port_channel in port_channel_list:
+        for if_port_channel in self.if_table.if_port_channels:
             interface_model = if_port_channel.if_name
             match_object = re.search(r"\d+$", interface_model)
             if match_object:

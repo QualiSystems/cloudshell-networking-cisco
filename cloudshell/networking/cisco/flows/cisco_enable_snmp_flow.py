@@ -94,31 +94,32 @@ class CiscoEnableSnmpFlow(EnableSnmpFlow):
                                         " Please check Logs for details")
 
     def _validate_snmp_v3_params(self, snmp_v3_params):
-        message = "Failed to enable SNMP v3, '{}' attribute cannot be empty"
+        message = "Failed to enable SNMP v3: "
+        error = "'{}' attribute cannot be empty"
         is_failed = False
         if not snmp_v3_params.private_key_protocol or self.SNMP_PRIV_MAP[
             snmp_v3_params.private_key_protocol] == 'No Privacy Protocol':
             # SNMP V3 Privacy Protocol
             is_failed = True
-            message = message.format("SNMP V3 Privacy Protocol") + " or set to 'No Privacy Protocol'"
+            message += (error.format("SNMP V3 Privacy Protocol") + " or set to 'No Privacy Protocol'")
 
         if not snmp_v3_params.auth_protocol or self.SNMP_AUTH_MAP[
             snmp_v3_params.auth_protocol] == 'No Authentication Protocol':
             # SNMP V3 Authentication Protocol
             is_failed = True
-            message = message.format("SNMP V3 Authentication Protocol") + " or set to 'No Authentication Protocol'"
+            message += (error.format("SNMP V3 Authentication Protocol") + " or set to 'No Authentication Protocol'")
 
         if not snmp_v3_params.snmp_user:
             is_failed = True
-            message = message.format("SNMP V3 User")
+            message += error.format("SNMP V3 User")
 
         if not snmp_v3_params.snmp_private_key:
             is_failed = True
-            message = message.format("SNMP V3 Private Key")
+            message += error.format("SNMP V3 Private Key")
 
         if not snmp_v3_params.snmp_password:
             is_failed = True
-            message = message.format("SNMP V3 Password")
+            message += error.format("SNMP V3 Password")
 
         if is_failed:
             self._logger.error(message)
