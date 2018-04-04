@@ -43,20 +43,23 @@ class SnmpIfTable(object):
 
     def _get_if_entities(self):
         for index in self._if_table.keys():
-            interface_name = self._if_table.get(index,{}).get("ifDescr", "")
+            interface_name = self._if_table.get(index, {}).get("ifDescr", "")
+            if "." in interface_name:
+                continue
             if any([port_channel for port_channel in self.PORT_CHANNEL_NAME if port_channel in interface_name.lower()]):
 
                 port_channel_obj = SnmpIfPortChannelEntity(snmp_handler=self._snmp, logger=self._logger,
-                                                         index=index, name=interface_name,
-                                                         port_attributes_snmp_tables=self.port_attributes_snmp_tables)
+                                                           index=index, name=interface_name,
+                                                           port_attributes_snmp_tables=self.port_attributes_snmp_tables)
                 self._if_entities_dict[index] = port_channel_obj
                 self._if_port_channels_dict[index] = port_channel_obj
-            elif any([exclude_port for exclude_port in self.PORT_EXCLUDE_LIST if exclude_port in interface_name.lower()]):
+            elif any([exclude_port for exclude_port in self.PORT_EXCLUDE_LIST if
+                      exclude_port in interface_name.lower()]):
                 continue
             else:
                 port_obj = SnmpIfPortEntity(snmp_handler=self._snmp, logger=self._logger,
-                                                         index=index, name=interface_name,
-                                                         port_attributes_snmp_tables=self.port_attributes_snmp_tables)
+                                            index=index, name=interface_name,
+                                            port_attributes_snmp_tables=self.port_attributes_snmp_tables)
                 self._if_entities_dict[index] = port_obj
                 self._if_port_dict[index] = port_obj
 
