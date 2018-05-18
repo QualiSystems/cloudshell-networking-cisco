@@ -67,3 +67,5 @@ tests/networking/cisco/autoload/autoload_structure.py
 /.pytest_cache
 /.vs
 *.sln
+
+.idea/
