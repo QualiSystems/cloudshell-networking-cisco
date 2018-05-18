@@ -63,6 +63,20 @@ class TestsCiscoGenericSNMPAutoload(TestCase):
         self._snmp_handler.get_property.called_once_with(mib, mib_property, mib_index)
         self.assertEqual(version, result)
 
+    def test_get_device_os_version_with_comma(self):
+        version = "12.3.S(3).45"
+        mib = 'SNMPv2-MIB'
+        mib_property = 'sysDescr'
+        mib_index = '0'
+        self._snmp_handler.get_property.return_value = (
+            "Version {0}, some text").format(version)
+
+        result = self.cisco_snmp_autoload._get_device_os_version()
+
+        self._snmp_handler.get_property.called_once_with(
+            mib, mib_property, mib_index)
+        self.assertEqual(version, result)
+
     def test_get_device_model_name(self):
         model_name = "model name"
         with patch(
