@@ -8,6 +8,7 @@ from cloudshell.networking.cisco.command_actions.system_actions import SystemAct
 
 
 class CiscoRestoreFlow(RestoreConfigurationFlow):
+    STARTUP_CONFIG_NAME = "startup_config"
     STARTUP_LOCATION = "nvram:startup_config"
 
     def __init__(self, cli_handler, logger):
@@ -33,7 +34,7 @@ class CiscoRestoreFlow(RestoreConfigurationFlow):
             if "startup" in configuration_type:
                 if restore_method == "override":
                     del_action_map = OrderedDict({
-                        "[Dd]elete [Ff]ilename ": lambda session, logger: session.send_line(configuration_type,
+                        "[Dd]elete [Ff]ilename ": lambda session, logger: session.send_line(self.STARTUP_CONFIG_NAME,
                                                                                             logger)})
                     restore_action.delete_file(path=self.STARTUP_LOCATION, action_map=del_action_map)
                     restore_action.copy(path,
