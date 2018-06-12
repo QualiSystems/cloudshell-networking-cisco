@@ -148,7 +148,7 @@ class CiscoGenericSNMPAutoload(object):
         """
 
         result = ""
-        matched = re.search(r"Version (?P<os_version>\S+)[\s,]",
+        matched = re.search(r"Version (?P<os_version>[^\s,]+)",
                             self.snmp_handler.get_property('SNMPv2-MIB', 'sysDescr', '0'))
         if matched:
             result = matched.groupdict().get("os_version", "")
