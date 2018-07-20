@@ -4,6 +4,8 @@
 import re
 from collections import OrderedDict
 
+import time
+
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
 from cloudshell.devices.networking_utils import UrlParser
 from cloudshell.networking.cisco.command_templates import configuration
@@ -160,7 +162,7 @@ class SystemActions(object):
                                         configuration.RELOAD,
                                         action_map=action_map,
                                         error_map=error_map).execute_command()
-
+            time.sleep(60)
         except Exception as e:
             self._logger.info("Device rebooted, starting reconnect")
         self._cli_service.reconnect(timeout)
