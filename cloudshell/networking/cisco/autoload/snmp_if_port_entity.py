@@ -119,8 +119,10 @@ class SnmpIfPortEntity(SnmpIfEntity):
     def _get_cisco_duplex(self):
         if not self._cisco_duplex:
             cisco_duplex_id = self._port_attributes_snmp_tables.cisco_duplex_state_table.get(str(self.if_index))
-            self._cisco_duplex = self._snmp.get_property('CISCO-STACK-MIB', 'portDuplex', cisco_duplex_id).replace("'",
-                                                                                                                   "")
+            if cisco_duplex_id:
+                self._cisco_duplex = self._snmp.get_property('CISCO-STACK-MIB', 'portDuplex', cisco_duplex_id).replace(
+                    "'",
+                    "")
         return self._cisco_duplex
 
     def _get_duplex(self):
