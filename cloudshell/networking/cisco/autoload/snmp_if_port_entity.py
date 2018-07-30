@@ -37,13 +37,13 @@ class SnmpIfPortEntity(SnmpIfEntity):
     @property
     def if_speed(self):
         if not self._if_speed:
-            self._if_speed = self._snmp.get_property(self.IF_MIB, self.IF_SPEED, self.if_index)
+            self._if_speed = self._snmp.get_property(self.IF_MIB, self.IF_SPEED, self.if_index, "int")
         return self._if_speed
 
     @property
     def if_mtu(self):
         if not self._if_mtu:
-            self._if_mtu = self._snmp.get_property(self.IF_MIB, self.IF_MTU, self.if_index)
+            self._if_mtu = self._snmp.get_property(self.IF_MIB, self.IF_MTU, self.if_index, "int")
         return self._if_mtu
 
     @property
