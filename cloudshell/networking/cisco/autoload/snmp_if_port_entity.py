@@ -25,6 +25,7 @@ class SnmpIfPortEntity(SnmpIfEntity):
         self._duplex = ""
         self._auto_neg = ""
         self._port_channel_associated_port = ""
+        self._cisco_duplex = ""
 
     @property
     def if_type(self):
@@ -36,13 +37,13 @@ class SnmpIfPortEntity(SnmpIfEntity):
     @property
     def if_speed(self):
         if not self._if_speed:
-            self._if_speed = self._snmp.get_property(self.IF_MIB, self.IF_SPEED, self.if_index)
+            self._if_speed = self._snmp.get_property(self.IF_MIB, self.IF_SPEED, self.if_index, "int")
         return self._if_speed
 
     @property
     def if_mtu(self):
         if not self._if_mtu:
-            self._if_mtu = self._snmp.get_property(self.IF_MIB, self.IF_MTU, self.if_index)
+            self._if_mtu = self._snmp.get_property(self.IF_MIB, self.IF_MTU, self.if_index, "int")
         return self._if_mtu
 
     @property
@@ -72,7 +73,6 @@ class SnmpIfPortEntity(SnmpIfEntity):
     def _get_adjacent(self):
         """Get connected device interface and device name to the specified port id, using cdp or lldp protocols
 
-        :param interface_id: port id
         :return: device's name and port connected to port id
         :rtype string
         """
@@ -105,6 +105,10 @@ class SnmpIfPortEntity(SnmpIfEntity):
         :return return "True"
         """
 
+        cisco_duplex = self._get_cisco_duplex()
+        if cisco_duplex:
+            if cisco_duplex in ["auto", "disagree"]:
+                return "True"
         try:
             auto_negotiation = self._snmp.get(('MAU-MIB', 'ifMauAutoNegAdminStatus', self.if_index, 1)).values()[0]
             if 'enabled' in auto_negotiation.lower():
@@ -112,12 +116,25 @@ class SnmpIfPortEntity(SnmpIfEntity):
         except Exception as e:
             self._logger.error('Failed to load auto negotiation property for interface {0}'.format(e.message))
 
+    def _get_cisco_duplex(self):
+        if not self._cisco_duplex:
+            cisco_duplex_id = self._port_attributes_snmp_tables.cisco_duplex_state_table.get(str(self.if_index))
+            if cisco_duplex_id:
+                self._cisco_duplex = self._snmp.get_property('CISCO-STACK-MIB', 'portDuplex', cisco_duplex_id).replace(
+                    "'",
+                    "")
+        return self._cisco_duplex
+
     def _get_duplex(self):
         """Get current duplex state
 
         :return str "Full"
         """
 
+        cisco_duplex = self._get_cisco_duplex()
+        if cisco_duplex:
+            if cisco_duplex in ["full", "half"]:
+                return cisco_duplex.capitalize()
         for key, value in self._port_attributes_snmp_tables.duplex_table.iteritems():
             if 'dot3StatsIndex' in value.keys() and value['dot3StatsIndex'] == str(self.if_index):
                 interface_duplex = self._snmp.get_property('EtherLike-MIB', 'dot3StatsDuplexStatus', key)
