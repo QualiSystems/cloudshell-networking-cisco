@@ -69,3 +69,4 @@ tests/networking/cisco/autoload/autoload_structure.py
 *.sln
 
 .idea/
+/tests/integration

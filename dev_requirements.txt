@@ -1,5 +1,5 @@
 git+https://github.com/QualiSystems/cloudshell-shell-core.git@dev#egg=cloudshell-shell-core
-git+https://github.com/QualiSystems/cloudshell-cli.git@dev#egg=cloudshell-cli
+git+https://github.com/QualiSystems/cloudshell-cli.git@3.2.1#egg=cloudshell-cli
 git+https://github.com/QualiSystems/cloudshell-snmp.git@dev#egg=cloudshell-snmp
 git+https://github.com/QualiSystems/cloudshell-networking.git@dev#egg=cloudshell-networking
-git+https://github.com/QualiSystems/cloudshell-networking-devices.git@master#egg=cloudshell-networking-devices
+git+https://github.com/QualiSystems/cloudshell-networking-devices.git@2.3.1#egg=cloudshell-networking-devices
