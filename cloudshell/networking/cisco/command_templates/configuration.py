@@ -10,7 +10,9 @@ COPY = CommandTemplate('copy {src} {dst} [vrf {vrf}]',
                            r'\(y/n\)': lambda session, logger: session.send_line('y', logger),
                            r'[Oo]verwrit+e': lambda session, logger: session.send_line('y', logger),
                            r'\([Yy]es/[Nn]o\)': lambda session, logger: session.send_line('yes', logger),
-                           r'\s+[Vv][Rr][Ff]\s+': lambda session, logger: session.send_line('', logger)}))
+                           r'\s+[Vv][Rr][Ff]\s+': lambda session, logger: session.send_line('', logger)}),
+                       error_map=OrderedDict(
+                           [("permission\s*denied", "Failed to save configuration: Permission Denied")]))
 
 DEL = CommandTemplate('del {target}', action_map=OrderedDict(
     {'[confirm]': lambda session, logger: session.send_line('', logger),
@@ -19,7 +21,7 @@ DEL = CommandTemplate('del {target}', action_map=OrderedDict(
 CONFIGURE_REPLACE = CommandTemplate('configure replace {path}',
                                     action_map=OrderedDict({
                                         '[\[\(][Yy]es/[Nn]o[\)\]]': lambda session, logger: session.send_line('yes',
-                                                                                                                 logger),
+                                                                                                              logger),
                                         '\[confirm\]': lambda session, logger: session.send_line('', logger),
                                         '\(y\/n\)': lambda session, logger: session.send_line('y', logger),
                                         '[\[\(][Nn]o[\)\]]': lambda session, logger: session.send_line('y', logger),
@@ -39,8 +41,8 @@ CONFIGURE_REPLACE = CommandTemplate('configure replace {path}',
 WRITE_ERASE = CommandTemplate('write erase',
                               action_map=OrderedDict({
                                   '[\[\(][Yy]es/[Nn]o[\)\]]': lambda session,
-                                                                                 logger: session.send_line('yes',
-                                                                                                           logger),
+                                                                     logger: session.send_line('yes',
+                                                                                               logger),
                                   '\[confirm\]': lambda session, logger: session.send_line('', logger),
                                   '\(y\/n\)': lambda session, logger: session.send_line('y', logger),
                                   '[\[\(][Nn]o[\)\]]': lambda session, logger: session.send_line('y', logger),

@@ -48,12 +48,17 @@ class SystemActions(object):
             action_map[r"(?!/)[\[\(]{}[\)\]]".format(
                 source_file_name)] = lambda session, logger: session.send_line("", logger)
         host = url.get(UrlParser.HOSTNAME)
-        if host:
-            action_map[r"(?!/){}(?!/)".format(host)] = lambda session, logger: session.send_line("", logger)
         password = url.get(UrlParser.PASSWORD)
+        username = url.get(UrlParser.USERNAME)
+        if username:
+            action_map[r"[Uu]ser(name)?:".format(
+                source_file)] = lambda session, logger: session.send_line(username, logger)
         if password:
             action_map[r"[Pp]assword:".format(
                 source_file)] = lambda session, logger: session.send_line(password, logger)
+        if host:
+            action_map[r"(?!/){}(?!/)".format(host)] = lambda session, logger: session.send_line("", logger)
+
         return action_map
 
     def copy(self, source, destination, vrf=None, action_map=None, error_map=None, timeout=180):
