@@ -48,6 +48,9 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
                         self._logger.info("Device has a {} folder".format(flash))
                         firmware_dst_path = "{0}/{1}".format(flash, firmware_file_name)
                         self._logger.info("Copying {} image".format(firmware_dst_path))
+                        password = full_path_dict.get(UrlParser.PASSWORD)
+                        if password:
+                            path = path.replace(":{}".format(password), "")
                         system_action.copy(path, firmware_dst_path, vrf=vrf,
                                            action_map=system_action.prepare_action_map(path, firmware_dst_path))
                         break

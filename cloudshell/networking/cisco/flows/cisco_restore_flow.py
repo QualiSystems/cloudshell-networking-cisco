@@ -4,6 +4,7 @@
 from collections import OrderedDict
 
 from cloudshell.devices.flows.action_flows import RestoreConfigurationFlow
+from cloudshell.devices.networking_utils import UrlParser
 from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
 
 
@@ -30,6 +31,10 @@ class CiscoRestoreFlow(RestoreConfigurationFlow):
         with self._cli_handler.get_cli_service(self._cli_handler.enable_mode) as enable_session:
             restore_action = SystemActions(enable_session, self._logger)
             copy_action_map = restore_action.prepare_action_map(path, configuration_type)
+            url = UrlParser.parse_url(path)
+            password = url.get(UrlParser.PASSWORD)
+            if password:
+                path = path.replace(":{}".format(password), "")
 
             if "startup" in configuration_type:
                 if restore_method == "override":
@@ -49,7 +54,10 @@ class CiscoRestoreFlow(RestoreConfigurationFlow):
 
             elif "running" in configuration_type:
                 if restore_method == "override":
-                    restore_action.override_running(path)
+                    action_map = {}
+                    if password:
+                        action_map[r"[Pp]assword:"] = lambda session, logger: session.send_line(password, logger)
+                    restore_action.override_running(path, action_map=action_map)
                 else:
                     restore_action.copy(path,
                                         configuration_type,
