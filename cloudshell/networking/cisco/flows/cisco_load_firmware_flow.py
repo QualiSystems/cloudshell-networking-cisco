@@ -38,10 +38,7 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
             dst_file_system = self._file_system
 
             firmware_dst_path = "{0}/{1}".format(dst_file_system, firmware_file_name)
-            password = full_path_dict.get(UrlParser.PASSWORD)
-            source_path = path
-            if password:
-                source_path = source_path.replace(":{}".format(password), "")
+
             device_file_system = system_action.get_flash_folders_list()
             self._logger.info("Discovered folders: {}".format(device_file_system))
             if device_file_system:
@@ -51,18 +48,18 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
                         self._logger.info("Device has a {} folder".format(flash))
                         firmware_dst_path = "{0}/{1}".format(flash, firmware_file_name)
                         self._logger.info("Copying {} image".format(firmware_dst_path))
-                        system_action.copy(source_path, firmware_dst_path, vrf=vrf,
+                        system_action.copy(path, firmware_dst_path, vrf=vrf,
                                            action_map=system_action.prepare_action_map(path, firmware_dst_path))
                         break
                     if "flash-" in flash:
                         firmware_dst_file_path = "{0}/{1}".format(flash, firmware_file_name)
                         self._logger.info("Copying {} image".format(firmware_dst_file_path))
-                        system_action.copy(source_path, firmware_dst_file_path, vrf=vrf,
+                        system_action.copy(path, firmware_dst_file_path, vrf=vrf,
                                            action_map=system_action.prepare_action_map(path,
                                                                                        firmware_dst_file_path))
             else:
                 self._logger.info("Copying {} image".format(firmware_dst_path))
-                system_action.copy(source_path, firmware_dst_path, vrf=vrf,
+                system_action.copy(path, firmware_dst_path, vrf=vrf,
                                    action_map=system_action.prepare_action_map(path, firmware_dst_path))
 
             self._logger.info("Get current boot configuration")
@@ -72,7 +69,7 @@ class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
 
             output = system_action.get_current_boot_config()
             new_boot_settings = re.sub("^.*boot-start-marker|boot-end-marker.*", "", output)
-            self._logger.info("Boot config lines updated with: {0}".format(new_boot_settings))
+            self._logger.info("Boot config lines updated: {0}".format(new_boot_settings))
 
             if output.find(firmware_file_name) == -1:
                 raise Exception(self.__class__.__name__,
