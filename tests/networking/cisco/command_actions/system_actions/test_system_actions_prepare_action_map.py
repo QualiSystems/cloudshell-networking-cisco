@@ -14,7 +14,7 @@ class TestCiscoSystemActions(TestCase):
 
     TEST_RESULT_TEXT_HOST = "(?!/)localhost(?!/)"
     TEST_RESULT_IP_HOST = "(?!/)127.0.0.1(?!/)"
-    TEST_RESULT_PASSWORD = "[Pp]assword:"
+    TEST_RESULT_PASSWORD = "[Pp]assword"
     TEST_RESULT_SRC_FILE_NAME = "[\\[\\(].*running-config[\\)\\]]"
     TEST_RESULT_DST_FILE_NAME = "[\\[\\(]running-config[\\)\\]]"
     TEST_RESULT_FROM_REMOTE_DST_FILE_NAME = "(?!/)[\\[\\(]running-config[\\)\\]]"
