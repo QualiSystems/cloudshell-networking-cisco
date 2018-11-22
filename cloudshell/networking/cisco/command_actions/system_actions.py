@@ -51,11 +51,9 @@ class SystemActions(object):
         password = url.get(UrlParser.PASSWORD)
         username = url.get(UrlParser.USERNAME)
         if username:
-            action_map[r"[Uu]ser(name)?:".format(
-                source_file)] = lambda session, logger: session.send_line(username, logger)
+            action_map[r"[Uu]ser(name)?"] = lambda session, logger: session.send_line(username, logger)
         if password:
-            action_map[r"[Pp]assword:".format(
-                source_file)] = lambda session, logger: session.send_line(password, logger)
+            action_map[r"[Pp]assword"] = lambda session, logger: session.send_line(password, logger)
         if host:
             action_map[r"(?!/){}(?!/)".format(host)] = lambda session, logger: session.send_line("", logger)
 
