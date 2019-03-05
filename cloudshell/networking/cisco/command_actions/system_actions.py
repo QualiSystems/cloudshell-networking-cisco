@@ -55,7 +55,7 @@ class SystemActions(object):
         if password:
             action_map[r"[Pp]assword"] = lambda session, logger: session.send_line(password, logger)
         if host:
-            action_map[r"(?!/){}(?!/)".format(host)] = lambda session, logger: session.send_line("", logger)
+            action_map[r"(?!/){}(?!/)\D*\s*$".format(host)] = lambda session, logger: session.send_line("", logger)
 
         return action_map
 
