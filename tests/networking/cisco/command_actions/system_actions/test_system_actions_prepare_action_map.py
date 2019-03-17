@@ -12,8 +12,8 @@ class TestCiscoSystemActions(TestCase):
     TEST_RUNNING_CONFIG_REMOTE_FTP_TEXT_PATH = "ftp://user:pass@localhost/running-config"
     TEST_RUNNING_CONFIG_REMOTE_FTP_IP_PATH = "ftp://user:pass@127.0.0.1/running-config"
 
-    TEST_RESULT_TEXT_HOST = "(?!/)localhost(?!/)"
-    TEST_RESULT_IP_HOST = "(?!/)127.0.0.1(?!/)"
+    TEST_RESULT_TEXT_HOST = "(?!/)localhost(?!/)\D*\s*$"
+    TEST_RESULT_IP_HOST = "(?!/)127.0.0.1(?!/)\D*\s*$"
     TEST_RESULT_PASSWORD = "[Pp]assword"
     TEST_RESULT_SRC_FILE_NAME = "[\\[\\(].*running-config[\\)\\]]"
     TEST_RESULT_DST_FILE_NAME = "[\\[\\(]running-config[\\)\\]]"
