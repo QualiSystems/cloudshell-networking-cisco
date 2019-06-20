@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from cloudshell.devices.flows.action_flows import AddVlanFlow
 from cloudshell.networking.cisco.command_actions.add_remove_vlan_actions import AddRemoveVlanActions
 from cloudshell.networking.cisco.command_actions.iface_actions import IFaceActions
 
