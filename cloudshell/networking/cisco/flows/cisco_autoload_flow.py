@@ -10,8 +10,12 @@ class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
     CISCO_MIBS_FOLDER = os.path.join(os.path.dirname(__file__), os.pardir, "mibs")
     DEVICE_NAMES_MAP_FILE = os.path.join(CISCO_MIBS_FOLDER, "device_names_map.csv")
 
+    def __init__(self, logger, snmp_handler):
+        super().__init__(logger)
+        self._snmp_handler = snmp_handler
+
     def _autoload_flow(self, supported_os, resource_model):
-        with self._snmp_handler.get_snmp_service() as snmp_service:
+        with self._snmp_handler.get_service() as snmp_service:
             snmp_service.update_mib_file_sources(self.CISCO_MIBS_FOLDER)
             snmp_service.load_mib_oids(
                 ["CISCO-PRODUCTS-MIB", "CISCO-ENTITY-VENDORTYPE-OID-MIB"]

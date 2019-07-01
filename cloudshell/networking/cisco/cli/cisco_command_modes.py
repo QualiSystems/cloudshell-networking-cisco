@@ -5,7 +5,7 @@ from collections import OrderedDict
 import re
 import time
 
-from cloudshell.cli.command_mode import CommandMode
+from cloudshell.cli.service.command_mode import CommandMode
 
 
 class DefaultCommandMode(CommandMode):
@@ -13,7 +13,7 @@ class DefaultCommandMode(CommandMode):
     ENTER_COMMAND = ''
     EXIT_COMMAND = ''
 
-    def __init__(self, resource_config, api):
+    def __init__(self, resource_config):
         """
         Initialize Default command mode, only for cases when session started not in enable mode
 
@@ -21,7 +21,6 @@ class DefaultCommandMode(CommandMode):
         """
 
         self.resource_config = resource_config
-        self._api = api
 
         CommandMode.__init__(self,
                              DefaultCommandMode.PROMPT,
@@ -50,7 +49,7 @@ class EnableCommandMode(CommandMode):
     ENTER_COMMAND = 'enable'
     EXIT_COMMAND = ''
 
-    def __init__(self, resource_config, api):
+    def __init__(self, resource_config):
         """
         Initialize Enable command mode - default command mode for Cisco Shells
 
@@ -58,8 +57,6 @@ class EnableCommandMode(CommandMode):
         """
 
         self.resource_config = resource_config
-        self._api = api
-        self._enable_password = None
 
         CommandMode.__init__(self,
                              EnableCommandMode.PROMPT,
@@ -70,15 +67,8 @@ class EnableCommandMode(CommandMode):
                              enter_error_map=self.enter_error_map(),
                              exit_error_map=self.exit_error_map())
 
-    @property
-    def enable_password(self):
-        if not self._enable_password:
-            password = self.resource_config.enable_password
-            self._enable_password = self._api.DecryptPassword(password).Value
-        return self._enable_password
-
     def enter_action_map(self):
-        return {"[Pp]assword": lambda session, logger: session.send_line(self.enable_password, logger)}
+        return {"[Pp]assword": lambda session, logger: session.send_line(self.resource_config.enable_password, logger)}
 
     def enter_error_map(self):
         return OrderedDict()
@@ -98,7 +88,7 @@ class ConfigCommandMode(CommandMode):
     EXIT_COMMAND = "exit"
     ENTER_ACTION_COMMANDS = []
 
-    def __init__(self, resource_config, api):
+    def __init__(self, resource_config):
         """
         Initialize Config command mode
 
@@ -106,7 +96,6 @@ class ConfigCommandMode(CommandMode):
         """
 
         self.resource_config = resource_config
-        self._api = api
 
         CommandMode.__init__(self,
                              ConfigCommandMode.PROMPT,

@@ -7,10 +7,10 @@ from collections import OrderedDict
 import time
 
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
-from cloudshell.devices.networking_utils import UrlParser
 from cloudshell.networking.cisco.command_templates import configuration
 from cloudshell.networking.cisco.command_templates import firmware
 from cloudshell.cli.session.session_exceptions import ExpectedSessionException, CommandExecutionException
+from cloudshell.shell.flows.utils.networking_utils import UrlParser
 
 
 class SystemActions(object):

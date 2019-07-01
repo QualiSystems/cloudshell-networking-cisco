@@ -3,23 +3,24 @@
 
 import re
 
-from cloudshell.devices.flows.action_flows import LoadFirmwareFlow
-from cloudshell.devices.networking_utils import UrlParser
+from cloudshell.networking.cisco.cisco_constants import DEFAULT_FILE_SYSTEM
 from cloudshell.networking.cisco.command_actions.system_actions import SystemActions, FirmwareActions
+from cloudshell.shell.flows.firmware.basic_flow import AbstractFirmwareFlow
+from cloudshell.shell.flows.utils.networking_utils import UrlParser
 
 
-class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
+class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
     RUNNING_CONFIG = "running-config"
     STARTUP_CONFIG = "startup-config"
     BOOTFOLDER = ["bootflash:", "bootdisk:"]
-    FLASH = "flash:"
     KICKSTART_IMAGE = "kickstart"
 
-    def __init__(self, cli_handler, logger, default_file_system=None):
-        super(CiscoLoadFirmwareFlow, self).__init__(cli_handler, logger)
-        self._file_system = default_file_system or self.FLASH
+    def __init__(self, cli_handler, logger, default_file_system=DEFAULT_FILE_SYSTEM):
+        super(CiscoLoadFirmwareFlow, self).__init__(logger)
+        self._cli_handler = cli_handler
+        self._file_system = default_file_system
 
-    def execute_flow(self, path, vrf, timeout):
+    def _load_firmware_flow(self, path, vrf_management_name, timeout):
         """Load a firmware onto the device
 
         :param path: The path to the firmware file, including the firmware file name
