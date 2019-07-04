@@ -92,3 +92,22 @@ class IFaceActions(object):
                                        vlan_command_template.NO_L2_TUNNEL,
                                        action_map=action_map,
                                        error_map=error_map)
+
+    def clean_vlan_sub_iface_config(self, current_config, action_map=None, error_map=None):
+        """ Remove current switchport configuration from interface
+
+        :param current_config: current interface configuration
+        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        """
+
+        self._logger.debug("Start cleaning interface switchport configuration")
+
+        for line in current_config.splitlines():
+            if line.strip(" ").startswith('encapsulation '):
+                line_to_remove = line.strip(" ")
+                CommandTemplateExecutor(self._cli_service,
+                                        configuration.NO, action_map=action_map,
+                                        error_map=error_map).execute_command(command=line_to_remove)
+
+                self._logger.debug("Completed cleaning vlan sub interface configuration")

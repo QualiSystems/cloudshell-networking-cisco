@@ -42,7 +42,7 @@ class CiscoCliHandler(AbstractModeConfigurator):
     def config_mode(self):
         return self.modes[ConfigCommandMode]
 
-    def on_session_start(self, session, logger):
+    def _on_session_start(self, session, logger):
         """Send default commands to configure/clear session outputs
         :return:
         """

@@ -1,7 +1,7 @@
 #
-# PySNMP MIB module CISCO-SMI (http://snmplabs.com/pysmi)
+# PySNMP MIB module CISCO-SMI (http://pysnmp.sf.net)
 # ASN.1 source http://mibs.snmplabs.com:80/asn1/CISCO-SMI
-# Produced by pysmi-0.3.0 at Fri Jul 20 12:51:19 2018
+# Produced by pysmi-0.1.3 at Mon Jul 01 12:24:15 2019
 # On host ? platform ? version ? by user ?
 # Using Python version 2.7.14 (v2.7.14:84471935ed, Sep 16 2017, 20:19:30) [MSC v.1500 32 bit (Intel)]
 #
@@ -12,9 +12,8 @@ NotificationGroup, ModuleCompliance = mibBuilder.importSymbols("SNMPv2-CONF", "N
 Integer32, MibScalar, MibTable, MibTableRow, MibTableColumn, NotificationType, MibIdentifier, IpAddress, TimeTicks, Counter64, Unsigned32, enterprises, iso, Gauge32, ModuleIdentity, ObjectIdentity, Bits, Counter32 = mibBuilder.importSymbols("SNMPv2-SMI", "Integer32", "MibScalar", "MibTable", "MibTableRow", "MibTableColumn", "NotificationType", "MibIdentifier", "IpAddress", "TimeTicks", "Counter64", "Unsigned32", "enterprises", "iso", "Gauge32", "ModuleIdentity", "ObjectIdentity", "Bits", "Counter32")
 DisplayString, TextualConvention = mibBuilder.importSymbols("SNMPv2-TC", "DisplayString", "TextualConvention")
 cisco = ModuleIdentity((1, 3, 6, 1, 4, 1, 9))
-cisco.setRevisions(('2016-01-15 00:00', '2012-08-29 00:00', '2009-02-03 00:00', '2002-03-21 00:00', '2001-05-22 00:00', '2000-11-01 22:46', '2000-01-11 00:00', '1997-04-09 00:00', '1995-05-16 00:00', '1994-04-26 20:00',))
+if mibBuilder.loadTexts: cisco.setRevisions(('2016-01-15 00:00', '2012-08-29 00:00', '2009-02-03 00:00', '2002-03-21 00:00', '2001-05-22 00:00', '2000-11-01 22:46', '2000-01-11 00:00', '1997-04-09 00:00', '1995-05-16 00:00', '1994-04-26 20:00',))
 if mibBuilder.loadTexts: cisco.setLastUpdated('201601150000Z')
-if mibBuilder.loadTexts: cisco.setOrganization('Cisco Systems, Inc.')
 ciscoProducts = ObjectIdentity((1, 3, 6, 1, 4, 1, 9, 1))
 if mibBuilder.loadTexts: ciscoProducts.setStatus('current')
 local = ObjectIdentity((1, 3, 6, 1, 4, 1, 9, 2))
@@ -118,6 +117,8 @@ ciscoTDomainIpx = ObjectIdentity((1, 3, 6, 1, 4, 1, 9, 19, 99999, 9))
 if mibBuilder.loadTexts: ciscoTDomainIpx.setStatus('current')
 ciscoTDomainSctpIpv4 = ObjectIdentity((1, 3, 6, 1, 4, 1, 9, 19, 99999, 10))
 if mibBuilder.loadTexts: ciscoTDomainSctpIpv4.setStatus('current')
+if mibBuilder.loadTexts: ciscoTDomainSctpIpv4.setReference('RFC 2960 - Stream Control Transmission Protocol. R. Stewart, Q. Xie, K. Morneault, C. Sharp, H. Schwarzbauer, T. Taylor, I. Rytina, M. Kalla, L. Zhang, V. Paxson. October 2000.')
 ciscoTDomainSctpIpv6 = ObjectIdentity((1, 3, 6, 1, 4, 1, 9, 19, 99999, 11))
 if mibBuilder.loadTexts: ciscoTDomainSctpIpv6.setStatus('current')
+if mibBuilder.loadTexts: ciscoTDomainSctpIpv6.setReference('RFC 2960 - Stream Control Transmission Protocol. R. Stewart, Q. Xie, K. Morneault, C. Sharp, H. Schwarzbauer, T. Taylor, I. Rytina, M. Kalla, L. Zhang, V. Paxson. October 2000.')
 mibBuilder.exportSymbols("CISCO-SMI", workgroup=workgroup, ciscoContextProxy=ciscoContextProxy, ciscoExperiment=ciscoExperiment, ciscoTDomainIpx=ciscoTDomainIpx, lightstream=lightstream, ciscoPolicyAuto=ciscoPolicyAuto, ciscoTDomainTcpIpv4=ciscoTDomainTcpIpv4, ciscoTDomainSctpIpv6=ciscoTDomainSctpIpv6, ciscoChipSetSaint4=ciscoChipSetSaint4, ciscoDomains=ciscoDomains, ciscoPartnerProducts=ciscoPartnerProducts, ciscoChipSetSaint3=ciscoChipSetSaint3, ciscoProducts=ciscoProducts, cisco=cisco, cisco2505RptrGroup=cisco2505RptrGroup, ciscoTDomainDdp=ciscoTDomainDdp, local=local, cisco2516RptrGroup=cisco2516RptrGroup, ciscoMgmt=ciscoMgmt, ciscoPolicy=ciscoPolicy, ciscoChipSetSaint1=ciscoChipSetSaint1, otherEnterprises=otherEnterprises, ciscoCIB=ciscoCIB, newport=newport, ciscoModules=ciscoModules, ciscoAgentCapability=ciscoAgentCapability, ciscoWsx5020RptrGroup=ciscoWsx5020RptrGroup, ciscoUnknownRptrGroup=ciscoUnknownRptrGroup, ciscoCibProvGroup=ciscoCibProvGroup, ciscoTDomainSctpIpv4=ciscoTDomainSctpIpv4, ciscoTDomainClns=ciscoTDomainClns, ciscoPartyProxy=ciscoPartyProxy, ciscoRptrGroupObjectID=ciscoRptrGroupObjectID, ciscoTDomains=ciscoTDomains, ciscoLDAP=ciscoLDAP, ciscoTDomainUdpIpv4=ciscoTDomainUdpIpv4, ciscoSB=ciscoSB, ciscoCibMmiGroup=ciscoCibMmiGroup, PYSNMP_MODULE_ID=cisco, ciscoTDomainTcpIpv6=ciscoTDomainTcpIpv6, cisco2507RptrGroup=cisco2507RptrGroup, ciscoChipSetSaint2=ciscoChipSetSaint2, ciscoTDomainLocal=ciscoTDomainLocal, ciscoConfig=ciscoConfig, ciscoPibToMib=ciscoPibToMib, ciscoPIB=ciscoPIB, ciscoworks=ciscoworks, ciscoTDomainUdpIpv6=ciscoTDomainUdpIpv6, temporary=temporary, ciscoProxy=ciscoProxy, ciscoPKI=ciscoPKI, ciscoAdmin=ciscoAdmin, ciscoSMB=ciscoSMB, ciscoTDomainCons=ciscoTDomainCons, pakmon=pakmon, ciscoChipSets=ciscoChipSets)

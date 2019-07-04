@@ -30,6 +30,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         :return:
         """
 
+        success = True
         self._logger.info("Add VLAN(s) {} configuration started".format(vlan_range))
 
         with self._cli_handler.get_cli_service(self._cli_handler.config_mode) as config_session:
@@ -45,6 +46,8 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
                                                            port_mode,
                                                            qnq,
                                                            c_tag)
+                if not vlan_actions.verify_interface_configured(vlan_range, current_config):
+                    success = False
             except Exception as e:
                 current_config = self._add_sub_interface_vlan(vlan_actions,
                                                               iface_action,
@@ -54,8 +57,11 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
                                                               qnq,
                                                               c_tag)
 
-            if not vlan_actions.verify_interface_configured(vlan_range, current_config):
-                raise Exception(self.__class__.__name__, "[FAIL] VLAN(s) {} configuration failed".format(vlan_range))
+                if not "{}.{}".format(port_name, vlan_range) in current_config:
+                    success = False
+            if not success:
+                raise Exception(self.__class__.__name__,
+                                "[FAIL] VLAN(s) {} configuration failed".format(vlan_range))
 
         self._logger.info("VLAN(s) {} configuration completed successfully".format(vlan_range))
         return "[ OK ] VLAN(s) {} configuration completed successfully".format(vlan_range)
@@ -70,13 +76,13 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
 
     def _add_sub_interface_vlan(self, vlan_actions, iface_actions, vlan_range, port_name, port_mode, qnq, c_tag):
         if port_name and "-" not in vlan_range:
-            port_name += ".{0}".format(vlan_range)
+            sub_port_name = "{}.{}".format(port_name, vlan_range)
         else:
             raise Exception(self.__class__.__name__, self.CISCO_SUB_INTERFACE_ERROR)
 
-        self._remove_vlan_from_sub_interface(port_name, iface_actions)
-        vlan_actions.set_vlan_to_sub_interface(vlan_range, port_mode, port_name, qnq, c_tag)
-        current_config = iface_actions.get_current_interface_config(port_name)
+        self._remove_vlan_from_sub_interface(sub_port_name, iface_actions)
+        vlan_actions.set_vlan_to_sub_interface(vlan_range, port_mode, sub_port_name, qnq, c_tag)
+        current_config = iface_actions.get_current_interface_config(sub_port_name)
         return current_config
 
     def _remove_vlan_flow(self, vlan_range, port_name, port_mode):
@@ -115,4 +121,3 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         current_config = iface_actions.get_current_interface_config(port_name)
         iface_actions.enter_iface_config_mode(port_name)
         iface_actions.clean_interface_switchport_config(current_config)
-

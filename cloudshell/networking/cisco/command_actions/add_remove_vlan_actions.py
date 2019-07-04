@@ -3,7 +3,6 @@
 
 import re
 
-from cloudshell.cli.cli_service import CliService
 from cloudshell.cli.command_template.command_template_executor import CommandTemplateExecutor
 from cloudshell.networking.cisco.command_templates import add_remove_vlan as vlan_command_template
 from cloudshell.networking.cisco.command_templates import iface as iface_command_template
@@ -106,6 +105,14 @@ class AddRemoveVlanActions(object):
                                     action_map=action_map,
                                     error_map=error_map).execute_command(port_mode_trunk='', vlan_range=vlan_range)
 
+    def enter_interface_config_id(self, port_name, l2_transport=None):
+        l2transport = None
+        if l2_transport:
+            l2transport = ""
+        CommandTemplateExecutor(self._cli_service,
+                                iface_command_template.CONFIGURE_INTERFACE).execute_command(port_name=port_name,
+                                                                                            l2transport=l2transport)
+
     def _get_l2_protocol_tunnel_cmd(self, action_map=None, error_map=None):
         return CommandTemplateExecutor(self._cli_service,
                                        vlan_command_template.L2_TUNNEL,
@@ -113,8 +120,10 @@ class AddRemoveVlanActions(object):
                                        error_map=error_map)
 
     def set_vlan_to_sub_interface(self, vlan_range, port_mode, port_name, qnq, c_tag,
-                              action_map=None,
-                              error_map=None):
+                                  l2_transport=None,
+                                  is_untagged=None,
+                                    action_map=None,
+                                    error_map=None):
 
         """Assign vlan to a certain interface
 
@@ -127,9 +136,10 @@ class AddRemoveVlanActions(object):
         :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
         """
 
-        CommandTemplateExecutor(self._cli_service,
-                                iface_command_template.CONFIGURE_INTERFACE).execute_command(port_name=port_name,
-                                                                                            l2transport="")
+        untagged = None
+
+        if is_untagged:
+            untagged = ""
 
         CommandTemplateExecutor(self._cli_service,
                                 iface_command_template.NO_SHUTDOWN,
@@ -145,7 +155,7 @@ class AddRemoveVlanActions(object):
             CommandTemplateExecutor(self._cli_service,
                                     vlan_command_template.VLAN_SUB_IFACE,
                                     action_map=action_map,
-                                    error_map=error_map).execute_command(vlan_id=vlan_range, untagged="")
+                                    error_map=error_map).execute_command(vlan_id=vlan_range, untagged=untagged)
 
     def clean_vlan_sub_interface(self, port_name):
         CommandTemplateExecutor(self._cli_service,

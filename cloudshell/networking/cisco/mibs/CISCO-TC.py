@@ -1,7 +1,7 @@
 #
-# PySNMP MIB module CISCO-TC (http://snmplabs.com/pysmi)
+# PySNMP MIB module CISCO-TC (http://pysnmp.sf.net)
 # ASN.1 source http://mibs.snmplabs.com:80/asn1/CISCO-TC
-# Produced by pysmi-0.3.0 at Fri Jul 20 12:51:19 2018
+# Produced by pysmi-0.1.3 at Wed Jul 03 17:34:59 2019
 # On host ? platform ? version ? by user ?
 # Using Python version 2.7.14 (v2.7.14:84471935ed, Sep 16 2017, 20:19:30) [MSC v.1500 32 bit (Intel)]
 #
@@ -13,9 +13,8 @@ NotificationGroup, ModuleCompliance = mibBuilder.importSymbols("SNMPv2-CONF", "N
 Integer32, MibScalar, MibTable, MibTableRow, MibTableColumn, NotificationType, MibIdentifier, IpAddress, TimeTicks, Counter64, Unsigned32, iso, Gauge32, ModuleIdentity, ObjectIdentity, Bits, Counter32 = mibBuilder.importSymbols("SNMPv2-SMI", "Integer32", "MibScalar", "MibTable", "MibTableRow", "MibTableColumn", "NotificationType", "MibIdentifier", "IpAddress", "TimeTicks", "Counter64", "Unsigned32", "iso", "Gauge32", "ModuleIdentity", "ObjectIdentity", "Bits", "Counter32")
 DisplayString, TextualConvention = mibBuilder.importSymbols("SNMPv2-TC", "DisplayString", "TextualConvention")
 ciscoTextualConventions = ModuleIdentity((1, 3, 6, 1, 4, 1, 9, 12, 1))
-ciscoTextualConventions.setRevisions(('2015-06-09 00:00', '2014-07-23 00:00', '2012-08-06 00:00', '2012-02-01 00:00', '2011-11-11 00:00', '2011-06-17 00:00', '2010-02-24 00:00', '2009-06-18 00:00', '2009-03-10 00:00', '2009-02-26 00:00', '2008-04-02 00:00', '2007-02-15 00:00', '2006-07-06 00:00', '2006-04-13 00:00', '2005-06-24 00:00', '2005-06-16 00:00', '2004-10-11 00:00', '2004-06-08 00:00', '2004-04-14 00:00', '2002-12-18 00:00', '2002-12-12 16:00', '2002-12-02 00:00', '2002-09-22 00:00', '2002-09-17 00:00', '2002-04-16 00:00', '2001-07-07 00:00', '2001-01-18 00:00', '2000-11-21 00:00', '1998-10-28 00:00', '1997-03-13 00:00', '1996-08-14 00:00', '1996-07-08 00:00', '1996-02-22 00:00', '1995-06-07 00:00',))
+if mibBuilder.loadTexts: ciscoTextualConventions.setRevisions(('2015-06-09 00:00', '2014-07-23 00:00', '2012-08-06 00:00', '2012-02-01 00:00', '2011-11-11 00:00', '2011-06-17 00:00', '2010-02-24 00:00', '2009-06-18 00:00', '2009-03-10 00:00', '2009-02-26 00:00', '2008-04-02 00:00', '2007-02-15 00:00', '2006-07-06 00:00', '2006-04-13 00:00', '2005-06-24 00:00', '2005-06-16 00:00', '2004-10-11 00:00', '2004-06-08 00:00', '2004-04-14 00:00', '2002-12-18 00:00', '2002-12-12 16:00', '2002-12-02 00:00', '2002-09-22 00:00', '2002-09-17 00:00', '2002-04-16 00:00', '2001-07-07 00:00', '2001-01-18 00:00', '2000-11-21 00:00', '1998-10-28 00:00', '1997-03-13 00:00', '1996-08-14 00:00', '1996-07-08 00:00', '1996-02-22 00:00', '1995-06-07 00:00',))
 if mibBuilder.loadTexts: ciscoTextualConventions.setLastUpdated('201506090000Z')
-if mibBuilder.loadTexts: ciscoTextualConventions.setOrganization('Cisco Systems, Inc.')
 class Layer2Cos(TextualConvention, Integer32):
     reference = 'IEEE 802.1D, 2004 Edition, Annex G User priorities and traffic classes.'
     status = 'current'

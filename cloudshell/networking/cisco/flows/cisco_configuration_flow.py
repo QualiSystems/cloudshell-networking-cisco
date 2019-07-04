@@ -10,9 +10,10 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
     STARTUP_LOCATION = "nvram:startup_config"
 
     def __init__(self, cli_handler, resource_config, logger):
-        super(CiscoConfigurationFlow, self).__init__(resource_config, logger)
+        super(CiscoConfigurationFlow, self).__init__(logger, resource_config)
         self._cli_handler = cli_handler
 
+    @property
     def _file_system(self):
         return DEFAULT_FILE_SYSTEM
 
