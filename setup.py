@@ -20,5 +20,6 @@ setup(
     tests_require=required_for_tests,
     version=version_from_file,
     description='QualiSystems networking cisco specific package',
-    include_package_data=True
+    include_package_data=True,
+    python_requires='>3.0.*'
 )
