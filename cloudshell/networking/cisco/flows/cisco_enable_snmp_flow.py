@@ -51,7 +51,7 @@ class CiscoEnableSnmpFlow(object):
                     snmp_community = snmp_parameters.snmp_community
                     if not re.search("snmp-server community {}".format(snmp_parameters.snmp_community),
                                      current_snmp_communities):
-                        snmp_actions.enable_snmp(snmp_community, snmp_parameters.is_read_only_community)
+                        snmp_actions.enable_snmp(snmp_community, snmp_parameters.is_read_only)
                     else:
                         self._logger.debug("SNMP Community '{}' already configured".format(snmp_community))
             self._logger.info("Start verification of SNMP config")
