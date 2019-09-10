@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from cloudshell.devices.runners.connectivity_runner import ConnectivityRunner
-from cloudshell.networking.cisco.cli.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.flows.cisco_add_vlan_flow import CiscoAddVlanFlow
 from cloudshell.networking.cisco.flows.cisco_remove_vlan_flow import CiscoRemoveVlanFlow
 

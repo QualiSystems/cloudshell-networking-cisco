@@ -82,13 +82,13 @@ class CiscoSNMPEntityTable(object):
                 return
             module_parent_address_list = module_parent_address.split("/")
             if len(module_parent_address_list) > 2:
-                module_parent_address = '{0}/{1}'.format(module_parent_address[0], module_parent_address[1])
+                module_parent_address = '{0}/M{1}'.format(module_parent_address[0], module_parent_address[1])
 
-            module_rel_path = module_parent_address + '/' + self.get_resource_id(module)
+            module_rel_path = module_parent_address + '/M' + self.get_resource_id(module)
             i = 1
             while module_rel_path in self.relative_address.values():
                 i += 1
-                module_rel_path = '{0}/{1}'.format(module_parent_address, (int(self.get_resource_id(module)) + i))
+                module_rel_path = '{0}/M{1}'.format(module_parent_address, (int(self.get_resource_id(module)) + i))
             self.relative_address[module] = module_rel_path
             self._module_list.append(module)
             self._logger.debug("Added {0} with relative path {1}".format(self._entity_table[module]["entPhysicalDescr"],
@@ -176,7 +176,7 @@ class CiscoSNMPEntityTable(object):
                 chassis_id = temp_entity_table['entPhysicalParentRelPos']
                 if chassis_id == '-1':
                     chassis_id = '0'
-                self.relative_address[index] = chassis_id
+                self.relative_address[index] = "CH{}".format(chassis_id)
             elif temp_entity_table['entPhysicalClass'] == 'port':
                 if not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalName'], re.IGNORECASE) \
                         and not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalDescr'],

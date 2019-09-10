@@ -71,6 +71,9 @@ class SnmpIfTable(object):
 
         self._logger.info('Start loading MIB tables:')
         self._if_table = self._snmp.get_table('IF-MIB', "ifDescr")
+        if not self._if_table:
+            self._if_table = self._snmp.get_table('IF-MIB', "ifName")
+
         self._logger.info('ifIndex table loaded')
 
         self._logger.info('MIB Tables loaded successfully')
