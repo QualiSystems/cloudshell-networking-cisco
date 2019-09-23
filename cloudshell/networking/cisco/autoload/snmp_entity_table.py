@@ -176,7 +176,7 @@ class CiscoSNMPEntityTable(object):
                 chassis_id = temp_entity_table['entPhysicalParentRelPos']
                 if chassis_id == '-1':
                     chassis_id = '0'
-                self.relative_address[index] = "CH{}".format(chassis_id)
+                self.relative_address[index] = "{}".format(chassis_id)
             elif temp_entity_table['entPhysicalClass'] == 'port':
                 if not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalName'], re.IGNORECASE) \
                         and not re.search(self.port_exclude_pattern, temp_entity_table['entPhysicalDescr'],
