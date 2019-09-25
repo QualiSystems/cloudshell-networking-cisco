@@ -2,8 +2,9 @@ from unittest import TestCase
 
 from mock import MagicMock, patch
 
-from tests.networking.cisco.command_actions.system_actions import system_actions_output
 from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
+
+from tests.networking.cisco.command_actions.system_actions import system_actions_output
 
 
 class TestCiscoSystemActionsCopy(TestCase):
@@ -11,26 +12,34 @@ class TestCiscoSystemActionsCopy(TestCase):
         self.system_action = SystemActions(cli_service=MagicMock(), logger=MagicMock())
 
     def test_restore_override_success(self):
-        with patch("cloudshell.networking.cisco.command_actions.system_actions.CommandTemplateExecutor") as cte_mock:
-            cte_mock.return_value.execute_command.return_value = system_actions_output.SUCCESS_OUTPUT_CONFIG_OVERRIDE
+        with patch(
+            "cloudshell.networking.cisco.command_actions.system_actions.CommandTemplateExecutor"
+        ) as cte_mock:
+            cte_mock.return_value.execute_command.return_value = (
+                system_actions_output.SUCCESS_OUTPUT_CONFIG_OVERRIDE
+            )
             self.system_action.override_running(MagicMock(), MagicMock())
 
     def test_copy_error_opening_output(self):
-        with patch("cloudshell.networking.cisco.command_actions.system_actions.CommandTemplateExecutor") as cte_mock:
+        with patch(
+            "cloudshell.networking.cisco.command_actions.system_actions.CommandTemplateExecutor"
+        ) as cte_mock:
             try:
-                cte_mock.return_value.execute_command.return_value = system_actions_output.ERROR_OVERRIDE_RUNNING
+                cte_mock.return_value.execute_command.return_value = (
+                    system_actions_output.ERROR_OVERRIDE_RUNNING
+                )
                 self.system_action.override_running(MagicMock(), MagicMock())
             except Exception as e:
-                self.assertIn(
-                    "Copy Command failed.",
-                    e.args)
+                self.assertIn("Copy Command failed.", e.args)
 
     def test_override_running_error_opening_output(self):
-        with patch("cloudshell.networking.cisco.command_actions.system_actions.CommandTemplateExecutor") as cte_mock:
+        with patch(
+            "cloudshell.networking.cisco.command_actions.system_actions.CommandTemplateExecutor"
+        ) as cte_mock:
             try:
-                cte_mock.return_value.execute_command.return_value = system_actions_output.ERROR_ROLL_BACK
+                cte_mock.return_value.execute_command.return_value = (
+                    system_actions_output.ERROR_ROLL_BACK
+                )
                 self.system_action.override_running(MagicMock(), MagicMock())
             except Exception as e:
-                self.assertIn(
-                    "Copy Command failed.",
-                    e.args)
+                self.assertIn("Copy Command failed.", e.args)

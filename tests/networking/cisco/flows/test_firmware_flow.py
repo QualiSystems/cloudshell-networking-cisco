@@ -1,7 +1,10 @@
 from unittest import TestCase
+
 from mock import MagicMock, patch
 
-from cloudshell.networking.cisco.flows.cisco_load_firmware_flow import CiscoLoadFirmwareFlow
+from cloudshell.networking.cisco.flows.cisco_load_firmware_flow import (
+    CiscoLoadFirmwareFlow,
+)
 
 
 class TestCiscoLoadFirmwareFlow(TestCase):
@@ -10,7 +13,10 @@ class TestCiscoLoadFirmwareFlow(TestCase):
 
     @patch("cloudshell.networking.cisco.flows.cisco_load_firmware_flow.SystemActions")
     def test_execute_flow(self, sys_actions_mock):
-        sys_actions_mock.return_value.get_current_boot_config.side_effect = ["filename.bin", "filename.bin"]
+        sys_actions_mock.return_value.get_current_boot_config.side_effect = [
+            "filename.bin",
+            "filename.bin",
+        ]
         self.firmware_flow.execute_flow("filename.bin", "", "")
 
         sys_actions_mock.return_value.get_flash_folders_list.assert_called_once()
@@ -22,11 +28,16 @@ class TestCiscoLoadFirmwareFlow(TestCase):
     def test_apply_firmware(self, fw_actions_mock):
         old_firmware = "flash:/oldfirmware.bin"
         new_firmware = "flash:/filename.bin"
-        self.firmware_flow._apply_firmware(enable_session=MagicMock(),
-                                           current_boot=[old_firmware],
-                                           firmware_dst_path=new_firmware)
+        self.firmware_flow._apply_firmware(
+            enable_session=MagicMock(),
+            current_boot=[old_firmware],
+            firmware_dst_path=new_firmware,
+        )
 
         fw_actions_mock.return_value.clean_boot_config.assert_called_once()
-        fw_actions_mock.return_value.add_boot_config_file.assert_called_once_with(new_firmware)
-        fw_actions_mock.return_value.add_boot_config.assert_called_once_with(old_firmware)
-
+        fw_actions_mock.return_value.add_boot_config_file.assert_called_once_with(
+            new_firmware
+        )
+        fw_actions_mock.return_value.add_boot_config.assert_called_once_with(
+            old_firmware
+        )

@@ -1,5 +1,7 @@
 from unittest import TestCase
+
 from mock import MagicMock, patch
+
 from cloudshell.networking.cisco.flows.cisco_restore_flow import CiscoRestoreFlow
 
 
@@ -18,7 +20,9 @@ class TestCiscoSaveConfigurationFlow(TestCase):
         configuration_type = "startup"
         restore_method = "append"
         vrf_management_name = MagicMock()
-        self.handler.execute_flow(self.PATH, configuration_type, restore_method, vrf_management_name)
+        self.handler.execute_flow(
+            self.PATH, configuration_type, restore_method, vrf_management_name
+        )
         copy_mock.assert_called_once()
 
     @patch("cloudshell.networking.cisco.flows.cisco_restore_flow.SystemActions")
@@ -28,7 +32,9 @@ class TestCiscoSaveConfigurationFlow(TestCase):
         configuration_type = "running"
         restore_method = "append"
         vrf_management_name = MagicMock()
-        self.handler.execute_flow(self.PATH, configuration_type, restore_method, vrf_management_name)
+        self.handler.execute_flow(
+            self.PATH, configuration_type, restore_method, vrf_management_name
+        )
         copy_mock.assert_called_once()
 
     @patch("cloudshell.networking.cisco.flows.cisco_restore_flow.SystemActions")
@@ -40,7 +46,9 @@ class TestCiscoSaveConfigurationFlow(TestCase):
         configuration_type = "startup"
         restore_method = "override"
         vrf_management_name = MagicMock()
-        self.handler.execute_flow(self.PATH, configuration_type, restore_method, vrf_management_name)
+        self.handler.execute_flow(
+            self.PATH, configuration_type, restore_method, vrf_management_name
+        )
         delete_mock.assert_called_once()
         copy_mock.assert_called_once()
 
@@ -51,5 +59,7 @@ class TestCiscoSaveConfigurationFlow(TestCase):
         configuration_type = "running"
         restore_method = "override"
         vrf_management_name = MagicMock()
-        self.handler.execute_flow(self.PATH, configuration_type, restore_method, vrf_management_name)
+        self.handler.execute_flow(
+            self.PATH, configuration_type, restore_method, vrf_management_name
+        )
         override_running_mock.assert_called_once()

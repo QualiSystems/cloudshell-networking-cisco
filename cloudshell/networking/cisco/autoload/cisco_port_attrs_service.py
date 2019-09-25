@@ -11,17 +11,25 @@ class CiscoSnmpPortAttrTables(SnmpPortAttrTables):
     @property
     def cdp_table(self):
         if self._cdp_table is None:
-            self._cdp_table = self._snmp.get_table(SnmpMibObject('CISCO-CDP-MIB', 'cdpCacheDeviceId'))
-            self._logger.info('cdpCacheDeviceId table loaded')
+            self._cdp_table = self._snmp.get_table(
+                SnmpMibObject("CISCO-CDP-MIB", "cdpCacheDeviceId")
+            )
+            self._logger.info("cdpCacheDeviceId table loaded")
         return self._cdp_table
 
     @property
     def cisco_duplex_state_table(self):
         if self._cisco_duplex_state_table is None:
             self._cisco_duplex_state_table = dict()
-            cisco_duplex_state_table = self._snmp.get_table(SnmpMibObject('CISCO-STACK-MIB', 'portIfIndex'))
+            cisco_duplex_state_table = self._snmp.get_table(
+                SnmpMibObject("CISCO-STACK-MIB", "portIfIndex")
+            )
             if cisco_duplex_state_table:
                 self._cisco_duplex_state_table = dict(
-                    [(v.get('portIfIndex', "").lower(), k) for k, v in cisco_duplex_state_table.iteritems()])
-            self._logger.info('Duplex portIfIndex table loaded')
+                    [
+                        (v.get("portIfIndex", "").lower(), k)
+                        for k, v in cisco_duplex_state_table.iteritems()
+                    ]
+                )
+            self._logger.info("Duplex portIfIndex table loaded")
         return self._cisco_duplex_state_table

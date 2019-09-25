@@ -1,10 +1,12 @@
 from unittest import TestCase
 
 from mock import MagicMock, patch
+
 from cloudshell.networking.cisco.flows.cisco_add_vlan_flow import CiscoAddVlanFlow
 from cloudshell.networking.cisco.flows.cisco_remove_vlan_flow import CiscoRemoveVlanFlow
-
-from cloudshell.networking.cisco.runners.cisco_connectivity_runner import CiscoConnectivityRunner
+from cloudshell.networking.cisco.runners.cisco_connectivity_runner import (
+    CiscoConnectivityRunner,
+)
 
 
 class TestCiscoConnectivityRunner(TestCase):
@@ -15,8 +17,8 @@ class TestCiscoConnectivityRunner(TestCase):
 
     def test_remove_vlan_triggered(self):
         with patch(
-                "cloudshell.networking.cisco.runners.cisco_connectivity_runner.CiscoConnectivityRunner.remove_vlan_flow") \
-                as rem_vlan_mock:
+            "cloudshell.networking.cisco.runners.cisco_connectivity_runner.CiscoConnectivityRunner.remove_vlan_flow"
+        ) as rem_vlan_mock:
             rem_vlan_exec_flow_mock = MagicMock(return_value="")
             rem_vlan_mock.execute_flow = rem_vlan_exec_flow_mock
             handler = self._get_handler()
@@ -26,8 +28,8 @@ class TestCiscoConnectivityRunner(TestCase):
 
     def test_add_vlan_triggered(self):
         with patch(
-                "cloudshell.networking.cisco.runners.cisco_connectivity_runner.CiscoConnectivityRunner.add_vlan_flow")\
-                as add_vlan_mock:
+            "cloudshell.networking.cisco.runners.cisco_connectivity_runner.CiscoConnectivityRunner.add_vlan_flow"
+        ) as add_vlan_mock:
             add_vlan_exec_flow_mock = MagicMock(return_value="")
             add_vlan_mock.execute_flow = add_vlan_exec_flow_mock
             handler = self._get_handler()

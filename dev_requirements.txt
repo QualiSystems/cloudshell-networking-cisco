@@ -1,5 +1,11 @@
+pre-commit
+tox
+tox-factor
+-r test_requirements.txt
 git+https://github.com/QualiSystems/cloudshell-shell-core.git@dev#egg=cloudshell-shell-core
-git+https://github.com/QualiSystems/cloudshell-cli.git@3.2.1#egg=cloudshell-cli
-git+https://github.com/QualiSystems/cloudshell-snmp.git@3.2.1#egg=cloudshell-snmp
-git+https://github.com/QualiSystems/cloudshell-networking.git@dev#egg=cloudshell-networking
-git+https://github.com/QualiSystems/cloudshell-networking-devices.git@2.3.1#egg=cloudshell-networking-devices
+git+https://github.com/QualiSystems/cloudshell-cli.git@dev#egg=cloudshell-cli
+git+https://github.com/QualiSystems/cloudshell-snmp.git@dev#egg=cloudshell-snmp
+git+https://github.com/QualiSystems/cloudshell-snmp-autoload.git@dev#egg=cloudshell-snmp-autoload
+git+https://github.com/QualiSystems/cloudshell-shell-flows.git@dev#egg=cloudshell-shell-flows
+git+https://github.com/QualiSystems/cloudshell-shell-standards.git@dev#egg=cloudshell-shell-standards
+git+https://github.com/QualiSystems/cloudshell-shell-networking-standard.git@dev#egg=cloudshell-shell-networking-standard
