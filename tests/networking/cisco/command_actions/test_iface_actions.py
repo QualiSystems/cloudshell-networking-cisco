@@ -39,30 +39,16 @@ class TestAddRemoveVlanActions(TestCase):
             self.assertEqual(e.args[-1], "Failed to get port name.")
 
     @patch(
-        "cloudshell.networking.cisco.command_actions.iface_actions.CommandTemplateExecutor"
+        "cloudshell.networking.cisco.command_actions.iface_actions"
+        ".CommandTemplateExecutor"
     )
     @patch(
-        "cloudshell.networking.cisco.command_actions.iface_actions.vlan_command_template"
+        "cloudshell.networking.cisco.command_actions.iface_actions"
+        ".vlan_command_template"
     )
     def test_get_no_l2_protocol_tunnel_cmd(self, vlan_templates_mock, cte_mock):
         result = self._handler._get_no_l2_protocol_tunnel_cmd()
         cte_mock.assert_called_once_with(
-            self._cli_service,
-            vlan_templates_mock.NO_L2_TUNNEL,
-            action_map=None,
-            error_map=None,
-        )
-        self.assertEqual(result, cte_mock.return_value)
-
-    @patch(
-        "cloudshell.networking.cisco.command_actions.iface_actions.CommandTemplateExecutor"
-    )
-    @patch(
-        "cloudshell.networking.cisco.command_actions.iface_actions.vlan_command_template"
-    )
-    def test_get_no_l2_protocol_tunnel_cmd(self, vlan_templates_mock, cte_mock):
-        result = self._handler._get_no_l2_protocol_tunnel_cmd()
-        cte_mock.return_valueassert_called_once_with(
             self._cli_service,
             vlan_templates_mock.NO_L2_TUNNEL,
             action_map=None,

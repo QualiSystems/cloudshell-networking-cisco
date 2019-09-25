@@ -20,7 +20,8 @@ class TestCiscoAutoloadRunner(TestCase):
 
     def test_discover(self):
         with patch(
-            "cloudshell.networking.cisco.runners.cisco_autoload_runner.CiscoSnmpAutoloadFlow"
+            "cloudshell.networking.cisco.runners.cisco_autoload_runner"
+            ".CiscoSnmpAutoloadFlow"
         ) as flow_mock:
             self._handler.discover()
             flow_mock.assert_called_once_with(self._snmp_handler, self._logger)

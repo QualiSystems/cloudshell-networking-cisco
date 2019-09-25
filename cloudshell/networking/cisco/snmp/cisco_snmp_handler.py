@@ -17,8 +17,8 @@ class CiscoEnableDisableSnmpFlow(EnableDisableSnmpFlowInterface):
     DEFAULT_SNMP_GROUP = "quali_snmp_group"
 
     def __init__(self, cli_handler, logger):
-        """
-        Enable snmp flow
+        """Enable snmp flow.
+
         :param cli_handler:
         :param logger:
         :return:

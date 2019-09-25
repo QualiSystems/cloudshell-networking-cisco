@@ -22,7 +22,7 @@ class TestCiscoConfigurationTemplates(TestCase):
             [OK - 3569/4096 bytes]
             %The input file is not a valid config file.
             37501#
-            """
+            """  # noqa: E501
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
         self.assertRegexpMatches(
             output, "|".join(configure_replace["error_map"].keys())
@@ -73,7 +73,7 @@ class TestCiscoConfigurationTemplates(TestCase):
             Rollback failed.Reverting back to the original configuration: flash:pynet-rtr1-cfgJan--6-12-49-44.412-PST-0
             Total number of passes: 1
             Rollback Done
-            """
+            """  # noqa: E501
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
         self.assertRegexpMatches(
             output, "|".join(configure_replace["error_map"].keys())

@@ -1,3 +1,4 @@
+# flake8: noqa
 SUCCESS_OUTPUT = """N6K-Sw1-S1# copy running-config tftp:
         Enter destination filename: [N6K-Sw1-S1-running-config] TestName
         Enter vrf (If no input, current vrf 'default' is considered): management

@@ -13,8 +13,8 @@ class EnableDisableSnmpActions(object):
     READ_WRITE = "rw"
 
     def __init__(self, cli_service, logger):
-        """
-        Reboot actions
+        """Reboot actions.
+
         :param cli_service: config mode cli service
         :type cli_service: CliService
         :param logger:
@@ -25,13 +25,14 @@ class EnableDisableSnmpActions(object):
         self._logger = logger
 
     def get_current_snmp_communities(self, action_map=None, error_map=None):
-        """Retrieve current snmp communities
+        """Retrieve current snmp communities.
 
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         :return:
         """
-
         return CommandTemplateExecutor(
             cli_service=self._cli_service,
             command_template=enable_disable_snmp.SHOW_SNMP_COMMUNITY,
@@ -40,13 +41,14 @@ class EnableDisableSnmpActions(object):
         ).execute_command()
 
     def get_current_snmp_config(self, action_map=None, error_map=None):
-        """Retrieve current snmp communities
+        """Retrieve current snmp communities.
 
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         :return:
         """
-
         return CommandTemplateExecutor(
             cli_service=self._cli_service,
             command_template=enable_disable_snmp.SHOW_SNMP_CONFIG,
@@ -55,13 +57,14 @@ class EnableDisableSnmpActions(object):
         ).execute_command()
 
     def get_current_snmp_user(self, action_map=None, error_map=None):
-        """Retrieve current snmp communities
+        """Retrieve current snmp communities.
 
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         :return:
         """
-
         return CommandTemplateExecutor(
             cli_service=self._cli_service,
             command_template=enable_disable_snmp.SHOW_SNMP_USER,
@@ -76,13 +79,14 @@ class EnableDisableSnmpActions(object):
         action_map=None,
         error_map=None,
     ):
-        """Enable SNMP on the device
+        """Enable SNMP on the device.
 
         :param snmp_community: community name
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         read_only = self.READ_WRITE
         if is_read_only_community:
             read_only = self.READ_ONLY
@@ -94,13 +98,14 @@ class EnableDisableSnmpActions(object):
         ).execute_command(snmp_community=snmp_community, read_only=read_only)
 
     def enable_snmp_view(self, snmp_view, action_map=None, error_map=None):
-        """Enable SNMP view on the device
+        """Enable SNMP view on the device.
 
         :param snmp_view: snmp view name
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         return CommandTemplateExecutor(
             cli_service=self._cli_service,
             command_template=enable_disable_snmp.ENABLE_SNMP_VIEW,
@@ -109,14 +114,15 @@ class EnableDisableSnmpActions(object):
         ).execute_command(snmp_view=snmp_view)
 
     def enable_snmp_group(self, snmp_group, snmp_view, action_map=None, error_map=None):
-        """Enable SNMP group on the device
+        """Enable SNMP group on the device.
 
         :param snmp_group: snmp group name
         :param snmp_view: snmp view name
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         return CommandTemplateExecutor(
             cli_service=self._cli_service,
             command_template=enable_disable_snmp.ENABLE_SNMP_GROUP,
@@ -135,16 +141,17 @@ class EnableDisableSnmpActions(object):
         action_map=None,
         error_map=None,
     ):
-        """Enable SNMP user on the device
+        """Enable SNMP user on the device.
 
         :param snmp_user: snmp user
         :param snmp_password: snmp password
         :param snmp_priv_key: snmp priv key
         :param snmp_group: snmp group name
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         if snmp_group:
             result = CommandTemplateExecutor(
                 cli_service=self._cli_service,
@@ -175,13 +182,14 @@ class EnableDisableSnmpActions(object):
         return result
 
     def disable_snmp(self, snmp_community, action_map=None, error_map=None):
-        """Disable SNMP community on the device
+        """Disable SNMP community on the device.
 
         :param snmp_community: community name
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         return CommandTemplateExecutor(
             cli_service=self._cli_service,
             command_template=enable_disable_snmp.DISABLE_SNMP_COMMUNITY,
@@ -190,13 +198,14 @@ class EnableDisableSnmpActions(object):
         ).execute_command(snmp_community=snmp_community)
 
     def remove_snmp_group(self, snmp_group, action_map=None, error_map=None):
-        """Disable SNMP community on the device
+        """Disable SNMP community on the device.
 
         :param snmp_group: community name
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         return CommandTemplateExecutor(
             cli_service=self._cli_service,
             command_template=enable_disable_snmp.DISABLE_SNMP_GROUP,
@@ -205,13 +214,14 @@ class EnableDisableSnmpActions(object):
         ).execute_command(snmp_group=snmp_group)
 
     def remove_snmp_view(self, snmp_view, action_map=None, error_map=None):
-        """Disable SNMP view on the device
+        """Disable SNMP view on the device.
 
         :param snmp_view: community name
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         return CommandTemplateExecutor(
             cli_service=self._cli_service,
             command_template=enable_disable_snmp.DISABLE_SNMP_VIEW,
@@ -222,11 +232,13 @@ class EnableDisableSnmpActions(object):
     def remove_snmp_user(
         self, snmp_user, snmp_group=None, action_map=None, error_map=None
     ):
-        """Disable SNMP user on the device
+        """Disable SNMP user on the device.
 
         :param snmp_user: snmp v3 user name
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
         if snmp_group:
             result = CommandTemplateExecutor(

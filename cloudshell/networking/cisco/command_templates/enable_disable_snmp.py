@@ -6,7 +6,9 @@ from cloudshell.cli.command_template.command_template import CommandTemplate
 
 ERROR_MAP = OrderedDict(
     {
-        r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected": "Failed to initialize snmp. Please check Logs for details."
+        (
+            r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected"
+        ): "Failed to initialize snmp. Please check Logs for details."
     }
 )
 

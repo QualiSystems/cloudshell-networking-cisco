@@ -1,10 +1,3 @@
-from ipaddress import IPv4Address, IPv6Address
-
-from cloudshell.snmp.autoload.constants.port_constants import (
-    PORT_DESCR_NAME,
-    PORT_DESCRIPTION,
-    PORT_NAME,
-)
 from cloudshell.snmp.autoload.core.snmp_oid_template import SnmpMibOidTemplate
 from cloudshell.snmp.autoload.domain.if_entity.snmp_if_port_entity import SnmpIfPort
 
@@ -25,11 +18,12 @@ class CiscoSnmpIfPort(SnmpIfPort):
         return self.if_descr_name
 
     def _get_adjacent(self):
-        """Get connected device interface and device name to the specified port id, using cdp or lldp protocols
+        """Get connected device interface and device name to the specified port id.
+
+        Using cdp or lldp protocols
         :return: device's name and port connected to port id
         :rtype string
         """
-
         result_template = "{remote_host} through {remote_port}"
         result = ""
         for key, value in self._port_attributes_snmp_tables.cdp_table.items():
@@ -44,11 +38,10 @@ class CiscoSnmpIfPort(SnmpIfPort):
         return result
 
     def _get_auto_neg(self):
-        """Get port auto negotiation status
+        """Get port auto negotiation status.
 
         :return return "True"
         """
-
         cisco_duplex = self._get_cisco_duplex()
         if cisco_duplex:
             if cisco_duplex in ["auto", "disagree"]:
@@ -58,9 +51,8 @@ class CiscoSnmpIfPort(SnmpIfPort):
 
     def _get_cisco_duplex(self):
         if not self._cisco_duplex:
-            cisco_duplex_id = self._port_attributes_snmp_tables.cisco_duplex_state_table.get(
-                str(self.if_index)
-            )
+            state_table = self._port_attributes_snmp_tables.cisco_duplex_state_table
+            cisco_duplex_id = state_table.get(str(self.if_index))
             if cisco_duplex_id:
                 self._cisco_duplex = self._snmp.get_property(
                     "CISCO-STACK-MIB", "portDuplex", cisco_duplex_id
@@ -68,10 +60,10 @@ class CiscoSnmpIfPort(SnmpIfPort):
         return self._cisco_duplex
 
     def _get_duplex(self):
-        """Get current duplex state
+        """Get current duplex state.
+
         :return str "Full"
         """
-
         cisco_duplex = self._get_cisco_duplex()
         if cisco_duplex:
             if cisco_duplex in ["full", "half"]:

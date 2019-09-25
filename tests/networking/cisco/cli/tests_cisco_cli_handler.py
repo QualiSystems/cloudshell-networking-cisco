@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from cloudshell.cli.cli import CLI
 from cloudshell.cli.session.ssh_session import SSHSession
-from mock import Mock, create_autospec, patch
+from mock import Mock, patch
 
 from cloudshell.networking.cisco.cli.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.cli.cisco_command_modes import (

@@ -42,9 +42,9 @@ class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
                 r"cevxfp|cevContainer10GigBasePort|"
                 r"cevModulePseAsicPlim"
             )
-            cisco_snmp_autoload.if_table_service.port_attributes_service = CiscoSnmpPortAttrTables(
-                snmp_service, self._logger
-            )
+            (
+                cisco_snmp_autoload.if_table_service.port_attributes_service
+            ) = CiscoSnmpPortAttrTables(snmp_service, self._logger)
             cisco_snmp_autoload.if_table_service.if_port_type = CiscoSnmpIfPort
             cisco_snmp_autoload.if_table_service.if_port_channel_type = (
                 CiscoIfPortChannel

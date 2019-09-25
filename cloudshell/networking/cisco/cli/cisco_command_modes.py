@@ -14,12 +14,12 @@ class DefaultCommandMode(CommandMode):
     EXIT_COMMAND = ""
 
     def __init__(self, resource_config):
-        """
-        Initialize Default command mode, only for cases when session started not in enable mode
+        """Initialize Default command mode.
+
+        Only for cases when session started not in enable mode
 
         :param resource_config:
         """
-
         self.resource_config = resource_config
 
         CommandMode.__init__(
@@ -52,12 +52,10 @@ class EnableCommandMode(CommandMode):
     EXIT_COMMAND = ""
 
     def __init__(self, resource_config):
-        """
-        Initialize Enable command mode - default command mode for Cisco Shells
+        """Initialize Enable command mode - default command mode for Cisco Shells.
 
         :param resource_config:
         """
-
         self.resource_config = resource_config
 
         CommandMode.__init__(
@@ -97,12 +95,10 @@ class ConfigCommandMode(CommandMode):
     ENTER_ACTION_COMMANDS = []
 
     def __init__(self, resource_config):
-        """
-        Initialize Config command mode
+        """Initialize Config command mode.
 
         :param resource_config:
         """
-
         self.resource_config = resource_config
 
         CommandMode.__init__(

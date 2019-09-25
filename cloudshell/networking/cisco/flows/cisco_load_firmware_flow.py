@@ -25,14 +25,13 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
         self._file_system = default_file_system
 
     def _load_firmware_flow(self, path, vrf_management_name, timeout):
-        """Load a firmware onto the device
+        """Load a firmware onto the device.
 
         :param path: The path to the firmware file, including the firmware file name
-        :param vrf: Virtual Routing and Forwarding Name
+        :param vrf_management_name: Virtual Routing and Forwarding Name
         :param timeout:
         :return:
         """
-
         full_path_dict = UrlParser().parse_url(path)
         firmware_file_name = full_path_dict.get(UrlParser.FILENAME)
         if not firmware_file_name:
@@ -58,7 +57,7 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
                         system_action.copy(
                             path,
                             firmware_dst_path,
-                            vrf=vrf,
+                            vrf=vrf_management_name,
                             action_map=system_action.prepare_action_map(
                                 path, firmware_dst_path
                             ),
@@ -74,7 +73,7 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
                         system_action.copy(
                             path,
                             firmware_dst_file_path,
-                            vrf=vrf,
+                            vrf=vrf_management_name,
                             action_map=system_action.prepare_action_map(
                                 path, firmware_dst_file_path
                             ),
@@ -84,7 +83,7 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
                 system_action.copy(
                     path,
                     firmware_dst_path,
-                    vrf=vrf,
+                    vrf=vrf_management_name,
                     action_map=system_action.prepare_action_map(
                         path, firmware_dst_path
                     ),
@@ -112,7 +111,7 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
             system_action.copy(
                 self.RUNNING_CONFIG,
                 self.STARTUP_CONFIG,
-                vrf=vrf,
+                vrf=vrf_management_name,
                 action_map=system_action.prepare_action_map(
                     self.RUNNING_CONFIG, self.STARTUP_CONFIG
                 ),

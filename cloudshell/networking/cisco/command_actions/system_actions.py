@@ -19,8 +19,8 @@ from cloudshell.networking.cisco.command_templates import configuration, firmwar
 
 class SystemActions(object):
     def __init__(self, cli_service, logger):
-        """
-        Reboot actions
+        """Reboot actions.
+
         :param cli_service: default mode cli_service
         :type cli_service: CliService
         :param logger:
@@ -84,17 +84,19 @@ class SystemActions(object):
         error_map=None,
         timeout=180,
     ):
-        """Copy file from device to tftp or vice versa, as well as copying inside devices filesystem.
+        """Copy file from device to tftp or vice versa.
 
+        As well as copying inside devices filesystem.
         :param source: source file
         :param destination: destination file
         :param vrf: vrf management name
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         :param timeout: session timeout
         :raise Exception:
         """
-
         if not vrf:
             vrf = None
 
@@ -106,7 +108,10 @@ class SystemActions(object):
             timeout=timeout,
         ).execute_command(src=source, dst=destination, vrf=vrf)
 
-        copy_ok_pattern = r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|[Cc]opy complete|[\(\[]OK[\]\)]"
+        copy_ok_pattern = (
+            r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|"
+            r"[Cc]opy complete|[\(\[]OK[\]\)]"
+        )
         status_match = re.search(copy_ok_pattern, output, re.IGNORECASE)
         if not status_match:
             match_error = re.search(
@@ -126,13 +131,14 @@ class SystemActions(object):
             raise Exception("Copy", message)
 
     def delete_file(self, path, action_map=None, error_map=None):
-        """Delete file on the device
+        """Delete file on the device.
 
         :param path: path to file
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         CommandTemplateExecutor(
             self._cli_service,
             configuration.DEL,
@@ -143,14 +149,16 @@ class SystemActions(object):
     def override_running(
         self, path, action_map=None, error_map=None, timeout=300, reconnect_timeout=1600
     ):
-        """Override running-config
+        """Override running-config.
 
-        :param path: relative path to the file on the remote host tftp://server/sourcefile
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param path: relative path to the file on the remote host
+            tftp://server/sourcefile
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+        i.e. handles Invalid Commands errors
         :raise Exception:
         """
-
         try:
             output = CommandTemplateExecutor(
                 self._cli_service,
@@ -174,12 +182,11 @@ class SystemActions(object):
             self._cli_service.reconnect(reconnect_timeout)
 
     def write_erase(self, action_map=None, error_map=None):
-        """Erase startup configuration
+        """Erase startup configuration.
 
         :param action_map:
         :param error_map:
         """
-
         CommandTemplateExecutor(
             self._cli_service,
             configuration.WRITE_ERASE,
@@ -188,13 +195,14 @@ class SystemActions(object):
         ).execute_command()
 
     def reload_device(self, timeout, action_map=None, error_map=None):
-        """Reload device
+        """Reload device.
 
         :param timeout: session reconnect timeout
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         try:
             redundancy_reload = CommandTemplateExecutor(
                 self._cli_service,
@@ -203,7 +211,7 @@ class SystemActions(object):
                 error_map=error_map,
             ).execute_command()
             if re.search(
-                "[Ii]nvalid\s*([Ii]nput|[Cc]ommand)", redundancy_reload, re.IGNORECASE
+                r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)", redundancy_reload, re.IGNORECASE
             ):
                 CommandTemplateExecutor(
                     self._cli_service,
@@ -212,7 +220,7 @@ class SystemActions(object):
                     error_map=error_map,
                 ).execute_command()
             time.sleep(60)
-        except Exception as e:
+        except Exception:
             self._logger.info("Device rebooted, starting reconnect")
         self._cli_service.reconnect(timeout)
 
@@ -228,11 +236,10 @@ class SystemActions(object):
             return match_dir
 
     def reload_device_via_console(self, timeout=500, action_map=None, error_map=None):
-        """Reload device
+        """Reload device.
 
         :param timeout: session reconnect timeout
         """
-
         CommandTemplateExecutor(
             self._cli_service,
             configuration.CONSOLE_RELOAD,
@@ -245,13 +252,14 @@ class SystemActions(object):
         )
 
     def get_current_boot_config(self, action_map=None, error_map=None):
-        """Retrieve current boot configuration
+        """Retrieve current boot configuration.
 
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         :return:
         """
-
         return CommandTemplateExecutor(
             self._cli_service,
             firmware.SHOW_RUNNING,
@@ -260,13 +268,14 @@ class SystemActions(object):
         ).execute_command()
 
     def get_current_os_version(self, action_map=None, error_map=None):
-        """Retrieve os version
+        """Retrieve os version.
 
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         :return:
         """
-
         return CommandTemplateExecutor(
             self._cli_service,
             firmware.SHOW_VERSION,
@@ -283,18 +292,14 @@ class SystemActions(object):
         return current_firmware
 
     def shutdown(self):
-        """
-        Shutdown the system
-        :return:
-        """
-
+        """Shutdown the system."""
         pass
 
 
 class FirmwareActions(object):
     def __init__(self, cli_service, logger):
-        """
-        Reboot actions
+        """Reboot actions.
+
         :param cli_service: default mode cli_service
         :type cli_service: CliService
         :param logger:
@@ -311,7 +316,6 @@ class FirmwareActions(object):
 
         :param firmware_file_name: firmware file name
         """
-
         CommandTemplateExecutor(
             self._cli_service, firmware.BOOT_SYSTEM_FILE
         ).execute_command(firmware_file_name=firmware_file_name)
@@ -328,17 +332,17 @@ class FirmwareActions(object):
 
         :param boot_config_line: firmware file name
         """
-
         self._cli_service.send_command(boot_config_line)
 
     def clean_boot_config(self, config_line_to_remove, action_map=None, error_map=None):
-        """Remove current boot from device
+        """Remove current boot from device.
 
         :param config_line_to_remove: current boot configuration
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         self._logger.debug("Start cleaning boot configuration")
 
         self._logger.info(

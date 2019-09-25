@@ -37,6 +37,6 @@ class TestCiscoRemoveVlanFlow(TestCase):
             converted_port_name
         )
         iface_obj_mock.clean_interface_switchport_config.assert_called_once()
-        vlan_actions_mock.return_value.verify_interface_configured.assert_called_once_with(
+        vlan_actions_mock.return_value.verify_interface_configured.assert_called_once_with(  # noqa: E501
             vlan_id, if_curconf_mock.return_value
         )

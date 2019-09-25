@@ -25,7 +25,8 @@ class TestCiscoConfigurationRunner(TestCase):
 
     def test_save(self):
         with patch(
-            "cloudshell.networking.cisco.runners.cisco_configuration_runner.CiscoSaveFlow"
+            "cloudshell.networking.cisco.runners.cisco_configuration_runner"
+            ".CiscoSaveFlow"
         ) as save_mock:
             config_type = "running"
             result = self._handler.save("tftp://10.10.10.10", "running", "")
@@ -43,7 +44,8 @@ class TestCiscoConfigurationRunner(TestCase):
 
     def test_restore(self):
         with patch(
-            "cloudshell.networking.cisco.runners.cisco_configuration_runner.CiscoRestoreFlow"
+            "cloudshell.networking.cisco.runners.cisco_configuration_runner"
+            ".CiscoRestoreFlow"
         ) as restore_mock:
             self._handler.restore("tftp://10.10.10.10", "running", "", "")
             restore_mock.assert_called_once_with(

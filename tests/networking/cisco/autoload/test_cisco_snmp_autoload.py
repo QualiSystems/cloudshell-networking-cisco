@@ -49,9 +49,8 @@ class TestsCiscoGenericSNMPAutoload(TestCase):
             self.cisco_snmp_autoload._is_valid_device_os(supported_os)
         except Exception as e:
             self.assertIn(
-                "Incompatible driver! Please use this driver for '{0}' operation system(s)".format(
-                    str(tuple(supported_os))
-                ),
+                "Incompatible driver! Please use this driver for '{0}' operation "
+                "system(s)".format(str(tuple(supported_os))),
                 e.args,
             )
         self._snmp_handler.get_property.called_once_with(mib, mib_property, mib_index)
@@ -93,7 +92,8 @@ class TestsCiscoGenericSNMPAutoload(TestCase):
     def test_get_device_model_name(self):
         model_name = "model name"
         with patch(
-            "cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload.get_device_name"
+            "cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload"
+            ".get_device_name"
         ) as get_dev_name_mock:
             self.cisco_snmp_autoload._get_device_model_name(model_name)
             get_dev_name_mock.called_once_with(model_name)
@@ -102,7 +102,8 @@ class TestsCiscoGenericSNMPAutoload(TestCase):
         "cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload.SnmpIfTable"
     )
     @patch(
-        "cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload.CiscoSNMPEntityTable"
+        "cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload"
+        ".CiscoSNMPEntityTable"
     )
     def test_load_snmp_tables(self, snmp_ent_tbl_mock, snmp_if_tbl_mock):
         snmp_ent_tbl_mock.get_entity_table.return_value = QualiMibTable(

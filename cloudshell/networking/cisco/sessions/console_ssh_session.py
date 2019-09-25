@@ -22,11 +22,11 @@ class ConsoleSSHSession(SSHSession):
         )
 
     def connect(self, prompt, logger):
-        """Connect to device through ssh
+        """Connect to device through ssh.
+
         :param prompt: expected string in output
         :param logger: logger
         """
-
         try:
             super(ConsoleSSHSession, self).connect(prompt, logger)
         except Exception:

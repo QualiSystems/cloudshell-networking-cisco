@@ -17,7 +17,8 @@ class TestCiscoConnectivityRunner(TestCase):
 
     def test_remove_vlan_triggered(self):
         with patch(
-            "cloudshell.networking.cisco.runners.cisco_connectivity_runner.CiscoConnectivityRunner.remove_vlan_flow"
+            "cloudshell.networking.cisco.runners.cisco_connectivity_runner"
+            ".CiscoConnectivityRunner.remove_vlan_flow"
         ) as rem_vlan_mock:
             rem_vlan_exec_flow_mock = MagicMock(return_value="")
             rem_vlan_mock.execute_flow = rem_vlan_exec_flow_mock
@@ -28,7 +29,8 @@ class TestCiscoConnectivityRunner(TestCase):
 
     def test_add_vlan_triggered(self):
         with patch(
-            "cloudshell.networking.cisco.runners.cisco_connectivity_runner.CiscoConnectivityRunner.add_vlan_flow"
+            "cloudshell.networking.cisco.runners.cisco_connectivity_runner"
+            ".CiscoConnectivityRunner.add_vlan_flow"
         ) as add_vlan_mock:
             add_vlan_exec_flow_mock = MagicMock(return_value="")
             add_vlan_mock.execute_flow = add_vlan_exec_flow_mock
@@ -86,7 +88,8 @@ class TestCiscoConnectivityRunner(TestCase):
                         "type" : "setVlanParameter"
                     },
                     "connectorAttributes" : [],
-                    "actionId" : "0b0f37df-0f70-4a8a-bd7b-fd21e5fbc23d_5dded658-3389-466a-a479-4b97a3c17ebd",
+                    "actionId" : "0b0f37df-0f70-4a8a-bd7b-fd21e5fbc23d_5dded658
+                        -3389-466a-a479-4b97a3c17ebd",
                     "actionTarget" : {
                         "fullName" : "sw9003-vpp-10-3.cisco.com/port-channel2",
                         "fullAddress" : "10.89.143.226/PC2",

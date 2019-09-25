@@ -41,7 +41,8 @@ class TestCiscoDisableSNMPFlow(TestCase):
         )
 
     @patch(
-        "cloudshell.networking.cisco.flows.cisco_disable_snmp_flow.EnableDisableSnmpActions"
+        "cloudshell.networking.cisco.flows.cisco_disable_snmp_flow"
+        ".EnableDisableSnmpActions"
     )
     def test_disable_snmp_v3_no_group(self, disable_actions_mock):
         disable_actions_mock.return_value.get_current_snmp_user.side_effect = [
@@ -64,16 +65,17 @@ class TestCiscoDisableSNMPFlow(TestCase):
         )
 
     @patch(
-        "cloudshell.networking.cisco.flows.cisco_disable_snmp_flow.EnableDisableSnmpActions"
+        "cloudshell.networking.cisco.flows.cisco_disable_snmp_flow"
+        ".EnableDisableSnmpActions"
     )
     def test_disable_snmp_v3_with_group(self, disable_actions_mock):
         disable_actions_mock.return_value.get_current_snmp_user.side_effect = [
             self.SNMP_USER,
             "",
         ]
-        disable_actions_mock.return_value.get_current_snmp_config.return_value = "snmp-server view {}".format(
-            CiscoEnableSnmpFlow.DEFAULT_SNMP_VIEW
-        )
+        (
+            disable_actions_mock.return_value.get_current_snmp_config.return_value
+        ) = "snmp-server view {}".format(CiscoEnableSnmpFlow.DEFAULT_SNMP_VIEW)
 
         disable_flow = self._get_handler()
         self.snmp_v3_parameters = SNMPV3Parameters(
@@ -97,7 +99,8 @@ class TestCiscoDisableSNMPFlow(TestCase):
         )
 
     @patch(
-        "cloudshell.networking.cisco.flows.cisco_disable_snmp_flow.EnableDisableSnmpActions"
+        "cloudshell.networking.cisco.flows.cisco_disable_snmp_flow"
+        ".EnableDisableSnmpActions"
     )
     def test_disable_snmp_v2_read(self, disable_actions_mock):
         disable_actions_mock.return_value.get_current_snmp_config.return_value = ""

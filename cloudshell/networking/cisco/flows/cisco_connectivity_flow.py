@@ -109,7 +109,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         return current_config
 
     def _remove_vlan_flow(self, vlan_range, port_name, port_mode):
-        """ Remove configuration of VLANs on multiple ports or port-channels.
+        """Remove configuration of VLANs on multiple ports or port-channels.
 
         :param vlan_range: VLAN or VLAN range
         :param port_name: full port name

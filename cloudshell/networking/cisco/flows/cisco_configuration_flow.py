@@ -19,14 +19,13 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
         return DEFAULT_FILE_SYSTEM
 
     def _save_flow(self, folder_path, configuration_type, vrf_management_name=None):
-        """ Execute flow which save selected file to the provided destination
+        """Execute flow which save selected file to the provided destination.
 
         :param folder_path: destination path where file will be saved
         :param configuration_type: source file, which will be saved
         :param vrf_management_name: Virtual Routing and Forwarding Name
         :return: saved configuration file name
         """
-
         with self._cli_handler.get_cli_service(
             self._cli_handler.enable_mode
         ) as enable_session:
@@ -42,15 +41,16 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
     def _restore_flow(
         self, path, configuration_type, restore_method, vrf_management_name
     ):
-        """ Execute flow which save selected file to the provided destination
+        """Execute flow which save selected file to the provided destination.
 
-        :param path: the path to the configuration file, including the configuration file name
-        :param restore_method: the restore method to use when restoring the configuration file.
-                               Possible Values are append and override
-        :param configuration_type: the configuration type to restore. Possible values are startup and running
+        :param path: the path to the configuration file, including the configuration
+            file name
+        :param restore_method: the restore method to use when restoring the
+            configuration file. Possible Values are append and override
+        :param configuration_type: the configuration type to restore.
+            Possible values are startup and running
         :param vrf_management_name: Virtual Routing and Forwarding Name
         """
-
         if "-config" not in configuration_type:
             configuration_type += "-config"
 
@@ -65,8 +65,8 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
             if "startup" in configuration_type:
                 if restore_method == "override":
                     del_action_map = {
-                        "[Dd]elete [Ff]ilename ": lambda session, logger: session.send_line(
-                            self.STARTUP_CONFIG_NAME, logger
+                        "[Dd]elete [Ff]ilename ": lambda s, l: s.send_line(
+                            self.STARTUP_CONFIG_NAME, l
                         )
                     }
                     restore_action.delete_file(

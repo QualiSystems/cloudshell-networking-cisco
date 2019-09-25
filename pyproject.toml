@@ -1,5 +1,4 @@
 [tool.black]
-target_version = ['py27']
 exclude = '''
 /(
     \.eggs

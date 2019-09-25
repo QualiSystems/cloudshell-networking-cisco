@@ -12,7 +12,7 @@ from cloudshell.networking.cisco.command_templates import add_remove_vlan, iface
 
 class AddRemoveVlanActions(object):
     def __init__(self, cli_service, logger):
-        """ Add remove vlan
+        """Add remove vlan.
 
         :param cli_service: config mode cli_service
         :type cli_service: CliService
@@ -20,33 +20,32 @@ class AddRemoveVlanActions(object):
         :type logger: Logger
         :return:
         """
-
         self._cli_service = cli_service
         self._logger = logger
 
     @staticmethod
     def verify_interface_configured(vlan_range, current_config):
-        """ Verify interface configuration
+        """Verify interface configuration.
 
         :param vlan_range:
         :param current_config:
         :return: True or False
         """
-
         return re.search(
-            "switchport.*vlan\s+{0}$".format(str(vlan_range)),
+            r"switchport.*vlan\s+{0}$".format(str(vlan_range)),
             current_config,
             re.MULTILINE | re.IGNORECASE | re.DOTALL,
         )
 
     def create_vlan(self, vlan_range, action_map=None, error_map=None):
-        """Create vlan entity on the device
+        """Create vlan entity on the device.
 
         :param vlan_range: range of vlans to be created
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         CommandTemplateExecutor(
             self._cli_service,
             add_remove_vlan.CONFIGURE_VLAN,
@@ -77,18 +76,18 @@ class AddRemoveVlanActions(object):
         action_map=None,
         error_map=None,
     ):
-
-        """Assign vlan to a certain interface
+        """Assign vlan to a certain interface.
 
         :param vlan_range: range of vlans to be assigned
         :param port_mode: switchport mode
         :param port_name: interface name
         :param qnq: qinq settings (dot1q tunnel)
         :param c_tag: selective qnq
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         CommandTemplateExecutor(
             self._cli_service, iface.CONFIGURE_INTERFACE
         ).execute_command(port_name=port_name)
@@ -162,18 +161,18 @@ class AddRemoveVlanActions(object):
         action_map=None,
         error_map=None,
     ):
-
-        """Assign vlan to a certain interface
+        """Assign vlan to a certain interface.
 
         :param vlan_range: range of vlans to be assigned
         :param port_mode: switchport mode
         :param port_name: interface name
         :param qnq: qinq settings (dot1q tunnel)
         :param c_tag: selective qnq
-        :param action_map: actions will be taken during executing commands, i.e. handles yes/no prompts
-        :param error_map: errors will be raised during executing commands, i.e. handles Invalid Commands errors
+        :param action_map: actions will be taken during executing commands,
+            i.e. handles yes/no prompts
+        :param error_map: errors will be raised during executing commands,
+            i.e. handles Invalid Commands errors
         """
-
         untagged = None
 
         if is_untagged:

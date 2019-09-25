@@ -22,7 +22,8 @@ ERROR_MAP = OrderedDict(
 )
 
 VLAN_SUB_IFACE = CommandTemplate(
-    command="encapsulation dot1q {vlan_id} [, untagged{untagged}] [second-dot1q any{qnq}]"
+    command="encapsulation dot1q {vlan_id} [, untagged{untagged}] "
+    "[second-dot1q any{qnq}]"
 )
 
 CONFIGURE_VLAN = CommandTemplate(
@@ -30,7 +31,8 @@ CONFIGURE_VLAN = CommandTemplate(
 )
 
 SWITCHPORT_ALLOW_VLAN = CommandTemplate(
-    "switchport [trunk allowed{port_mode_trunk}] [access{port_mode_access}] vlan {vlan_range}",
+    "switchport [trunk allowed{port_mode_trunk}] [access{port_mode_access}] "
+    "vlan {vlan_range}",
     action_map=ACTION_MAP,
     error_map=ERROR_MAP,
 )

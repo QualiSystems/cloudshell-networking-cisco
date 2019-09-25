@@ -38,7 +38,8 @@ class TestCiscoEnableSNMPFlow(TestCase):
         )
 
     @patch(
-        "cloudshell.networking.cisco.flows.cisco_enable_snmp_flow.EnableDisableSnmpActions"
+        "cloudshell.networking.cisco.flows.cisco_enable_snmp_flow"
+        ".EnableDisableSnmpActions"
     )
     def test_enable_snmp_v3(self, enable_actions_mock):
         enable_snmp_mock = MagicMock()
@@ -78,7 +79,8 @@ class TestCiscoEnableSNMPFlow(TestCase):
         )
 
     @patch(
-        "cloudshell.networking.cisco.flows.cisco_enable_snmp_flow.EnableDisableSnmpActions"
+        "cloudshell.networking.cisco.flows.cisco_enable_snmp_flow"
+        ".EnableDisableSnmpActions"
     )
     def test_enable_snmp_v3_no_group(self, enable_actions_mock):
         enable_snmp_mock = MagicMock()
@@ -115,7 +117,8 @@ class TestCiscoEnableSNMPFlow(TestCase):
         )
 
     @patch(
-        "cloudshell.networking.cisco.flows.cisco_enable_snmp_flow.EnableDisableSnmpActions"
+        "cloudshell.networking.cisco.flows.cisco_enable_snmp_flow"
+        ".EnableDisableSnmpActions"
     )
     def test_enable_snmp_v2_read(self, enable_actions_mock):
         enable_flow = self._get_handler()
@@ -137,7 +140,8 @@ class TestCiscoEnableSNMPFlow(TestCase):
         )
 
     @patch(
-        "cloudshell.networking.cisco.flows.cisco_enable_snmp_flow.EnableDisableSnmpActions"
+        "cloudshell.networking.cisco.flows.cisco_enable_snmp_flow"
+        ".EnableDisableSnmpActions"
     )
     def test_enable_snmp_v2_write(self, enable_actions_mock):
         enable_flow = self._get_handler()
@@ -186,7 +190,8 @@ class TestCiscoEnableSNMPFlow(TestCase):
             enable_flow._validate_snmp_v3_params(snmp_v3_parameters)
         except Exception as e:
             self.assertIn(
-                "Failed to enable SNMP v3: 'SNMP V3 Password' attribute cannot be empty",
+                "Failed to enable SNMP v3: 'SNMP V3 Password' attribute cannot be "
+                "empty",
                 e.args,
             )
 
@@ -202,7 +207,8 @@ class TestCiscoEnableSNMPFlow(TestCase):
             enable_flow._validate_snmp_v3_params(snmp_v3_parameters)
         except Exception as e:
             self.assertIn(
-                "Failed to enable SNMP v3: 'SNMP V3 Private Key' attribute cannot be empty",
+                "Failed to enable SNMP v3: 'SNMP V3 Private Key' attribute cannot be "
+                "empty",
                 e.args,
             )
 
@@ -219,8 +225,8 @@ class TestCiscoEnableSNMPFlow(TestCase):
             enable_flow._validate_snmp_v3_params(snmp_v3_parameters)
         except Exception as e:
             self.assertIn(
-                "Failed to enable SNMP v3: 'SNMP V3 Privacy Protocol' attribute cannot be empty"
-                " or set to 'No Privacy Protocol'",
+                "Failed to enable SNMP v3: 'SNMP V3 Privacy Protocol' attribute cannot "
+                "be empty or set to 'No Privacy Protocol'",
                 e.args,
             )
 
@@ -237,7 +243,7 @@ class TestCiscoEnableSNMPFlow(TestCase):
             enable_flow._validate_snmp_v3_params(snmp_v3_parameters)
         except Exception as e:
             self.assertIn(
-                "Failed to enable SNMP v3: 'SNMP V3 Authentication Protocol' attribute cannot be empty"
-                " or set to 'No Authentication Protocol'",
+                "Failed to enable SNMP v3: 'SNMP V3 Authentication Protocol' attribute "
+                "cannot be empty or set to 'No Authentication Protocol'",
                 e.args,
             )

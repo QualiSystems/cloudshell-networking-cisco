@@ -20,16 +20,14 @@ class CiscoSnmpPortAttrTables(SnmpPortAttrTables):
     @property
     def cisco_duplex_state_table(self):
         if self._cisco_duplex_state_table is None:
-            self._cisco_duplex_state_table = dict()
+            self._cisco_duplex_state_table = {}
             cisco_duplex_state_table = self._snmp.get_table(
                 SnmpMibObject("CISCO-STACK-MIB", "portIfIndex")
             )
             if cisco_duplex_state_table:
-                self._cisco_duplex_state_table = dict(
-                    [
-                        (v.get("portIfIndex", "").lower(), k)
-                        for k, v in cisco_duplex_state_table.iteritems()
-                    ]
-                )
+                self._cisco_duplex_state_table = {
+                    v.get("portIfIndex", "").lower(): k
+                    for k, v in cisco_duplex_state_table.iteritems()
+                }
             self._logger.info("Duplex portIfIndex table loaded")
         return self._cisco_duplex_state_table

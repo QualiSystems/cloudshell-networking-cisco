@@ -12,13 +12,13 @@ from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnable
 
 class CiscoDisableSnmpFlow(object):
     def __init__(self, cli_handler, logger):
+        """Enable snmp flow.
+
+        :param cli_handler:
+        :type cli_handler: CiscoCliHandler
+        :param logger:
+        :return:
         """
-          Enable snmp flow
-          :param cli_handler:
-          :type cli_handler: CiscoCliHandler
-          :param logger:
-          :return:
-          """
         self._cli_handler = cli_handler
         self._logger = logger
 

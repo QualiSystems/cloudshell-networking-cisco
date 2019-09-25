@@ -41,7 +41,8 @@ Boogie#
         )
 
     @patch(
-        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions.CommandTemplateExecutor"
+        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
+        ".CommandTemplateExecutor"
     )
     def test_create_vlan(self, cte_mock):
         conf_vlan_mock = MagicMock()
@@ -57,7 +58,8 @@ Boogie#
         conf_vlan_mock.execute_command.assert_called_with(vlan_id=vlan_range)
 
     @patch(
-        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions.CommandTemplateExecutor"
+        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
+        ".CommandTemplateExecutor"
     )
     def test_get_l2_protocol_tunnel_cmd(self, cte_mock):
         result = self._handler._get_l2_protocol_tunnel_cmd()
@@ -67,7 +69,8 @@ Boogie#
         self.assertEqual(result, cte_mock.return_value)
 
     @patch(
-        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions.CommandTemplateExecutor"
+        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
+        ".CommandTemplateExecutor"
     )
     def test_config_vlan_on_interface_qnq(self, cte_mock):
         vlan_range = 11
@@ -108,7 +111,8 @@ Boogie#
         )
 
     @patch(
-        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions.CommandTemplateExecutor"
+        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
+        ".CommandTemplateExecutor"
     )
     def test_config_vlan_on_interface_no_qnq_access(self, cte_mock):
         vlan_range = 11
@@ -148,7 +152,8 @@ Boogie#
         )
 
     @patch(
-        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions.CommandTemplateExecutor"
+        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
+        ".CommandTemplateExecutor"
     )
     def test_config_vlan_on_interface_no_qnq_trunk(self, cte_mock):
         vlan_range = 11
@@ -188,7 +193,8 @@ Boogie#
         )
 
         @patch(
-            "cloudshell.networking.cisco.command_actions.iface_actions.CommandTemplateExecutor"
+            "cloudshell.networking.cisco.command_actions.iface_actions"
+            ".CommandTemplateExecutor"
         )
         def test_config_vlan_on_interface_qnq(self, cte_mock):
             vlan_range = 11
@@ -231,7 +237,8 @@ Boogie#
             )
 
         @patch(
-            "cloudshell.networking.cisco.command_actions.iface_actions.CommandTemplateExecutor"
+            "cloudshell.networking.cisco.command_actions.iface_actions"
+            ".CommandTemplateExecutor"
         )
         def test_config_vlan_on_interface_no_qnq_access(self, cte_mock):
             vlan_range = 11
@@ -273,7 +280,8 @@ Boogie#
             )
 
         @patch(
-            "cloudshell.networking.cisco.command_actions.iface_actions.CommandTemplateExecutor"
+            "cloudshell.networking.cisco.command_actions.iface_actions"
+            ".CommandTemplateExecutor"
         )
         def test_config_vlan_on_interface_no_qnq_trunk(self, cte_mock):
             vlan_range = 11

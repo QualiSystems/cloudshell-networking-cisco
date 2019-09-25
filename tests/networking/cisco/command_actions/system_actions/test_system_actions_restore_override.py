@@ -13,7 +13,8 @@ class TestCiscoSystemActionsCopy(TestCase):
 
     def test_restore_override_success(self):
         with patch(
-            "cloudshell.networking.cisco.command_actions.system_actions.CommandTemplateExecutor"
+            "cloudshell.networking.cisco.command_actions.system_actions"
+            ".CommandTemplateExecutor"
         ) as cte_mock:
             cte_mock.return_value.execute_command.return_value = (
                 system_actions_output.SUCCESS_OUTPUT_CONFIG_OVERRIDE
@@ -22,7 +23,8 @@ class TestCiscoSystemActionsCopy(TestCase):
 
     def test_copy_error_opening_output(self):
         with patch(
-            "cloudshell.networking.cisco.command_actions.system_actions.CommandTemplateExecutor"
+            "cloudshell.networking.cisco.command_actions.system_actions"
+            ".CommandTemplateExecutor"
         ) as cte_mock:
             try:
                 cte_mock.return_value.execute_command.return_value = (
@@ -34,7 +36,8 @@ class TestCiscoSystemActionsCopy(TestCase):
 
     def test_override_running_error_opening_output(self):
         with patch(
-            "cloudshell.networking.cisco.command_actions.system_actions.CommandTemplateExecutor"
+            "cloudshell.networking.cisco.command_actions.system_actions"
+            ".CommandTemplateExecutor"
         ) as cte_mock:
             try:
                 cte_mock.return_value.execute_command.return_value = (

@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import telnetlib
 from collections import OrderedDict
 
 from cloudshell.cli.session.session_exceptions import SessionException
@@ -39,12 +38,11 @@ class ConsoleTelnetSession(TelnetSession):
         self._start_with_new_line = start_with_new_line
 
     def _connect_actions(self, prompt, logger):
-        """Open connection to device / create session
+        """Open connection to device / create session.
 
         :param prompt:
         :param logger:
         """
-
         action_map = OrderedDict()
         action_map[
             "[Ll]ogin:|[Uu]ser:|[Uu]sername:"
@@ -63,7 +61,7 @@ class ConsoleTelnetSession(TelnetSession):
         cmd = None
         if self._start_with_new_line:
             cmd = ""
-        out = self.hardware_expect(
+        self.hardware_expect(
             cmd,
             expected_string=prompt,
             timeout=self._timeout,
