@@ -21,7 +21,7 @@ class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
     DEVICE_NAMES_MAP_FILE = os.path.join(CISCO_MIBS_FOLDER, "device_names_map.csv")
 
     def __init__(self, logger, snmp_handler):
-        super().__init__(logger)
+        super(CiscoSnmpAutoloadFlow, self).__init__(logger)
         self._snmp_handler = snmp_handler
 
     def _autoload_flow(self, supported_os, resource_model):

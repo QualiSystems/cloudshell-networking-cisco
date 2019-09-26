@@ -4,7 +4,7 @@ from cloudshell.snmp.core.domain.snmp_oid import SnmpMibObject
 
 class CiscoSnmpPortAttrTables(SnmpPortAttrTables):
     def __init__(self, snmp_handler, logger):
-        super().__init__(snmp_handler, logger)
+        super(CiscoSnmpPortAttrTables, self).__init__(snmp_handler, logger)
         self._cisco_duplex_state_table = None
         self._cdp_table = None
 

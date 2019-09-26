@@ -8,7 +8,7 @@ class CiscoSnmpIfPort(SnmpIfPort):
     def __init__(
         self, snmp_handler, logger, port_name_response, port_attributes_snmp_tables
     ):
-        super().__init__(
+        super(CiscoSnmpIfPort, self).__init__(
             snmp_handler, logger, port_name_response, port_attributes_snmp_tables
         )
         self._cisco_duplex = None
@@ -34,7 +34,7 @@ class CiscoSnmpIfPort(SnmpIfPort):
                 )
                 break
         if result == "":
-            result = super()._get_adjacent()
+            result = super(CiscoSnmpIfPort, self)._get_adjacent()
         return result
 
     def _get_auto_neg(self):
@@ -47,7 +47,7 @@ class CiscoSnmpIfPort(SnmpIfPort):
             if cisco_duplex in ["auto", "disagree"]:
                 return "True"
         else:
-            return super()._get_auto_neg()
+            return super(CiscoSnmpIfPort, self)._get_auto_neg()
 
     def _get_cisco_duplex(self):
         if not self._cisco_duplex:
@@ -69,4 +69,4 @@ class CiscoSnmpIfPort(SnmpIfPort):
             if cisco_duplex in ["full", "half"]:
                 return cisco_duplex.capitalize()
         else:
-            return super()._get_duplex()
+            return super(CiscoSnmpIfPort, self)._get_duplex()
