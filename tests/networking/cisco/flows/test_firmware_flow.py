@@ -1,10 +1,13 @@
 from unittest import TestCase
 
-from mock import MagicMock, patch
-
 from cloudshell.networking.cisco.flows.cisco_load_firmware_flow import (
     CiscoLoadFirmwareFlow,
 )
+
+try:
+    from unittest.mock import MagicMock, patch
+except ImportError:
+    from mock import MagicMock, patch
 
 
 class TestCiscoLoadFirmwareFlow(TestCase):
@@ -17,7 +20,7 @@ class TestCiscoLoadFirmwareFlow(TestCase):
             "filename.bin",
             "filename.bin",
         ]
-        self.firmware_flow.execute_flow("filename.bin", "", "")
+        self.firmware_flow.load_firmware("filename.bin", "")
 
         sys_actions_mock.return_value.get_flash_folders_list.assert_called_once()
         sys_actions_mock.return_value.get_current_boot_image.assert_called()

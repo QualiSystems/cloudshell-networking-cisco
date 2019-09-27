@@ -1,8 +1,11 @@
 from unittest import TestCase
 
-from mock import MagicMock
-
 from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
+
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    from mock import MagicMock
 
 
 class TestCiscoSystemActions(TestCase):

@@ -1,9 +1,13 @@
 from unittest import TestCase
 
-from cloudshell.cli.cli_service_impl import CliServiceImpl
-from mock import MagicMock, create_autospec, patch
+from cloudshell.cli.service.cli_service_impl import CliServiceImpl
 
 from cloudshell.networking.cisco.command_actions.iface_actions import IFaceActions
+
+try:
+    from unittest.mock import MagicMock, create_autospec, patch
+except ImportError:
+    from mock import MagicMock, create_autospec, patch
 
 
 class TestAddRemoveVlanActions(TestCase):
@@ -43,8 +47,7 @@ class TestAddRemoveVlanActions(TestCase):
         ".CommandTemplateExecutor"
     )
     @patch(
-        "cloudshell.networking.cisco.command_actions.iface_actions"
-        ".vlan_command_template"
+        "cloudshell.networking.cisco.command_actions.iface_actions" ".add_remove_vlan"
     )
     def test_get_no_l2_protocol_tunnel_cmd(self, vlan_templates_mock, cte_mock):
         result = self._handler._get_no_l2_protocol_tunnel_cmd()

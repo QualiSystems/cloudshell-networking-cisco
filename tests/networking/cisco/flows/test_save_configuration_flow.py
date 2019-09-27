@@ -1,8 +1,13 @@
 from unittest import TestCase
 
-from mock import MagicMock
+from cloudshell.networking.cisco.flows.cisco_configuration_flow import (
+    CiscoConfigurationFlow,
+)
 
-from cloudshell.networking.cisco.flows.cisco_save_flow import CiscoSaveFlow
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    from mock import MagicMock
 
 
 class TestCiscoSaveConfigurationFlow(TestCase):
@@ -14,7 +19,7 @@ class TestCiscoSaveConfigurationFlow(TestCase):
         cliservice.__enter__.return_value = self.session
         cli.get_cli_service.return_value = cliservice
         logger = MagicMock()
-        return CiscoSaveFlow(cli_handler=cli, logger=logger)
+        return CiscoConfigurationFlow(cli, MagicMock(), logger)
 
     def test_save_configuration(self):
         save_flow = self._get_handler(
@@ -34,7 +39,7 @@ class TestCiscoSaveConfigurationFlow(TestCase):
          N5K-L3-Sw1#"""
         )
 
-        save_flow.execute_flow("tftp://127.0.0.1", "startup")
+        save_flow._save_flow("tftp://127.0.0.1", "startup")
         self.session.send_command.assert_called_once()
 
     def test_save_configuration_with_vrf(self):
@@ -55,7 +60,7 @@ class TestCiscoSaveConfigurationFlow(TestCase):
          N5K-L3-Sw1#"""
         )
 
-        save_flow.execute_flow(
+        save_flow._save_flow(
             "tftp://127.0.0.1", "running", vrf_management_name="management"
         )
         self.session.send_command.assert_called_once()

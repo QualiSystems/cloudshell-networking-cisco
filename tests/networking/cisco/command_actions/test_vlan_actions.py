@@ -1,12 +1,16 @@
 from unittest import TestCase
 
-from cloudshell.cli.cli_service_impl import CliServiceImpl
-from mock import MagicMock, create_autospec, patch
+from cloudshell.cli.service.cli_service_impl import CliServiceImpl
 
 from cloudshell.networking.cisco.command_actions.add_remove_vlan_actions import (
     AddRemoveVlanActions,
 )
 from cloudshell.networking.cisco.command_templates.add_remove_vlan import L2_TUNNEL
+
+try:
+    from unittest.mock import MagicMock, create_autospec, patch
+except ImportError:
+    from mock import MagicMock, create_autospec, patch
 
 
 class TestAddRemoveVlanActions(TestCase):

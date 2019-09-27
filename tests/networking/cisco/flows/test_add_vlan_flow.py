@@ -1,16 +1,23 @@
 from unittest import TestCase
 
-from mock import MagicMock, patch
+from cloudshell.networking.cisco.flows.cisco_connectivity_flow import (
+    CiscoConnectivityFlow,
+)
 
-from cloudshell.networking.cisco.flows.cisco_add_vlan_flow import CiscoAddVlanFlow
+try:
+    from unittest.mock import MagicMock, patch
+except ImportError:
+    from mock import MagicMock, patch
 
 
 class TestCiscoAddVlanFlow(TestCase):
     def setUp(self):
-        self._handler = CiscoAddVlanFlow(MagicMock(), MagicMock())
+        self._handler = CiscoConnectivityFlow(MagicMock(), MagicMock())
 
-    @patch("cloudshell.networking.cisco.flows.cisco_add_vlan_flow.AddRemoveVlanActions")
-    @patch("cloudshell.networking.cisco.flows.cisco_add_vlan_flow.IFaceActions")
+    @patch(
+        "cloudshell.networking.cisco.flows.cisco_connectivity_flow.AddRemoveVlanActions"
+    )
+    @patch("cloudshell.networking.cisco.flows.cisco_connectivity_flow.IFaceActions")
     def test_execute_flow(self, iface_mock, vlan_actions_mock):
         port_mode = "trunk"
         port_name = "Ethernet4-5"
@@ -20,7 +27,7 @@ class TestCiscoAddVlanFlow(TestCase):
         c_tag = ""
         iface_mock.return_value.get_port_name.return_value = converted_port_name
 
-        self._handler.execute_flow(vlan_id, port_mode, port_name, qnq, c_tag)
+        self._handler._add_vlan_flow(vlan_id, port_mode, port_name, qnq, c_tag)
         iface_mock.return_value.get_port_name.assert_called_once_with(port_name)
         vlan_actions_mock.return_value.create_vlan.assert_called_once_with(vlan_id)
         iface_mock.return_value.get_current_interface_config.assert_called_with(

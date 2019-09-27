@@ -1,11 +1,15 @@
 from unittest import TestCase
 
-from cloudshell.cli.cli_service import CliService
-from mock import MagicMock, create_autospec
+from cloudshell.cli.service.cli_service_impl import CliServiceImpl
 
 from cloudshell.networking.cisco.command_actions.enable_disable_snmp_actions import (
     EnableDisableSnmpActions,
 )
+
+try:
+    from unittest.mock import MagicMock, create_autospec
+except ImportError:
+    from mock import MagicMock, create_autospec
 
 
 def return_cmd(cmd, **kwargs):
@@ -14,7 +18,7 @@ def return_cmd(cmd, **kwargs):
 
 class TestCiscoEnableSNMPActions(TestCase):
     def set_up(self, response):
-        cli_service = create_autospec(CliService)
+        cli_service = create_autospec(CliServiceImpl)
         if callable(response):
             cli_service.send_command = response
         else:

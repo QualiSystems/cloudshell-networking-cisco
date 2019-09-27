@@ -1,8 +1,7 @@
 from unittest import TestCase
 
-from cloudshell.cli.cli import CLI
-from cloudshell.cli.session.ssh_session import SSHSession
-from mock import Mock, patch
+from cloudshell.cli.service.cli import CLI
+from cloudshell.shell.standards.resource_config_generic_models import GenericCLIConfig
 
 from cloudshell.networking.cisco.cli.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.cli.cisco_command_modes import (
@@ -11,17 +10,20 @@ from cloudshell.networking.cisco.cli.cisco_command_modes import (
     EnableCommandMode,
 )
 
+try:
+    from mock import MagicMock, Mock, patch
+except ImportError:
+    from unittest.mock import MagicMock, Mock, patch
+
 
 class TestCiscoSystemActions(TestCase):
     def set_up(self):
         ConfigCommandMode.ENTER_CONFIG_RETRY_TIMEOUT = 0.5
-        resource_config = Mock()
-        resource_config.cli_connection_type = "SSH"
-        api = Mock()
-        api.DecryptPassword().Value.return_value = "password"
-        return CiscoCliHandler(
-            cli=CLI(), resource_config=resource_config, logger=Mock(), api=api
-        )
+        api = MagicMock(DecryptPassword=lambda password: MagicMock(Value=password))
+        cli_conf = GenericCLIConfig("Cisco Shell", api=api)
+        cli_conf.cli_tcp_port = "22"
+        cli_conf.cli_connection_type = "SSH"
+        return CiscoCliHandler(CLI(), cli_conf, Mock())
 
     def test_default_mode(self):
         cli_handler = self.set_up()
@@ -34,11 +36,6 @@ class TestCiscoSystemActions(TestCase):
     def test_config_mode(self):
         cli_handler = self.set_up()
         self.assertIsInstance(cli_handler.config_mode, ConfigCommandMode)
-
-    def test_get_session(self):
-        cli_handler = self.set_up()
-        session = cli_handler._new_sessions()
-        self.assertIsInstance(session, SSHSession)
 
     @patch("cloudshell.cli.session.ssh_session.paramiko")
     @patch(
@@ -136,6 +133,7 @@ class TestCiscoSystemActions(TestCase):
             "Boogie#",
             "Boogie#",
             "Boogie#",
+            "Boogie(config)#",
             "Boogie#",
             locked_message,
             locked_message,
