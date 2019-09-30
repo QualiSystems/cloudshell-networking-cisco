@@ -1,9 +1,11 @@
 from unittest import TestCase
-from cloudshell.networking.cisco.command_templates.configuration import CONFIGURE_REPLACE
+
+from cloudshell.networking.cisco.command_templates.configuration import (
+    CONFIGURE_REPLACE,
+)
 
 
 class TestCiscoConfigurationTemplates(TestCase):
-
     def setUp(self):
         self.path = "ftp://admin:password@10.10.10.10/CloudShell/config"
 
@@ -20,9 +22,11 @@ class TestCiscoConfigurationTemplates(TestCase):
             [OK - 3569/4096 bytes]
             %The input file is not a valid config file.
             37501#
-            """
+            """  # noqa: E501
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
-        self.assertRegexpMatches(output, "|".join(configure_replace['error_map'].keys()))
+        self.assertRegexpMatches(
+            output, "|".join(configure_replace["error_map"].keys())
+        )
 
     def test_configure_replace_ignores_rollback_done_output(self):
         output = """configure replace ftp://admin:password@10.33.3.22/CloudShell/config
@@ -39,7 +43,9 @@ class TestCiscoConfigurationTemplates(TestCase):
             37501#
             """
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
-        self.assertNotRegexpMatches(output, "|".join(configure_replace['error_map'].keys()))
+        self.assertNotRegexpMatches(
+            output, "|".join(configure_replace["error_map"].keys())
+        )
 
     def test_configure_replace_validates_rollback_aborted_output(self):
         output = """configure replace flash:candidate_config.txt force
@@ -56,7 +62,9 @@ class TestCiscoConfigurationTemplates(TestCase):
             ********
             """
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
-        self.assertRegexpMatches(output, "|".join(configure_replace['error_map'].keys()))
+        self.assertRegexpMatches(
+            output, "|".join(configure_replace["error_map"].keys())
+        )
 
     def test_configure_replace_validates_aborting_rollback_output(self):
         output = """configure replace flash:candidate_config.txt force revert trigger error
@@ -65,6 +73,8 @@ class TestCiscoConfigurationTemplates(TestCase):
             Rollback failed.Reverting back to the original configuration: flash:pynet-rtr1-cfgJan--6-12-49-44.412-PST-0
             Total number of passes: 1
             Rollback Done
-            """
+            """  # noqa: E501
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
-        self.assertRegexpMatches(output, "|".join(configure_replace['error_map'].keys()))
+        self.assertRegexpMatches(
+            output, "|".join(configure_replace["error_map"].keys())
+        )
