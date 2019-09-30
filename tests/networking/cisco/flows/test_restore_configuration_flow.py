@@ -1,6 +1,13 @@
 from unittest import TestCase
-from mock import MagicMock, patch
-from cloudshell.networking.cisco.flows.cisco_restore_flow import CiscoRestoreFlow
+
+from cloudshell.networking.cisco.flows.cisco_configuration_flow import (
+    CiscoConfigurationFlow,
+)
+
+try:
+    from unittest.mock import MagicMock, patch
+except ImportError:
+    from mock import MagicMock, patch
 
 
 class TestCiscoSaveConfigurationFlow(TestCase):
@@ -9,29 +16,33 @@ class TestCiscoSaveConfigurationFlow(TestCase):
     def setUp(self):
         cli = MagicMock()
         logger = MagicMock()
-        self.handler = CiscoRestoreFlow(cli_handler=cli, logger=logger)
+        self.handler = CiscoConfigurationFlow(cli, MagicMock(), logger)
 
-    @patch("cloudshell.networking.cisco.flows.cisco_restore_flow.SystemActions")
+    @patch("cloudshell.networking.cisco.flows.cisco_configuration_flow.SystemActions")
     def test_restore_append_startup(self, sys_actions_mock):
         copy_mock = MagicMock()
         sys_actions_mock.return_value.copy = copy_mock
         configuration_type = "startup"
         restore_method = "append"
         vrf_management_name = MagicMock()
-        self.handler.execute_flow(self.PATH, configuration_type, restore_method, vrf_management_name)
+        self.handler._restore_flow(
+            self.PATH, configuration_type, restore_method, vrf_management_name
+        )
         copy_mock.assert_called_once()
 
-    @patch("cloudshell.networking.cisco.flows.cisco_restore_flow.SystemActions")
+    @patch("cloudshell.networking.cisco.flows.cisco_configuration_flow.SystemActions")
     def test_restore_append_running(self, sys_actions_mock):
         copy_mock = MagicMock()
         sys_actions_mock.return_value.copy = copy_mock
         configuration_type = "running"
         restore_method = "append"
         vrf_management_name = MagicMock()
-        self.handler.execute_flow(self.PATH, configuration_type, restore_method, vrf_management_name)
+        self.handler._restore_flow(
+            self.PATH, configuration_type, restore_method, vrf_management_name
+        )
         copy_mock.assert_called_once()
 
-    @patch("cloudshell.networking.cisco.flows.cisco_restore_flow.SystemActions")
+    @patch("cloudshell.networking.cisco.flows.cisco_configuration_flow.SystemActions")
     def test_restore_override_startup(self, sys_actions_mock):
         delete_mock = MagicMock()
         copy_mock = MagicMock()
@@ -40,16 +51,20 @@ class TestCiscoSaveConfigurationFlow(TestCase):
         configuration_type = "startup"
         restore_method = "override"
         vrf_management_name = MagicMock()
-        self.handler.execute_flow(self.PATH, configuration_type, restore_method, vrf_management_name)
+        self.handler._restore_flow(
+            self.PATH, configuration_type, restore_method, vrf_management_name
+        )
         delete_mock.assert_called_once()
         copy_mock.assert_called_once()
 
-    @patch("cloudshell.networking.cisco.flows.cisco_restore_flow.SystemActions")
+    @patch("cloudshell.networking.cisco.flows.cisco_configuration_flow.SystemActions")
     def test_restore_override_running(self, sys_actions_mock):
         override_running_mock = MagicMock()
         sys_actions_mock.return_value.override_running = override_running_mock
         configuration_type = "running"
         restore_method = "override"
         vrf_management_name = MagicMock()
-        self.handler.execute_flow(self.PATH, configuration_type, restore_method, vrf_management_name)
+        self.handler._restore_flow(
+            self.PATH, configuration_type, restore_method, vrf_management_name
+        )
         override_running_mock.assert_called_once()

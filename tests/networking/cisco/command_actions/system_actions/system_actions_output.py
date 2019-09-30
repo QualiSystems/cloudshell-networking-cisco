@@ -1,3 +1,4 @@
+# flake8: noqa
 SUCCESS_OUTPUT = """N6K-Sw1-S1# copy running-config tftp:
         Enter destination filename: [N6K-Sw1-S1-running-config] TestName
         Enter vrf (If no input, current vrf 'default' is considered): management
@@ -30,12 +31,12 @@ ERROR_OPENING_OUTPUT = """ASR1004-2#copy running-config tftp:
         %Error opening tftp://10.10.10.10/ASR1004-2-running-100516-084841 (Timed out)
         ASR1004-2#"""
 
-ERROR_ACCESS_VIOLATION = '''sw9003-vpp-10-3# copy running-config tftp://10.87.42.120
+ERROR_ACCESS_VIOLATION = """sw9003-vpp-10-3# copy running-config tftp://10.87.42.120
         Enter destination filename: [sw9003-vpp-10-3-running-config] 123123
         Enter vrf (If no input, current vrf 'default' is considered):
         Trying to connect to tftp server......
         Connection to Server Established.
-        TFTP put operation failed:Access violation'''
+        TFTP put operation failed:Access violation"""
 
 SUCCESS_OUTPUT_CONFIG_OVERRIDE = """changename#
         configure replace ftp://Cloudshell:KPlab123@10.233.30.222/Cloudshell/2951-2-Test-running-250817-093706
