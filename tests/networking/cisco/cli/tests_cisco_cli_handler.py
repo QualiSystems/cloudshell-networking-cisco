@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from cloudshell.cli.service.cli import CLI
-from cloudshell.shell.standards.resource_config_generic_models import GenericCLIConfig
 
 from cloudshell.networking.cisco.cli.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.cli.cisco_command_modes import (
@@ -19,8 +18,7 @@ except ImportError:
 class TestCiscoSystemActions(TestCase):
     def set_up(self):
         ConfigCommandMode.ENTER_CONFIG_RETRY_TIMEOUT = 0.5
-        api = MagicMock(DecryptPassword=lambda password: MagicMock(Value=password))
-        cli_conf = GenericCLIConfig("Cisco Shell", api=api)
+        cli_conf = MagicMock()
         cli_conf.cli_tcp_port = "22"
         cli_conf.cli_connection_type = "SSH"
         return CiscoCliHandler(CLI(), cli_conf, Mock())
