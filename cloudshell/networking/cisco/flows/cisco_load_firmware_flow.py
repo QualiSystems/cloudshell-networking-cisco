@@ -7,6 +7,7 @@ from cloudshell.devices.flows.action_flows import LoadFirmwareFlow
 from cloudshell.devices.networking_utils import UrlParser
 from cloudshell.networking.cisco.command_actions.system_actions import SystemActions, FirmwareActions
 
+demo_variable = "Demo value"
 
 class CiscoLoadFirmwareFlow(LoadFirmwareFlow):
     RUNNING_CONFIG = "running-config"
