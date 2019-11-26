@@ -15,9 +15,8 @@ ACTION_MAP = OrderedDict(
 )
 ERROR_MAP = OrderedDict(
     {
-        r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected": Exception(
-            "SWITCHPORT_MODE", "Failed to switch port mode"
-        )
+        r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected":
+            "Failed to switch port mode"
     }
 )
 
@@ -27,7 +26,8 @@ VLAN_SUB_IFACE = CommandTemplate(
 )
 
 CONFIGURE_VLAN = CommandTemplate(
-    "vlan {vlan_id}", error_map=OrderedDict({r"%.*\.": "Unable to create vlan"})
+    "vlan {vlan_id}"
+    # "vlan {vlan_id}", error_map=OrderedDict({r"%.*\.": "Unable to create vlan"})
 )
 
 SWITCHPORT_ALLOW_VLAN = CommandTemplate(
