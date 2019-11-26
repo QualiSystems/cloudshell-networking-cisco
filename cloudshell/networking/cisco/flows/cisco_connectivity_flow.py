@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+import re
 
 from cloudshell.shell.flows.connectivity.basic_flow import AbstractConnectivityFlow
 
@@ -86,7 +87,15 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
     def _add_switchport_vlan(
         self, vlan_actions, iface_actions, vlan_range, port_name, port_mode, qnq, c_tag
     ):
-        vlan_actions.create_vlan(vlan_range)
+
+        result = vlan_actions.create_vlan(vlan_range)
+        if re.search(r"%.*\\.",
+                     result,
+                     re.IGNORECASE) \
+            and not re.search(r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected",
+                              result,
+                              re.IGNORECASE):
+            raise Exception("Failed to configure vlan: Unable to create vlan")
 
         self._remove_vlan_from_interface(port_name, iface_actions=iface_actions)
         vlan_actions.set_vlan_to_interface(vlan_range, port_mode, port_name, qnq, c_tag)
@@ -143,8 +152,8 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
 
     def _remove_vlan_from_sub_interface(self, port_name, iface_actions):
         current_config = iface_actions.get_current_interface_config(port_name)
+        iface_actions.enter_iface_config_mode(port_name)
         if port_name in current_config:
-            iface_actions.enter_iface_config_mode(port_name)
             iface_actions.clean_vlan_sub_iface_config(current_config)
 
     def _remove_vlan_from_interface(self, port_name, iface_actions):
