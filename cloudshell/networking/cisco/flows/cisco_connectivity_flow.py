@@ -88,15 +88,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         self, vlan_actions, iface_actions, vlan_range, port_name, port_mode, qnq, c_tag
     ):
 
-        result = vlan_actions.create_vlan(vlan_range)
-        if re.search(r"%.*\\.",
-                     result,
-                     re.IGNORECASE) \
-            and not re.search(r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected",
-                              result,
-                              re.IGNORECASE):
-            raise Exception("Failed to configure vlan: Unable to create vlan")
-
+        vlan_actions.create_vlan(vlan_range)
         self._remove_vlan_from_interface(port_name, iface_actions=iface_actions)
         vlan_actions.set_vlan_to_interface(vlan_range, port_mode, port_name, qnq, c_tag)
         current_config = iface_actions.get_current_interface_config(port_name)
