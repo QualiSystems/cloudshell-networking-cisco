@@ -50,7 +50,7 @@ Boogie#
     )
     def test_create_vlan(self, cte_mock):
         conf_vlan_mock = MagicMock()
-        state_vlan_mock = MagicMock()
+        state_vlan_mock = MagicMock(return_value="")
         no_shut_mock = MagicMock()
         cte_mock.side_effect = [conf_vlan_mock, state_vlan_mock, no_shut_mock]
         vlan_range = MagicMock()
