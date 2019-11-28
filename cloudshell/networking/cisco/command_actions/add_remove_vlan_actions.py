@@ -11,6 +11,11 @@ from cloudshell.networking.cisco.command_templates import add_remove_vlan, iface
 
 
 class AddRemoveVlanActions(object):
+    CREATE_VLAN_VALIDATION_PATTERN = re.compile(
+        r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected", re.IGNORECASE
+    )
+    CREATE_VLAN_ERROR_PATTERN = re.compile(r"%.*\\.", re.IGNORECASE)
+
     def __init__(self, cli_service, logger):
         """Add remove vlan.
 
@@ -52,14 +57,10 @@ class AddRemoveVlanActions(object):
             action_map=action_map,
             error_map=error_map,
         ).execute_command(vlan_id=vlan_range)
-        if re.search(
-            r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected",
-            result,
-            re.IGNORECASE,
-        ):
+        if self.CREATE_VLAN_VALIDATION_PATTERN.search(result):
             self._logger.info("Unable to create vlan, proceeding")
             return
-        elif re.search(r"%.*\\.", result, re.IGNORECASE):
+        elif self.CREATE_VLAN_ERROR_PATTERN.search(result):
             raise Exception("Failed to configure vlan: Unable to create vlan")
 
         CommandTemplateExecutor(
