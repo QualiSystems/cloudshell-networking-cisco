@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-import re
 
 from cloudshell.shell.flows.connectivity.basic_flow import AbstractConnectivityFlow
 
