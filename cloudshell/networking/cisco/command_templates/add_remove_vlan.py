@@ -15,7 +15,7 @@ ACTION_MAP = OrderedDict(
 )
 ERROR_MAP = OrderedDict(
     {
-        r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected": "Failed to switch port mode"
+        r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected": "Failed to switch port mode"  # noqa: E501
     }
 )
 
