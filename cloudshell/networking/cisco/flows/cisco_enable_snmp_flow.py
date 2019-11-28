@@ -67,8 +67,8 @@ class CiscoEnableSnmpFlow(object):
                     current_snmp_communities = snmp_actions.get_current_snmp_config()
                     snmp_community = snmp_parameters.snmp_community
                     if not re.search(
-                        "snmp-server community {}".format(re.escape(
-                            snmp_parameters.snmp_community)
+                        "snmp-server community {}".format(
+                            re.escape(snmp_parameters.snmp_community)
                         ),
                         current_snmp_communities,
                     ):
@@ -100,8 +100,8 @@ class CiscoEnableSnmpFlow(object):
                         updated_snmp_actions.get_current_snmp_config()
                     )
                     if not re.search(
-                        "snmp-server community {}".format(re.escape(
-                            snmp_parameters.snmp_community)
+                        "snmp-server community {}".format(
+                            re.escape(snmp_parameters.snmp_community)
                         ),
                         updated_snmp_communities,
                     ):

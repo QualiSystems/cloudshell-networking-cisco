@@ -52,9 +52,11 @@ class AddRemoveVlanActions(object):
             action_map=action_map,
             error_map=error_map,
         ).execute_command(vlan_id=vlan_range)
-        if re.search(r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected",
-                     result,
-                     re.IGNORECASE):
+        if re.search(
+            r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected",
+            result,
+            re.IGNORECASE,
+        ):
             self._logger.info("Unable to create vlan, proceeding")
             return
         elif re.search(r"%.*\\.", result, re.IGNORECASE):
@@ -74,14 +76,14 @@ class AddRemoveVlanActions(object):
         ).execute_command()
 
     def set_vlan_to_interface(
-            self,
-            vlan_range,
-            port_mode,
-            port_name,
-            qnq,
-            c_tag,
-            action_map=None,
-            error_map=None,
+        self,
+        vlan_range,
+        port_mode,
+        port_name,
+        qnq,
+        c_tag,
+        action_map=None,
+        error_map=None,
     ):
         """Assign vlan to a certain interface.
 
@@ -157,16 +159,16 @@ class AddRemoveVlanActions(object):
         )
 
     def set_vlan_to_sub_interface(
-            self,
-            vlan_range,
-            port_mode,
-            port_name,
-            qnq,
-            c_tag,
-            l2_transport=None,
-            is_untagged=None,
-            action_map=None,
-            error_map=None,
+        self,
+        vlan_range,
+        port_mode,
+        port_name,
+        qnq,
+        c_tag,
+        l2_transport=None,
+        is_untagged=None,
+        action_map=None,
+        error_map=None,
     ):
         """Assign vlan to a certain interface.
 
