@@ -7,7 +7,7 @@ tox-factor
 -e git+https://github.com/QualiSystems/cloudshell-cli.git@dev#egg=cloudshell-cli
 -e git+https://github.com/QualiSystems/cloudshell-snmp.git@dev#egg=cloudshell-snmp
 -e git+https://github.com/QualiSystems/cloudshell-snmp-autoload.git@dev#egg=cloudshell-snmp-autoload
--e git+https://github.com/QualiSystems/cloudshell-shell-flows.git@remove_connectivity#egg=cloudshell-shell-flows
+-e git+https://github.com/QualiSystems/cloudshell-shell-flows.git@dev#egg=cloudshell-shell-flows
 -e git+https://github.com/QualiSystems/cloudshell-shell-connectivity-flow.git@dev#egg=cloudshell-shell-connectivity-flow
 -e git+https://github.com/QualiSystems/cloudshell-shell-flows.git@dev#egg=cloudshell-shell-flows
 -e git+https://github.com/QualiSystems/cloudshell-shell-standards.git@dev#egg=cloudshell-shell-standards
