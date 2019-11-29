@@ -26,7 +26,6 @@ VLAN_SUB_IFACE = CommandTemplate(
 
 CONFIGURE_VLAN = CommandTemplate(
     "vlan {vlan_id}"
-    # "vlan {vlan_id}", error_map=OrderedDict({r"%.*\.": "Unable to create vlan"})
 )
 
 SWITCHPORT_ALLOW_VLAN = CommandTemplate(
