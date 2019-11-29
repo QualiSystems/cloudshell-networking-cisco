@@ -24,9 +24,7 @@ VLAN_SUB_IFACE = CommandTemplate(
     "[second-dot1q any{qnq}]"
 )
 
-CONFIGURE_VLAN = CommandTemplate(
-    "vlan {vlan_id}"
-)
+CONFIGURE_VLAN = CommandTemplate("vlan {vlan_id}")
 
 SWITCHPORT_ALLOW_VLAN = CommandTemplate(
     "switchport [trunk allowed{port_mode_trunk}] [access{port_mode_access}] "
