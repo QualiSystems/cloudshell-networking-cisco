@@ -74,7 +74,7 @@ class CiscoDisableSnmpFlow(object):
                     )
                     if re.search(
                         "snmp-server community {}".format(
-                            snmp_parameters.snmp_community
+                            re.escape(snmp_parameters.snmp_community)
                         ),
                         updated_snmp_communities,
                     ):
