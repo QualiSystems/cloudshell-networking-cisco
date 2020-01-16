@@ -26,9 +26,9 @@ jobs:
         skip_cleanup: true
         provider: pypi
         server: https://test.pypi.org/legacy/
-        user: quali
+        user: "__token__"
         password:
-          secure: gaVgSn+g8BByN3jbQV/xrF4lxHylFOwe3SW/NwklQPp9ksZYhFSojA3tLuQQW7kOLjLDHW//hpAHuKJMJlumIOBPW5JdLBvip3p0apZqiFk0yUTGknsnxcJ89b/2npJpHJFovZayEZ9zxKxBHBs2aHmyC+sB35tYvSBUe15Rxgf/+UcPy40ilaCM6wZhC9hzUywaZ/19HajeHMc1OuJ39GILFLeHw3jidMknh9VLxjKQEkEeTXap4dNA42Z4JoUWJbSbVg4hRy6HlPPhkHoofMbYpvRu70Mvop+XnNHr7DVPy7eNlTgPN26rupc8EPqDX78j7nAwIafgD67vaEG1R2skiyXoqFOmiffo9BdCeuQqF7UZlXrsY5jUhCmSuvnlUAFjwa3Hm51DiCtGLJrK5hbAfbiFaHgqT7jaMK/VTUh9A/i8OQUCeEKfZwkS8zigWzYWl4TtdTrKVCojluT5YpIw5iepFFvx7i/R6Mh7uOqHPV7uv80irHO/PiwV4SPvooOg7sVjpL3/EZqWwEt9A2UQesg7fIR0azJSg154NNZzGyBv/pzvkmtOXmCPr366XjhO97UKjHxGGCCdKHgfNy9dZZyXL0OVW79I/ULUvkcF5f232Rjhq6f3dHhTk9p7Z4PsKLMEoEDIe8fH1U+1jFnZ+HBVkZp4k5DAMZ0ZRUg=
+          secure: aF6asPQ+TGTvjBI9vmHJ9GCTFFOPkiXIBxw7cd9ADPWGdrm4S6JljaAY4N3GDdbyXPblaKFO7IXDARgYbBcRW/TymdQMUJACSSMBS47bPfdl3D3c+u6B2QCivZUknsgIhXKiF635+RMGOXj3A6hZDpO8RejlVmRT+tEeFLKTnBCG+hOB+hjdZ6JHkkgufX/jgvIHC3JMeV9fWQcgR5Vk4RYGj6aYqB0nKG03JqH/xY2iKl/KDHhg7+P4yJqIGlokfgSjsPp4BAGqvxWPJq7UWVAOe96G3ZDTbcs1cbApiKu391mj2lTxdTeLZ8tmtMBp4i4r9sZRwrUGpCO3qmwyf5fcmZwQAcZCRSI/E0k/W4B77kfiUDoe5XViuGGfj7cgi8MtRI2fnQTiVcf3giD2R6i3ZBDdabEpQRv3jhgWd4fOSc8sWDWzZpTSFA/2QKFP5y2DyFXUEU2zhan6v8culIpYnSg4/yZnL2QX3To7WCmILbE+VKGNPZVsrua7j9pdsS+Cqx8vrkiZHxYfLJd0rDJ7l2hNx0OScFypkB3IumHxXZAmdg1hAX53Ys/UnzdVnIbgWmFrTND75m/ZbMoq/Zh6rDs958S30e47RUJE+XTHimzsNxn6vAYHb7qXft4omGCdtKXahJa2oszPpy4eFaaO1I+OOZ2y4yZDZr1LnhI=
         on:
           branch: dev
     - stage: Deploy to PyPI release
