@@ -3,7 +3,7 @@ from cloudshell.snmp.autoload.domain.if_entity.snmp_if_port_entity import SnmpIf
 
 
 class CiscoSnmpIfPort(SnmpIfPort):
-    CISCO_CDP_MIB = SnmpMibOidTemplate("CISCO-CDP-MIB", "entPhysicalParentRelPos")
+    CISCO_CDP_MIB = SnmpMibOidTemplate("CISCO-CDP-MIB", "cdpCacheDeviceId")
 
     def __init__(
         self, snmp_handler, logger, port_name_response, port_attributes_snmp_tables
