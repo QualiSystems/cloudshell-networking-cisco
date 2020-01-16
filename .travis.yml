@@ -59,7 +59,7 @@ jobs:
           secure: HrgpQWE622z+SWMpEDOp7vAJ2aD+5AHXT9VKbjY+gJ4nw00KtbjzDJD4rNB7/ck9S51ExtVvw84V3Ar3Z1Wt8/oZrAlvDxaBC0p6PZQ05wA4nRe+6QjMJc8TgpP0bMBjxP0J+ssOqwJiBH46UiASp3L0yQjjHqTR9b0s0TDnTxvAWJRangWn91efIRx0HOm/DY3r2DJN88fbOLHG2mxAcKrsd3pe5vXtrsZvo1ccOWVxNpZ2iYYe5hU1suqIQeXa5tx78y3LeAkNCfU10/9dP72A9vug4yCWB7MBXkhvnxQdJwFRTho4pZ5h9u/hE4524hH9D6X5M5JwlIv6fepJcYjPTzLzCAI/HHdVmjDimopSuFB/zKozvh9jTWXNBlgCkARXGcvFmIcF08PQOaJ9vjfeApK3FerqNsuTYiUwYHkv2icEptuHuTWCETb72+q1+OxiA75poQPXVvFdrSCOJGD5tXLeYWJPywCFlpZBrrgM8w7LnPGBUVSWswh6/frj69RMdlrjzmFYc5Yfp9670FKiKftIqY19XMZPJQYbuF6y1NgAhozDuIX5zgnAsTAhgCyZj5sipit+XoAAbP50R5Z3Qj2TI7uPff0BVzVWjoL+ElXutc0LHFoZuqXK9oxtVEb3eF9s08IL3wrH6K/ilgNC//IVAIMkwLzuVe3cZ6Y=
         file_glob: true
         file: dist/*
-        name: cloudshell-template $GIT_TAG
+        name: cloudshell-networking-cisco $GIT_TAG
         target_commitish: master
         on:
           branch: master
