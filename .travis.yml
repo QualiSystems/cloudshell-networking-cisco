@@ -63,6 +63,13 @@ jobs:
         target_commitish: master
         on:
           branch: master
+    - stage: Check version
+      language: bash
+      install:
+        - git clone https://github.com/$TRAVIS_REPO_SLUG.git $TRAVIS_REPO_SLUG
+        - cd $TRAVIS_REPO_SLUG
+        - git checkout -qf $TRAVIS_PULL_REQUEST_BRANCH
+      script: "! git diff --exit-code --quiet origin/master version.txt"
 
 install:
   - pip install tox
@@ -71,6 +78,8 @@ install:
 script: tox
 
 stages:
+  - name: Check version
+    if: branch = master AND type = pull_request
   - name: Test
   - name: Deploy to Test PyPI release
     if: branch = dev AND type != pull_request
