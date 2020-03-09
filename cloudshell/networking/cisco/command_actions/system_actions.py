@@ -51,7 +51,7 @@ class SystemActions(object):
         password = url.get(UrlParser.PASSWORD)
         username = url.get(UrlParser.USERNAME)
         if username:
-            action_map[r"[Uu]ser(name)?"] = lambda session, logger: session.send_line(username, logger)
+            action_map[r"[Uu]ser(name)*(:)*\s*$"] = lambda session, logger: session.send_line(username, logger)
         if password:
             action_map[r"[Pp]assword"] = lambda session, logger: session.send_line(password, logger)
         if host:
@@ -94,7 +94,7 @@ class SystemActions(object):
                 if error_match:
                     self._logger.error(message)
                     message += error_match.group()
-            raise Exception("Copy", message)
+            raise Exception(message)
 
     def delete_file(self, path, action_map=None, error_map=None):
         """Delete file on the device
