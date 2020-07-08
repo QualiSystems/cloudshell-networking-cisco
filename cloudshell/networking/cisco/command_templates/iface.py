@@ -30,7 +30,13 @@ REMOVE_INTERFACE = CommandTemplate("no interface {port_name}")
 
 NO_SHUTDOWN = CommandTemplate("no shutdown")
 
+NO_INTERFACE = CommandTemplate("no interface {interface_name}")
+
 SHOW_RUNNING = CommandTemplate("do show running-config [interface {port_name}]")
+
+SHOW_RUNNING_SUB_INTERFACES = CommandTemplate(
+    "do show running-config | include {port_name}."
+)
 
 SHUTDOWN = CommandTemplate("shutdown")
 
