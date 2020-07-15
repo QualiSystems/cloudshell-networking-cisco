@@ -19,7 +19,8 @@ class AddRemoveVlanActions(object):
     )
     CREATE_VLAN_ERROR_PATTERN = re.compile(r"%.*\\.", re.IGNORECASE)
     CHECK_VLAN_ASSIGNED = re.compile(
-        r"switchport.*vlan\s+$", re.MULTILINE | re.IGNORECASE | re.DOTALL
+        r"switchport.*vlan\s+\d+$|switchport\s+mode\s+trunk",
+        re.MULTILINE | re.IGNORECASE | re.DOTALL,
     )
 
     def __init__(self, cli_service, logger):
@@ -75,16 +76,18 @@ class AddRemoveVlanActions(object):
             ).execute_command(vlan_id=vlan)
             if self.CREATE_VLAN_VALIDATION_PATTERN.search(result):
                 self._logger.info("Unable to create vlan, proceeding")
-                return
+                continue
             elif self.CREATE_VLAN_ERROR_PATTERN.search(result):
                 raise Exception("Failed to configure vlan: Unable to create vlan")
 
+            # Enabling switchport
             CommandTemplateExecutor(
                 self._cli_service,
                 iface.STATE_ACTIVE,
                 action_map=action_map,
                 error_map=error_map,
             ).execute_command()
+            # Enabling trunk/access mode
             CommandTemplateExecutor(
                 self._cli_service,
                 iface.NO_SHUTDOWN,
@@ -134,7 +137,6 @@ class AddRemoveVlanActions(object):
             action_map=action_map,
             error_map=error_map,
         ).execute_command()
-
         response = CommandTemplateExecutor(
             self._cli_service,
             add_remove_vlan.SWITCHPORT_MODE,

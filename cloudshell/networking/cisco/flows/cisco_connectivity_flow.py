@@ -50,6 +50,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
             iface_action = self._get_iface_actions(config_session)
             vlan_actions = self._get_vlan_actions(config_session)
             port_name = iface_action.get_port_name(port_name)
+            vlan_range = vlan_range.replace(" ", "")
 
             try:
                 current_config = self._add_switchport_vlan(
@@ -94,7 +95,6 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
     def _add_switchport_vlan(
         self, vlan_actions, iface_actions, vlan_range, port_name, port_mode, qnq, c_tag
     ):
-
         vlan_actions.create_vlan(vlan_range)
         vlan_actions.set_vlan_to_interface(vlan_range, port_mode, port_name, qnq, c_tag)
         current_config = iface_actions.get_current_interface_config(port_name)
