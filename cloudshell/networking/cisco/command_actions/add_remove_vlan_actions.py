@@ -15,7 +15,7 @@ class AddRemoveVlanActions(object):
         r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected", re.IGNORECASE
     )
     CHECK_VLAN_MODE_NOT_REJECTED = re.compile(
-        r"^[Cc]ommand\s*rejected.*encapsulation\s*is\s*\S*Auto", re.IGNORECASE
+        r"^command\s*rejected.*encapsulation\s*is\s*\S*Auto", re.IGNORECASE
     )
     CREATE_VLAN_ERROR_PATTERN = re.compile(r"%.*\\.", re.IGNORECASE)
     CHECK_VLAN_ASSIGNED = re.compile(
