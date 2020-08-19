@@ -1,6 +1,34 @@
 import os
+import sys
+from distutils.version import StrictVersion
 
+from pip import __version__ as pip_version
 from setuptools import find_packages, setup
+from setuptools.version import __version__ as setuptools_version
+
+python = sys.executable
+if StrictVersion(setuptools_version) < StrictVersion("40.0"):
+    emsg = "setuptools>=40 have to be installed"
+    try:
+        s = os.system('{} -m pip install "setuptools>=40"'.format(python))
+    except Exception:
+        raise Exception(emsg)
+    else:
+        if s != 0:
+            raise Exception(emsg)
+        os.execl(python, python, *sys.argv)
+
+if StrictVersion(pip_version) < StrictVersion("20.0"):
+    emsg = "pip>=20 have to be installed"
+    try:
+        s = os.system('{} -m pip install "pip>=20.0"'.format(python))
+    except Exception:
+        raise Exception(emsg)
+    else:
+        if s != 0:
+            raise Exception(emsg)
+        os.execl(python, python, *sys.argv)
+
 
 with open(os.path.join("version.txt")) as version_file:
     version_from_file = version_file.read().strip()
