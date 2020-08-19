@@ -42,7 +42,7 @@ class AddRemoveVlanActions(object):
         :param current_config:
         :return: True or False
         """
-        return AddRemoveVlanActions.CHECK_VLAN_ASSIGNED.search(current_config)
+        return bool(AddRemoveVlanActions.CHECK_VLAN_ASSIGNED.search(current_config))
 
     @staticmethod
     def verify_interface_has_vlan_assigned(vlan_range, current_config):
