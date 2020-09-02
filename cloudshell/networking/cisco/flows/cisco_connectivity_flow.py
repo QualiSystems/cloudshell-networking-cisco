@@ -30,7 +30,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
     def _get_iface_actions(self, config_session):
         return IFaceActions(config_session, self._logger)
 
-    def _add_vlan_flow(self, vlan_range, port_mode, port_name, qnq, c_tag):
+    def _add_vlan_flow(self, vlan_range, port_mode, full_name, qnq, c_tag, vm_uid=None):
         """Configures VLANs on multiple ports or port-channels.
 
         :param vlan_range: VLAN or VLAN range
@@ -49,7 +49,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         ) as config_session:
             iface_action = self._get_iface_actions(config_session)
             vlan_actions = self._get_vlan_actions(config_session)
-            port_name = iface_action.get_port_name(port_name)
+            port_name = iface_action.get_port_name(full_name)
             vlan_range = vlan_range.replace(" ", "")
 
             try:
@@ -115,7 +115,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         current_config = iface_actions.get_current_interface_config(sub_port_name)
         return current_config
 
-    def _remove_all_vlan_flow(self, port_name):
+    def _remove_all_vlan_flow(self, full_name, vm_uid=None):
         """Remove configuration of VLANs on multiple ports or port-channels.
 
         :param port_name: full port name
@@ -123,14 +123,14 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         :return:
         """
         self._logger.info(
-            "Interface {} configuration cleanup started".format(port_name)
+            "Interface {} configuration cleanup started".format(full_name)
         )
         with self._cli_handler.get_cli_service(
             self._cli_handler.config_mode
         ) as config_session:
             iface_action = self._get_iface_actions(config_session)
             vlan_actions = self._get_vlan_actions(config_session)
-            port_name = iface_action.get_port_name(port_name)
+            port_name = iface_action.get_port_name(full_name)
 
             current_config = iface_action.get_current_interface_config(port_name)
             if "switchport" not in current_config:
@@ -154,7 +154,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
             "[ OK ] All VLAN(s) were removed successfully from {}".format(port_name)
         )
 
-    def _remove_vlan_flow(self, vlan_range, port_name, port_mode):
+    def _remove_vlan_flow(self, vlan_range, full_name, port_mode, vm_uid=None):
         """Remove configuration of VLANs on multiple ports or port-channels.
 
         :param vlan_range: VLAN or VLAN range
@@ -170,18 +170,20 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         ) as config_session:
             iface_action = self._get_iface_actions(config_session)
             vlan_actions = self._get_vlan_actions(config_session)
-            port_name = iface_action.get_port_name(port_name)
+            port_name = iface_action.get_port_name(full_name)
 
             current_config = iface_action.get_current_interface_config(port_name)
             if "switchport" not in current_config:
-                self._remove_vlan_from_sub_interface(port_name, iface_action)
-                sub_interfaces_list = iface_action.get_sub_interfaces_config(port_name)
-                for interface in sub_interfaces_list:
-                    if iface_action.check_sub_interface_has_vlan(interface):
-                        is_failed = True
-                        self._logger.error(
-                            "Failed to remove sub interface: {}".format(interface)
-                        )
+                sub_interface_name = "{}.{}".format(port_name, vlan_range)
+                self._remove_sub_interface(sub_interface_name, iface_action)
+                sub_interfaces_list = iface_action.get_current_interface_config(
+                    sub_interface_name
+                )
+                if sub_interface_name in sub_interfaces_list:
+                    is_failed = True
+                    self._logger.error(
+                        "Failed to remove sub interface: {}".format(sub_interface_name)
+                    )
             else:
                 iface_action.enter_iface_config_mode(port_name)
                 iface_action.clean_interface_switchport_config(current_config)
@@ -206,6 +208,9 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         sub_interfaces_list = iface_actions.get_sub_interfaces_config(port_name)
         for sub_int in sub_interfaces_list:
             iface_actions.clean_vlan_sub_iface_config(sub_int)
+
+    def _remove_sub_interface(self, port_name, iface_actions):
+        iface_actions.clean_vlan_sub_iface_config(port_name)
 
     def _remove_vlan_from_interface(self, port_name, iface_actions):
         current_config = iface_actions.get_current_interface_config(port_name)

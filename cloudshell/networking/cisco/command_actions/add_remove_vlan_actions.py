@@ -67,33 +67,31 @@ class AddRemoveVlanActions(object):
         :param error_map: errors will be raised during executing commands,
             i.e. handles Invalid Commands errors
         """
-        for vlan in vlan_range.split(","):
-            result = CommandTemplateExecutor(
-                self._cli_service,
-                add_remove_vlan.CONFIGURE_VLAN,
-                action_map=action_map,
-                error_map=error_map,
-            ).execute_command(vlan_id=vlan)
-            if self.CREATE_VLAN_VALIDATION_PATTERN.search(result):
-                self._logger.info("Unable to create vlan, proceeding")
-                continue
-            elif self.CREATE_VLAN_ERROR_PATTERN.search(result):
-                raise Exception("Failed to configure vlan: Unable to create vlan")
+        result = CommandTemplateExecutor(
+            self._cli_service,
+            add_remove_vlan.CONFIGURE_VLAN,
+            action_map=action_map,
+            error_map=error_map,
+        ).execute_command(vlan_id=vlan_range)
+        if self.CREATE_VLAN_VALIDATION_PATTERN.search(result):
+            self._logger.info("Unable to create vlan, proceeding")
+            return
 
-            # Enabling switchport
-            CommandTemplateExecutor(
-                self._cli_service,
-                iface.STATE_ACTIVE,
-                action_map=action_map,
-                error_map=error_map,
-            ).execute_command()
-            # Enabling trunk/access mode
-            CommandTemplateExecutor(
-                self._cli_service,
-                iface.NO_SHUTDOWN,
-                action_map=action_map,
-                error_map=error_map,
-            ).execute_command()
+        # Set vlan state active
+        CommandTemplateExecutor(
+            self._cli_service,
+            iface.STATE_ACTIVE,
+            action_map=action_map,
+            error_map=error_map,
+        ).execute_command()
+
+        # Enabling trunk/access mode
+        CommandTemplateExecutor(
+            self._cli_service,
+            iface.NO_SHUTDOWN,
+            action_map=action_map,
+            error_map=error_map,
+        ).execute_command()
 
     def set_vlan_to_interface(
         self,
