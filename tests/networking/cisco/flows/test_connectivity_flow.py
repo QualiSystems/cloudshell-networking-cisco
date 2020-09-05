@@ -98,12 +98,13 @@ class TestCiscoAddVlanFlow(TestCase):
     @patch("cloudshell.networking.cisco.flows.cisco_connectivity_flow.IFaceActions")
     @patch(
         "cloudshell.networking.cisco.flows.cisco_connectivity_flow."
-        "CiscoConnectivityFlow._remove_vlan_from_sub_interface"
+        "CiscoConnectivityFlow._remove_sub_interface"
     )
     def test_remove_flow_router(self, rm_sub_iface_mock, iface_mock, vlan_actions_mock):
         port_mode = "trunk"
         port_name = "Ethernet4-5"
         converted_port_name = "Ethernet4/5"
+        converted_sub_port_name = "Ethernet4/5.45"
         vlan_id = "45"
         output = "ip address 10.0.0.0/24"
         iface_obj_mock = iface_mock.return_value
@@ -111,7 +112,7 @@ class TestCiscoAddVlanFlow(TestCase):
         iface_obj_mock.check_sub_interface_has_vlan.return_value = False
         iface_obj_mock.get_current_interface_config.return_value = output
         iface_obj_mock.get_sub_interfaces_config.return_value = [
-            converted_port_name + ".45"
+            converted_sub_port_name
         ]
 
         self._handler._remove_vlan_flow(vlan_id, port_name, port_mode)
@@ -119,13 +120,13 @@ class TestCiscoAddVlanFlow(TestCase):
         iface_obj_mock = iface_mock.return_value
 
         iface_obj_mock.get_port_name.assert_called_once_with(port_name)
-        iface_obj_mock.get_current_interface_config.assert_called_once_with(
-            converted_port_name
+        iface_obj_mock.get_current_interface_config.assert_called_with(
+            converted_sub_port_name
         )
-        iface_obj_mock.get_sub_interfaces_config.assert_called_once()
-        iface_obj_mock.check_sub_interface_has_vlan.assert_called_once()
 
-        rm_sub_iface_mock.assert_called_once_with(converted_port_name, iface_obj_mock)
+        rm_sub_iface_mock.assert_called_once_with(
+            converted_sub_port_name, iface_obj_mock
+        )
 
     @patch(
         "cloudshell.networking.cisco.flows.cisco_connectivity_flow.AddRemoveVlanActions"

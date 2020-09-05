@@ -8,9 +8,9 @@ from cloudshell.networking.cisco.command_actions.add_remove_vlan_actions import 
 from cloudshell.networking.cisco.command_templates.add_remove_vlan import L2_TUNNEL
 
 try:
-    from unittest.mock import MagicMock, create_autospec, patch, call
+    from unittest.mock import MagicMock, create_autospec, patch
 except ImportError:
-    from mock import MagicMock, create_autospec, patch, call
+    from mock import MagicMock, create_autospec, patch
 
 
 class TestAddRemoveVlanActions(TestCase):
@@ -101,15 +101,14 @@ class TestAddRemoveVlanActions(TestCase):
         response = [conf_vlan_mock, state_vlan_mock, no_shut_mock]
         cte_mock.side_effect = [conf_vlan_mock, state_vlan_mock, no_shut_mock]
         vlan_range = "10, 20, 30"
-        vlan_range_list = list(map(lambda x: call(vlan_id=x), vlan_range.split(",")))
-        cte_mock.side_effect = response * len(vlan_range_list)
+        cte_mock.side_effect = response
 
         self._handler.create_vlan(vlan_range)
 
         no_shut_mock.execute_command.assert_called()
         state_vlan_mock.execute_command.assert_called()
 
-        conf_vlan_mock.execute_command.assert_has_calls(vlan_range_list)
+        conf_vlan_mock.execute_command.assert_called_once_with(vlan_id=vlan_range)
 
     @patch(
         "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
