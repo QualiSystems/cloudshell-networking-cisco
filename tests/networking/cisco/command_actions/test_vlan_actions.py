@@ -24,25 +24,48 @@ class TestAddRemoveVlanActions(TestCase):
         vlan_id_3 = "111"
         current_config = """Building configuration...
 
-Current configuration : 118 bytes
-!
-interface FastEthernet0/22
- switchport trunk allowed vlan 11
- switchport mode trunk
- channel-group 1 mode auto
-end
-
-Boogie#
-"""
+        Current configuration : 118 bytes
+        !
+        interface FastEthernet0/22
+         switchport trunk allowed vlan 11
+         switchport mode trunk
+         channel-group 1 mode auto
+        end
+        Boogie#
+        """
         self.assertTrue(
-            self._handler.verify_interface_configured(vlan_id, current_config)
+            self._handler.verify_interface_has_vlan_assigned(vlan_id, current_config)
         )
         self.assertFalse(
-            self._handler.verify_interface_configured(vlan_id_2, current_config)
+            self._handler.verify_interface_has_vlan_assigned(vlan_id_2, current_config)
         )
         self.assertFalse(
-            self._handler.verify_interface_configured(vlan_id_3, current_config)
+            self._handler.verify_interface_has_vlan_assigned(vlan_id_3, current_config)
         )
+
+    def test_verify_interface_has_any_vlan(self):
+        current_config = """Building configuration...
+
+        Current configuration : 118 bytes
+        !
+        interface FastEthernet0/22
+         switchport trunk allowed vlan 11
+         switchport mode trunk
+         channel-group 1 mode auto
+        end
+        Boogie#
+        """
+        self.assertTrue(self._handler.verify_interface_configured(current_config))
+        current_config = """Building configuration...
+
+        Current configuration : 118 bytes
+        !
+        interface FastEthernet0/22
+         channel-group 1 mode auto
+        end
+        Boogie#
+        """
+        self.assertFalse(self._handler.verify_interface_configured(current_config))
 
     @patch(
         "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
@@ -56,7 +79,50 @@ Boogie#
         state_vlan_mock.execute_command.return_value = ""
         no_shut_mock.execute_command.return_value = ""
         cte_mock.side_effect = [conf_vlan_mock, state_vlan_mock, no_shut_mock]
-        vlan_range = MagicMock()
+        vlan_range = "10"
+
+        self._handler.create_vlan(vlan_range)
+
+        no_shut_mock.execute_command.assert_called()
+        state_vlan_mock.execute_command.assert_called()
+        conf_vlan_mock.execute_command.assert_called_with(vlan_id=vlan_range)
+
+    @patch(
+        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
+        ".CommandTemplateExecutor"
+    )
+    def test_create_multiple_vlan(self, cte_mock):
+        conf_vlan_mock = MagicMock()
+        state_vlan_mock = MagicMock()
+        no_shut_mock = MagicMock()
+        conf_vlan_mock.execute_command.return_value = ""
+        state_vlan_mock.execute_command.return_value = ""
+        no_shut_mock.execute_command.return_value = ""
+        response = [conf_vlan_mock, state_vlan_mock, no_shut_mock]
+        cte_mock.side_effect = [conf_vlan_mock, state_vlan_mock, no_shut_mock]
+        vlan_range = "10, 20, 30"
+        cte_mock.side_effect = response
+
+        self._handler.create_vlan(vlan_range)
+
+        no_shut_mock.execute_command.assert_called()
+        state_vlan_mock.execute_command.assert_called()
+
+        conf_vlan_mock.execute_command.assert_called_once_with(vlan_id=vlan_range)
+
+    @patch(
+        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
+        ".CommandTemplateExecutor"
+    )
+    def test_create_vlan_range(self, cte_mock):
+        conf_vlan_mock = MagicMock()
+        state_vlan_mock = MagicMock()
+        no_shut_mock = MagicMock()
+        conf_vlan_mock.execute_command.return_value = ""
+        state_vlan_mock.execute_command.return_value = ""
+        no_shut_mock.execute_command.return_value = ""
+        cte_mock.side_effect = [conf_vlan_mock, state_vlan_mock, no_shut_mock]
+        vlan_range = "150-151"
 
         self._handler.create_vlan(vlan_range)
 
@@ -88,6 +154,7 @@ Boogie#
         no_shut_mock = MagicMock()
         enable_switchport_mock = MagicMock()
         switchport_mode_mock = MagicMock()
+        switchport_mode_mock.execute_command.return_value = "Ok"
         switchport_allow_vlan_mock = MagicMock()
 
         cte_mock.side_effect = [
@@ -130,6 +197,7 @@ Boogie#
         no_shut_mock = MagicMock()
         enable_switchport_mock = MagicMock()
         switchport_mode_mock = MagicMock()
+        switchport_mode_mock.execute_command.return_value = "Ok"
         switchport_allow_vlan_mock = MagicMock()
 
         cte_mock.side_effect = [
@@ -162,6 +230,61 @@ Boogie#
         "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
         ".CommandTemplateExecutor"
     )
+    def test_config_vlan_on_interface_no_qnq_trunk_auto(self, cte_mock):
+        vlan_range = 11
+        port_name = "Ehternet2/25"
+        port_mode = "trunk"
+        error = (
+            "Command rejected: "
+            'An interface whose trunk encapsulation is "Auto" '
+            'can not be configured to "trunk" mode.'
+        )
+
+        conf_interface_mock = MagicMock()
+        no_shut_mock = MagicMock()
+        enable_switchport_mock = MagicMock()
+        switchport_mode_mock = MagicMock()
+        disable_trunk_auto_mock = MagicMock()
+        switchport_mode_mock_w_error = MagicMock()
+        switchport_mode_mock_w_error.execute_command.return_value = error
+        switchport_allow_vlan_mock = MagicMock()
+
+        cte_mock.side_effect = [
+            conf_interface_mock,
+            no_shut_mock,
+            enable_switchport_mock,
+            switchport_mode_mock_w_error,
+            disable_trunk_auto_mock,
+            switchport_mode_mock,
+            switchport_allow_vlan_mock,
+        ]
+
+        self._handler.set_vlan_to_interface(
+            vlan_range=vlan_range,
+            port_name=port_name,
+            port_mode=port_mode,
+            qnq=False,
+            c_tag=None,
+        )
+
+        conf_interface_mock.execute_command.assert_called_once_with(port_name=port_name)
+        no_shut_mock.execute_command.assert_called_once()
+        enable_switchport_mock.execute_command.assert_called_once_with()
+        switchport_mode_mock_w_error.execute_command.assert_called_once_with(
+            port_mode=port_mode
+        )
+        disable_trunk_auto_mock.execute_command.assert_called_once()
+        switchport_mode_mock.execute_command.assert_called_once_with(
+            port_mode=port_mode
+        )
+        switchport_allow_vlan_mock.execute_command.assert_called_once_with(
+            port_mode_trunk="", vlan_range=vlan_range
+        )
+
+    @patch(
+        "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
+        ".CommandTemplateExecutor"
+    )
     def test_config_vlan_on_interface_no_qnq_trunk(self, cte_mock):
         vlan_range = 11
         port_name = "Ehternet2/25"
@@ -171,6 +294,7 @@ Boogie#
         no_shut_mock = MagicMock()
         enable_switchport_mock = MagicMock()
         switchport_mode_mock = MagicMock()
+        switchport_mode_mock.execute_command.return_value = "Ok"
         switchport_allow_vlan_mock = MagicMock()
 
         cte_mock.side_effect = [

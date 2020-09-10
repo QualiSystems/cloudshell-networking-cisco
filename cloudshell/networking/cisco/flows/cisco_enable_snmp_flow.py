@@ -54,11 +54,14 @@ class CiscoEnableSnmpFlow(object):
                                 snmp_group=self.DEFAULT_SNMP_GROUP,
                                 snmp_view=self.DEFAULT_SNMP_VIEW,
                             )
+                        priv_protocol = (
+                            snmp_parameters.snmp_private_key_protocol.lower()
+                        )
                         snmp_actions.enable_snmp_v3(
                             snmp_user=snmp_parameters.snmp_user,
                             snmp_password=snmp_parameters.snmp_password,
-                            auth_protocol=snmp_parameters.auth_protocol.lower(),
-                            priv_protocol=snmp_parameters.private_key_protocol.lower(),
+                            auth_protocol=snmp_parameters.snmp_auth_protocol.lower(),
+                            priv_protocol=priv_protocol,
                             snmp_priv_key=snmp_parameters.snmp_private_key,
                             snmp_group=self.DEFAULT_SNMP_GROUP,
                         )

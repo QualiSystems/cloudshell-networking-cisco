@@ -26,10 +26,10 @@ class CiscoCli(object):
         session_pool = SessionPoolManager(
             max_pool_size=session_pool_size, pool_timeout=pool_timeout
         )
-        self._cli = CLI(session_pool=session_pool)
+        self.cli = CLI(session_pool=session_pool)
 
     def get_cli_handler(self, resource_config, logger):
-        return CiscoCliHandler(self._cli, resource_config, logger)
+        return CiscoCliHandler(self.cli, resource_config, logger)
 
 
 class CiscoCliHandler(AbstractModeConfigurator):

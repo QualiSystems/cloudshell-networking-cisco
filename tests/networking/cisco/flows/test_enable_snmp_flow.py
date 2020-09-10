@@ -70,8 +70,8 @@ class TestCiscoEnableSNMPFlow(TestCase):
         enable_snmp_mock.assert_called_once_with(
             snmp_user=self.snmp_v3_parameters.snmp_user,
             snmp_password=self.snmp_v3_parameters.snmp_password,
-            auth_protocol=self.snmp_v3_parameters.auth_protocol.lower(),
-            priv_protocol=self.snmp_v3_parameters.private_key_protocol.lower(),
+            auth_protocol=self.snmp_v3_parameters.snmp_auth_protocol.lower(),
+            priv_protocol=self.snmp_v3_parameters.snmp_private_key_protocol.lower(),
             snmp_priv_key=self.snmp_v3_parameters.snmp_private_key,
             snmp_group=CiscoEnableSnmpFlow.DEFAULT_SNMP_GROUP,
         )

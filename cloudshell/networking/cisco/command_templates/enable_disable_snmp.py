@@ -23,7 +23,7 @@ ENABLE_SNMP = CommandTemplate(
     "snmp-server community {snmp_community} {read_only}", error_map=ERROR_MAP
 )
 ENABLE_SNMP_VIEW = CommandTemplate(
-    "snmp-server view {snmp_view} 1.3.6 included", error_map=ERROR_MAP
+    "snmp-server view {snmp_view} iso included", error_map=ERROR_MAP
 )
 ENABLE_SNMP_GROUP = CommandTemplate(
     "snmp-server group {snmp_group} v3 priv read {snmp_view} write {snmp_view}",
@@ -42,8 +42,11 @@ ENABLE_SNMP_USER = CommandTemplate(
 DISABLE_SNMP_COMMUNITY = CommandTemplate(
     "no snmp-server community {snmp_community}", error_map=ERROR_MAP
 )
+DISABLE_SNMP_VIEW_ERROR_MAP = {r"\%Bad\s*OID": "Failed to delete snmp view"}
+DISABLE_SNMP_VIEW_ERROR_MAP.update(ERROR_MAP)
 DISABLE_SNMP_VIEW = CommandTemplate(
-    "no snmp-server view {snmp_view}", error_map=ERROR_MAP
+    "no snmp-server view {snmp_view}[ iso{mib_oid}]",
+    error_map=DISABLE_SNMP_VIEW_ERROR_MAP,
 )
 DISABLE_SNMP_GROUP = CommandTemplate(
     "no snmp-server group {snmp_group} v3 priv", error_map=ERROR_MAP

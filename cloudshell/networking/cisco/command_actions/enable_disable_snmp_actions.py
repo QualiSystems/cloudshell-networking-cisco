@@ -4,6 +4,7 @@
 from cloudshell.cli.command_template.command_template_executor import (
     CommandTemplateExecutor,
 )
+from cloudshell.cli.session.session_exceptions import CommandExecutionException
 
 from cloudshell.networking.cisco.command_templates import enable_disable_snmp
 
@@ -153,19 +154,34 @@ class EnableDisableSnmpActions(object):
             i.e. handles Invalid Commands errors
         """
         if snmp_group:
-            result = CommandTemplateExecutor(
-                cli_service=self._cli_service,
-                command_template=enable_disable_snmp.ENABLE_SNMP_V3_WITH_GROUP,
-                action_map=action_map,
-                error_map=error_map,
-            ).execute_command(
-                snmp_user=snmp_user,
-                snmp_password=snmp_password,
-                auth_protocol=auth_protocol,
-                snmp_priv_key=snmp_priv_key,
-                priv_protocol=priv_protocol,
-                snmp_group=snmp_group,
-            )
+            try:
+                result = CommandTemplateExecutor(
+                    cli_service=self._cli_service,
+                    command_template=enable_disable_snmp.ENABLE_SNMP_V3_WITH_GROUP,
+                    action_map=action_map,
+                    error_map=error_map,
+                ).execute_command(
+                    snmp_user=snmp_user,
+                    snmp_password=snmp_password,
+                    auth_protocol=auth_protocol,
+                    snmp_priv_key=snmp_priv_key,
+                    priv_protocol=priv_protocol,
+                    snmp_group=snmp_group,
+                )
+            except CommandExecutionException:
+                result = CommandTemplateExecutor(
+                    cli_service=self._cli_service,
+                    command_template=enable_disable_snmp.ENABLE_SNMP_V3_WITH_GROUP,
+                    action_map=action_map,
+                    error_map=error_map,
+                ).execute_command(
+                    snmp_user=snmp_user,
+                    snmp_password=snmp_password,
+                    auth_protocol=auth_protocol,
+                    snmp_priv_key=snmp_priv_key,
+                    priv_protocol=priv_protocol.replace("-", " "),
+                    snmp_group=snmp_group,
+                )
         else:
             result = CommandTemplateExecutor(
                 cli_service=self._cli_service,
@@ -222,12 +238,20 @@ class EnableDisableSnmpActions(object):
         :param error_map: errors will be raised during executing commands,
             i.e. handles Invalid Commands errors
         """
-        return CommandTemplateExecutor(
-            cli_service=self._cli_service,
-            command_template=enable_disable_snmp.DISABLE_SNMP_VIEW,
-            action_map=action_map,
-            error_map=error_map,
-        ).execute_command(snmp_view=snmp_view)
+        try:
+            CommandTemplateExecutor(
+                cli_service=self._cli_service,
+                command_template=enable_disable_snmp.DISABLE_SNMP_VIEW,
+                action_map=action_map,
+                error_map=error_map,
+            ).execute_command(snmp_view=snmp_view)
+        except CommandExecutionException:
+            CommandTemplateExecutor(
+                cli_service=self._cli_service,
+                command_template=enable_disable_snmp.DISABLE_SNMP_VIEW,
+                action_map=action_map,
+                error_map=error_map,
+            ).execute_command(snmp_view=snmp_view, mib_oid="")
 
     def remove_snmp_user(
         self, snmp_user, snmp_group=None, action_map=None, error_map=None

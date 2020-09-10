@@ -14,7 +14,14 @@ class AddRemoveVlanActions(object):
     CREATE_VLAN_VALIDATION_PATTERN = re.compile(
         r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected", re.IGNORECASE
     )
+    CHECK_VLAN_MODE_NOT_REJECTED = re.compile(
+        r"^command\s*rejected.*encapsulation\s*is\s*\S*Auto", re.IGNORECASE
+    )
     CREATE_VLAN_ERROR_PATTERN = re.compile(r"%.*\\.", re.IGNORECASE)
+    CHECK_VLAN_ASSIGNED = re.compile(
+        r"switchport.*vlan\s+\d+$|switchport\s+mode\s+trunk",
+        re.MULTILINE | re.IGNORECASE | re.DOTALL,
+    )
 
     def __init__(self, cli_service, logger):
         """Add remove vlan.
@@ -29,7 +36,16 @@ class AddRemoveVlanActions(object):
         self._logger = logger
 
     @staticmethod
-    def verify_interface_configured(vlan_range, current_config):
+    def verify_interface_configured(current_config):
+        """Verify interface configuration.
+
+        :param current_config:
+        :return: True or False
+        """
+        return bool(AddRemoveVlanActions.CHECK_VLAN_ASSIGNED.search(current_config))
+
+    @staticmethod
+    def verify_interface_has_vlan_assigned(vlan_range, current_config):
         """Verify interface configuration.
 
         :param vlan_range:
@@ -60,15 +76,16 @@ class AddRemoveVlanActions(object):
         if self.CREATE_VLAN_VALIDATION_PATTERN.search(result):
             self._logger.info("Unable to create vlan, proceeding")
             return
-        elif self.CREATE_VLAN_ERROR_PATTERN.search(result):
-            raise Exception("Failed to configure vlan: Unable to create vlan")
 
+        # Set vlan state active
         CommandTemplateExecutor(
             self._cli_service,
             iface.STATE_ACTIVE,
             action_map=action_map,
             error_map=error_map,
         ).execute_command()
+
+        # Enabling trunk/access mode
         CommandTemplateExecutor(
             self._cli_service,
             iface.NO_SHUTDOWN,
@@ -118,13 +135,25 @@ class AddRemoveVlanActions(object):
             action_map=action_map,
             error_map=error_map,
         ).execute_command()
-
-        CommandTemplateExecutor(
+        response = CommandTemplateExecutor(
             self._cli_service,
             add_remove_vlan.SWITCHPORT_MODE,
             action_map=action_map,
             error_map=error_map,
         ).execute_command(port_mode=port_mode)
+        if self.CHECK_VLAN_MODE_NOT_REJECTED.search(response):
+            CommandTemplateExecutor(
+                self._cli_service,
+                add_remove_vlan.SWITCHPORT_REMOVE_TRUNK_AUTO,
+                action_map=action_map,
+                error_map=error_map,
+            ).execute_command(port_mode_trunk="", vlan_range=vlan_range)
+            CommandTemplateExecutor(
+                self._cli_service,
+                add_remove_vlan.SWITCHPORT_MODE,
+                action_map=action_map,
+                error_map=error_map,
+            ).execute_command(port_mode=port_mode)
         if qnq:
             self._get_l2_protocol_tunnel_cmd(action_map, error_map).execute_command()
 
@@ -135,6 +164,7 @@ class AddRemoveVlanActions(object):
                 action_map=action_map,
                 error_map=error_map,
             ).execute_command(port_mode_access="", vlan_range=vlan_range)
+
         else:
             CommandTemplateExecutor(
                 self._cli_service,
