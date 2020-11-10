@@ -26,7 +26,7 @@ class CiscoSnmpPortAttrTables(SnmpPortAttrTables):
             )
             if cisco_duplex_state_table:
                 self._cisco_duplex_state_table = {
-                    v.get("portIfIndex", "").lower(): k
+                    v.get("portIfIndex", "").safe_value.lower(): k
                     for k, v in cisco_duplex_state_table.items()
                 }
             self._logger.info("Duplex portIfIndex table loaded")

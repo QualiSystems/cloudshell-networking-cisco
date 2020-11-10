@@ -1,5 +1,6 @@
 from cloudshell.snmp.autoload.core.snmp_oid_template import SnmpMibOidTemplate
 from cloudshell.snmp.autoload.domain.if_entity.snmp_if_port_entity import SnmpIfPort
+from cloudshell.snmp.core.domain.snmp_oid import SnmpMibObject
 
 
 class CiscoSnmpIfPort(SnmpIfPort):
@@ -55,8 +56,8 @@ class CiscoSnmpIfPort(SnmpIfPort):
             cisco_duplex_id = state_table.get(str(self.if_index))
             if cisco_duplex_id:
                 self._cisco_duplex = self._snmp.get_property(
-                    "CISCO-STACK-MIB", "portDuplex", cisco_duplex_id
-                ).replace("'", "")
+                    SnmpMibObject("CISCO-STACK-MIB", "portDuplex", cisco_duplex_id)
+                ).safe_value.replace("'", "")
         return self._cisco_duplex
 
     def _get_duplex(self):
