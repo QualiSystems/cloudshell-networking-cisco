@@ -46,7 +46,7 @@ jobs:
           pip install tox
       - name: Run pre-commit
         env:
-          TOXENV="pre-commit"
+          TOXENV: pre-commit
         run: tox
   build:
     name: Build package
@@ -64,5 +64,5 @@ jobs:
           pip install tox
       - name: Build
         env:
-          TOXENV="build"
+          TOXENV: build
         run: tox
