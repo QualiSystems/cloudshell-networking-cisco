@@ -22,17 +22,12 @@ jobs:
           pip install tox codecov
       - name: Set py-version
         run: |
-          python-version="${{ matrix.python-version }}"
-          py-version="${python-version/./}"
-          echo $py-version
-          echo "::set-env name=py-version::$py-version"
-      - name: Set TOXENV
-        if: ${{ github.ref == refs/heads/master
-        env:
-          TOXENV: ${{ format('py{0}-master', $py-version) }}
-      - name: Set TOXENV
-        if: ${{ github.ref == refs/heads/master
-        env:
-          TOXENV: ${{ format('py{0}-dev', $py-version) }}
-      - name: Run tests
+          python_version="${{ matrix.python-version }}"
+          py_version="${python_version/./}"
+          echo $py_version
+          branch=(`[[ 'refs/head/master' == ${{ github.ref }} ]] && echo 'master' || echo 'dev'`)
+          echo $branch
+          TOXENV="py$py_version-$branch"
+          echo "::set-env name=TOXENV::$TOXENV"
+      - name: run test
         run: tox
