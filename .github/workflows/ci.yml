@@ -24,10 +24,9 @@ jobs:
         run: |
           python_version="${{ matrix.python-version }}"
           py_version="${python_version/./}"
-          echo $py_version
           branch=(`[[ 'refs/head/master' == ${{ github.ref }} ]] && echo 'master' || echo 'dev'`)
-          echo $branch
           TOXENV="py$py_version-$branch"
-          echo "::set-env name=TOXENV::$TOXENV"
+          echo $TOXENV
+          echo "TOXENV=$TOXENV" >> $GITHUB_ENV
       - name: run test
         run: tox
