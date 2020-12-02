@@ -38,14 +38,15 @@ jobs:
         uses: actions/checkout@v2
       - name: Set up Python 3.7
         uses: actions/setup-python@v2
-        python-version: 3.7
+          with:
+            python-version: 3.7
       - name: Install dependencies
         run: |
           python -m pip install pip -U
           pip install tox
       - name: Run pre-commit
         env:
-          TOXENV=pre-commit
+          TOXENV="pre-commit"
         run: tox
   build:
     name: Build package
@@ -55,12 +56,13 @@ jobs:
         uses: actions/checkout@v2
       - name: Set up Python 3.7
         uses: actions/setup-python@v2
-        python-version: 3.7
+          with:
+            python-version: 3.7
       - name: Install dependencies
         run: |
           python -m pip install pip -U
           pip install tox
       - name: Build
         env:
-          TOXENV=build
+          TOXENV="build"
         run: tox
