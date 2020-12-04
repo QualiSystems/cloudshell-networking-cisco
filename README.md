@@ -1,5 +1,5 @@
 # cloudshell-networking-cisco
-[![Build status](https://travis-ci.org/QualiSystems/cloudshell-networking-cisco.svg?branch=master)](https://travis-ci.org/QualiSystems/cloudshell-networking-cisco)
+[![Build status](https://github.com/QualiSystems/cloudshell-networking-cisco/workflows/CI/badge.svg?branch=master)](https://github.com/QualiSystems/cloudshell-networking-cisco/actions?query=branch%3Amaster)
 [![codecov](https://codecov.io/gh/QualiSystems/cloudshell-networking-cisco/branch/master/graph/badge.svg)](https://codecov.io/gh/QualiSystems/cloudshell-networking-cisco)
 [![PyPI version](https://badge.fury.io/py/cloudshell-networking-cisco.svg)](https://badge.fury.io/py/cloudshell-networking-cisco)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
