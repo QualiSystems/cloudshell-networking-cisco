@@ -6,6 +6,7 @@ import re
 from cloudshell.cli.command_template.command_template_executor import (
     CommandTemplateExecutor,
 )
+from cloudshell.shell.flows.connectivity.helpers.vlan_handler import VLANHandler
 
 from cloudshell.networking.cisco.command_templates import add_remove_vlan, iface
 
@@ -18,7 +19,7 @@ class AddRemoveVlanActions(object):
         r"^command\s*rejected.*encapsulation\s*is\s*\S*Auto", re.IGNORECASE
     )
     CREATE_VLAN_ERROR_PATTERN = re.compile(r"%.*\\.", re.IGNORECASE)
-    CHECK_VLAN_ASSIGNED = re.compile(
+    CHECK_ANY_VLAN_CFGED = re.compile(
         r"switchport.*vlan\s+\d+$|switchport\s+mode\s+trunk",
         re.MULTILINE | re.IGNORECASE | re.DOTALL,
     )
@@ -42,7 +43,7 @@ class AddRemoveVlanActions(object):
         :param current_config:
         :return: True or False
         """
-        return bool(AddRemoveVlanActions.CHECK_VLAN_ASSIGNED.search(current_config))
+        return bool(AddRemoveVlanActions.CHECK_ANY_VLAN_CFGED.search(current_config))
 
     @staticmethod
     def verify_interface_has_vlan_assigned(vlan_range, current_config):
@@ -52,11 +53,30 @@ class AddRemoveVlanActions(object):
         :param current_config:
         :return: True or False
         """
-        return re.search(
-            r"switchport.*vlan\s+{0}$".format(str(vlan_range)),
-            current_config,
-            re.MULTILINE | re.IGNORECASE | re.DOTALL,
-        )
+        vlans_list = VLANHandler(
+            is_vlan_range_supported=True, is_multi_vlan_supported=False
+        ).get_vlan_list(vlan_range)
+        vlan_range_list = [v for v in vlans_list if "-" in v]
+        for vlan_range in vlan_range_list:
+            str_vlan_range_ls = vlan_range.split("-")
+
+            vlan_range_ls = list(map(int, str_vlan_range_ls))
+            vlan_min = min(vlan_range_ls)
+            vlan_max = max(vlan_range_ls)
+
+            for vlan in vlans_list:
+                vlans_range = range(vlan_min, vlan_max)
+                if vlan not in vlan_range_list and int(vlan) in vlans_range:
+                    vlans_list.remove(vlan)
+            if len(range(vlan_min, vlan_max)) == 1:
+                vlans_list.remove(vlan_range)
+                vlans_list.extend(str_vlan_range_ls)
+        for vlan in vlans_list:
+            if not re.search(
+                rf"switchport.*vlan.*\b{vlan}\b", current_config, re.IGNORECASE
+            ):
+                raise Exception(f"Unable to add vlan {vlan}")
+        return True
 
     def create_vlan(self, vlan_range, action_map=None, error_map=None):
         """Create vlan entity on the device.

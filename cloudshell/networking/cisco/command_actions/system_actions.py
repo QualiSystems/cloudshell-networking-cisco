@@ -147,7 +147,13 @@ class SystemActions(object):
         ).execute_command(target=path)
 
     def override_running(
-        self, path, action_map=None, error_map=None, timeout=300, reconnect_timeout=1600
+        self,
+        path,
+        vrf=None,
+        action_map=None,
+        error_map=None,
+        timeout=300,
+        reconnect_timeout=1600,
     ):
         """Override running-config.
 
@@ -167,7 +173,7 @@ class SystemActions(object):
                 error_map=error_map,
                 timeout=timeout,
                 check_action_loop_detector=False,
-            ).execute_command(path=path)
+            ).execute_command(path=path, vrf=vrf)
             match_error = re.search(r"[Ee]rror.*", output, flags=re.DOTALL)
             if match_error:
                 error_str = match_error.group()
