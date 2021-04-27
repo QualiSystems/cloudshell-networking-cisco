@@ -54,6 +54,7 @@ class AddRemoveVlanActions(object):
         :param current_config:
         :return: True or False
         """
+        success = True
         vlans_list = VLANHandler(
             is_vlan_range_supported=True, is_multi_vlan_supported=False
         ).get_vlan_list(vlan_range)
@@ -76,8 +77,8 @@ class AddRemoveVlanActions(object):
             if not re.search(
                 rf"switchport.*vlan.*\b{vlan}\b", current_config, re.IGNORECASE
             ):
-                raise Exception(f"Unable to add vlan {vlan}")
-        return True
+                success = False
+        return success
 
     def create_vlan(self, vlan_range, action_map=None, error_map=None):
         """Create vlan entity on the device.
