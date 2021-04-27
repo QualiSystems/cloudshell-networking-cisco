@@ -6,6 +6,7 @@ import re
 from cloudshell.cli.command_template.command_template_executor import (
     CommandTemplateExecutor,
 )
+from cloudshell.cli.session.session_exceptions import SessionException
 from cloudshell.shell.flows.connectivity.helpers.vlan_handler import VLANHandler
 
 from cloudshell.networking.cisco.command_templates import add_remove_vlan, iface
@@ -253,12 +254,23 @@ class AddRemoveVlanActions(object):
                 error_map=error_map,
             ).execute_command(vlan_id=vlan_range, qnq="")
         else:
-            CommandTemplateExecutor(
-                self._cli_service,
-                add_remove_vlan.VLAN_SUB_IFACE,
-                action_map=action_map,
-                error_map=error_map,
-            ).execute_command(vlan_id=vlan_range, untagged=untagged)
+            try:
+                CommandTemplateExecutor(
+                    self._cli_service,
+                    add_remove_vlan.VLAN_SUB_IFACE,
+                    action_map=action_map,
+                    error_map=error_map,
+                ).execute_command(vlan_id=vlan_range, untagged=untagged)
+            except SessionException:
+                self._logger.warning(
+                    "Unable to configure sub interface with untagged encapsulation."
+                )
+                CommandTemplateExecutor(
+                    self._cli_service,
+                    add_remove_vlan.VLAN_SUB_IFACE,
+                    action_map=action_map,
+                    error_map=error_map,
+                ).execute_command(vlan_id=vlan_range)
 
     def clean_vlan_sub_interface(self, port_name):
         CommandTemplateExecutor(
