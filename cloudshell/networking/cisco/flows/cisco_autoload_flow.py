@@ -1,8 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import os
+import re
+from collections import OrderedDict
 
 from cloudshell.shell.flows.autoload.basic_flow import AbstractAutoloadFlow
+from cloudshell.snmp.autoload.constants import entity_constants
 
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import (
     CiscoGenericSNMPAutoload,
@@ -15,8 +18,19 @@ from cloudshell.networking.cisco.autoload.cisco_snmp_if_port_channel import (
     CiscoIfPortChannel,
 )
 
+entity_constants.ENTITY_VENDOR_TYPE_TO_CLASS_MAP = OrderedDict(
+    [
+        (re.compile(r"^\S+cevcontainer", re.IGNORECASE), "container"),
+        (re.compile(r"^\S+cevchassis", re.IGNORECASE), "chassis"),
+        (re.compile(r"^\S+cevmodule", re.IGNORECASE), "module"),
+        (re.compile(r"^\S+cevport", re.IGNORECASE), "port"),
+        (re.compile(r"^\S+cevpowersupply", re.IGNORECASE), "powerSupply"),
+    ]
+)
+
 
 class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
+
     CISCO_MIBS_FOLDER = os.path.join(os.path.dirname(__file__), os.pardir, "mibs")
     DEVICE_NAMES_MAP_FILE = os.path.join(CISCO_MIBS_FOLDER, "device_names_map.csv")
 
@@ -35,12 +49,12 @@ class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
                 r"stack|engine|management|"
                 r"mgmt|voice|foreign|cpu|"
                 r"control\s*ethernet\s*port|"
-                r"console\s*port"
+                r"usb\s*port"
             )
             cisco_snmp_autoload.entity_table_service.set_module_exclude_pattern(
                 r"powershelf|cevsfp|cevxfr|"
                 r"cevxfp|cevContainer10GigBasePort|"
-                r"cevModulePseAsicPlim"
+                r"cevModulePseAsicPlim|cevModuleCommonCardsPSEASIC"
             )
             (
                 cisco_snmp_autoload.if_table_service.port_attributes_service
