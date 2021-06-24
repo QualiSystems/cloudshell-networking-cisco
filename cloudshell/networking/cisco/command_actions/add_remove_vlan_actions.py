@@ -75,7 +75,9 @@ class AddRemoveVlanActions(object):
                 vlans_list.extend(str_vlan_range_ls)
         for vlan in vlans_list:
             if not re.search(
-                rf"switchport.*vlan.*\b{vlan}\b", current_config, re.IGNORECASE
+                r"switchport.*vlan.*\b{vlan}\b".format(vlan=vlan),
+                current_config,
+                re.IGNORECASE,
             ):
                 success = False
         return success
