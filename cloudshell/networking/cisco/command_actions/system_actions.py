@@ -18,6 +18,11 @@ from cloudshell.networking.cisco.command_templates import configuration, firmwar
 
 
 class SystemActions(object):
+    SUCCESS_COPY_PATTERN = (
+        r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|"
+        r"[Cc]opy complete|[\(\[]OK[\]\)]"
+    )
+
     def __init__(self, cli_service, logger):
         """Reboot actions.
 
@@ -108,11 +113,8 @@ class SystemActions(object):
             timeout=timeout,
         ).execute_command(src=source, dst=destination, vrf=vrf)
 
-        copy_ok_pattern = (
-            r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|"
-            r"[Cc]opy complete|[\(\[]OK[\]\)]"
-        )
-        status_match = re.search(copy_ok_pattern, output, re.IGNORECASE)
+        status_match = re.search(self.SUCCESS_COPY_PATTERN, output, re.IGNORECASE)
+
         if not status_match:
             match_error = re.search(
                 r"%.*|TFTP put operation failed.*|sysmgr.*not supported.*\n",

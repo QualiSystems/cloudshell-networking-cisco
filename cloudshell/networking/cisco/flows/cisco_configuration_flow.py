@@ -14,6 +14,9 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
         super(CiscoConfigurationFlow, self).__init__(logger, resource_config)
         self._cli_handler = cli_handler
 
+    def _get_system_actions(self, enable_session):
+        return SystemActions(enable_session, self._logger)
+
     @property
     def _file_system(self):
         return DEFAULT_FILE_SYSTEM
@@ -29,7 +32,7 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
         with self._cli_handler.get_cli_service(
             self._cli_handler.enable_mode
         ) as enable_session:
-            save_action = SystemActions(enable_session, self._logger)
+            save_action = self._get_system_actions(enable_session)
             action_map = save_action.prepare_action_map(configuration_type, folder_path)
             save_action.copy(
                 configuration_type,
@@ -57,7 +60,7 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
         with self._cli_handler.get_cli_service(
             self._cli_handler.enable_mode
         ) as enable_session:
-            restore_action = SystemActions(enable_session, self._logger)
+            restore_action = self._get_system_actions(enable_session)
             copy_action_map = restore_action.prepare_action_map(
                 path, configuration_type
             )

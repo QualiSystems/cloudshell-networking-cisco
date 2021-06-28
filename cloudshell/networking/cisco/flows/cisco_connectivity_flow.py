@@ -38,7 +38,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         :param vlan_range: VLAN or VLAN range
         :param port_mode: mode which will be configured on port.
             Possible Values are trunk and access
-        :param port_name: full port name
+        :param full_name: full port name
         :param qnq:
         :param c_tag:
         :return:
@@ -121,7 +121,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
     def _remove_all_vlan_flow(self, full_name, vm_uid=None):
         """Remove configuration of VLANs on multiple ports or port-channels.
 
-        :param port_name: full port name
+        :param full_name: full port name
             Possible Values are trunk and access
         :return:
         """
