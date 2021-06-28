@@ -28,6 +28,25 @@ class TestCiscoConfigurationTemplates(TestCase):
             output, "|".join(configure_replace["error_map"].keys())
         )
 
+    def test_configure_replace_with_vrf_validates_error_output(self):
+        output = """Command: configure replace ftp://admin:password@10.3.3.22/CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg vrf MGMT
+            This will apply all necessary additions and deletions
+            to replace the current running configuration with the
+            contents of the specified configuration file, which is
+            assumed to be a complete configuration, not a partial
+            configuration. Enter Y if you are sure you want to proceed. ? [no]: y
+            Loading CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg !
+            [OK - 3569/4096 bytes]
+            Loading CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg !
+            [OK - 3569/4096 bytes]
+            %The input file is not a valid config file.
+            37501#
+            """  # noqa: E501
+        configure_replace = CONFIGURE_REPLACE.get_command(path=self.path, vrf="MGMT")
+        self.assertRegexpMatches(
+            output, "|".join(configure_replace["error_map"].keys())
+        )
+
     def test_configure_replace_ignores_rollback_done_output(self):
         output = """configure replace ftp://admin:password@10.33.3.22/CloudShell/config
             This will apply all necessary additions and deletions

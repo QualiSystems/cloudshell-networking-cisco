@@ -18,11 +18,13 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         logger,
         support_vlan_range_str=False,
         support_multi_vlan_str=False,
+        is_switch=False,
     ):
         super(CiscoConnectivityFlow, self).__init__(logger)
         self._cli_handler = cli_handler
         self.IS_VLAN_RANGE_SUPPORTED = support_vlan_range_str
         self.IS_MULTI_VLAN_SUPPORTED = support_multi_vlan_str
+        self.is_switch = is_switch
 
     def _get_vlan_actions(self, config_session):
         return AddRemoveVlanActions(config_session, self._logger)
@@ -41,7 +43,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         :param c_tag:
         :return:
         """
-        success = True
+        success = False
         self._logger.info("Add VLAN(s) {} configuration started".format(vlan_range))
 
         with self._cli_handler.get_cli_service(
@@ -62,23 +64,24 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
                     qnq,
                     c_tag,
                 )
-                if not vlan_actions.verify_interface_has_vlan_assigned(
+                if vlan_actions.verify_interface_has_vlan_assigned(
                     vlan_range, current_config
                 ):
-                    success = False
+                    success = True
             except CommandExecutionException:
-                current_config = self._add_sub_interface_vlan(
-                    vlan_actions,
-                    iface_action,
-                    vlan_range,
-                    port_name,
-                    port_mode,
-                    qnq,
-                    c_tag,
-                )
+                if not self.is_switch:
+                    current_config = self._add_sub_interface_vlan(
+                        vlan_actions,
+                        iface_action,
+                        vlan_range,
+                        port_name,
+                        port_mode,
+                        qnq,
+                        c_tag,
+                    )
 
-                if not "{}.{}".format(port_name, vlan_range) in current_config:
-                    success = False
+                    if "{}.{}".format(port_name, vlan_range) in current_config:
+                        success = True
             if not success:
                 raise Exception(
                     self.__class__.__name__,
@@ -174,16 +177,19 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
 
             current_config = iface_action.get_current_interface_config(port_name)
             if "switchport" not in current_config:
-                sub_interface_name = "{}.{}".format(port_name, vlan_range)
-                self._remove_sub_interface(sub_interface_name, iface_action)
-                sub_interfaces_list = iface_action.get_current_interface_config(
-                    sub_interface_name
-                )
-                if sub_interface_name in sub_interfaces_list:
-                    is_failed = True
-                    self._logger.error(
-                        "Failed to remove sub interface: {}".format(sub_interface_name)
+                if not self.is_switch:
+                    sub_interface_name = "{}.{}".format(port_name, vlan_range)
+                    self._remove_sub_interface(sub_interface_name, iface_action)
+                    sub_interfaces_list = iface_action.get_current_interface_config(
+                        sub_interface_name
                     )
+                    if sub_interface_name in sub_interfaces_list:
+                        is_failed = True
+                        self._logger.error(
+                            "Failed to remove sub interface: {}".format(
+                                sub_interface_name
+                            )
+                        )
             else:
                 iface_action.enter_iface_config_mode(port_name)
                 iface_action.clean_interface_switchport_config(current_config)
