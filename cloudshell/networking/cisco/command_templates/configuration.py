@@ -36,7 +36,7 @@ DEL = CommandTemplate(
 )
 
 CONFIGURE_REPLACE = CommandTemplate(
-    "configure replace {path}",
+    "configure replace {path} [{vrf}]",
     action_map=OrderedDict(
         {
             r"[\[\(][Yy]es/[Nn]o[\)\]]": lambda session, logger: session.send_line(
