@@ -62,7 +62,7 @@ class AddRemoveVlanActions(object):
         for vlan_range in vlan_range_list:
             str_vlan_range_ls = vlan_range.split("-")
 
-            vlan_range_ls = list(map(int, str_vlan_range_ls))
+            vlan_range_ls = map(int, str_vlan_range_ls)
             vlan_min = min(vlan_range_ls)
             vlan_max = max(vlan_range_ls)
 
