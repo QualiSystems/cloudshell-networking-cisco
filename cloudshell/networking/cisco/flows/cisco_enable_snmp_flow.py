@@ -94,9 +94,8 @@ class CiscoEnableSnmpFlow(object):
                     updated_snmp_user = updated_snmp_actions.get_current_snmp_user()
                     if snmp_parameters.snmp_user not in updated_snmp_user:
                         raise Exception(
-                            self.__class__.__name__,
                             "Failed to create SNMP v3 Configuration."
-                            + " Please check Logs for details",
+                            + " Please check Logs for details"
                         )
                 else:
                     updated_snmp_communities = (
@@ -109,7 +108,6 @@ class CiscoEnableSnmpFlow(object):
                         updated_snmp_communities,
                     ):
                         raise Exception(
-                            self.__class__.__name__,
                             "Failed to create SNMP community."
-                            + " Please check Logs for details",
+                            + " Please check Logs for details"
                         )
