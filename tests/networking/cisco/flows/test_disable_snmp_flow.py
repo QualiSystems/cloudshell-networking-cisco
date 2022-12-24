@@ -1,20 +1,19 @@
 from unittest import TestCase
 
+from cloudshell.networking.cisco.flows.cisco_disable_snmp_flow import (
+    CiscoDisableSnmpFlow,
+)
+from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
 from cloudshell.snmp.snmp_parameters import (
     SNMPReadParameters,
     SNMPV3Parameters,
     SNMPWriteParameters,
 )
 
-from cloudshell.networking.cisco.flows.cisco_disable_snmp_flow import (
-    CiscoDisableSnmpFlow,
-)
-from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
-
 try:
     from unittest.mock import MagicMock, patch
 except ImportError:
-    from mock import MagicMock, patch
+    from unittest.mock import MagicMock, patch
 
 
 class TestCiscoDisableSNMPFlow(TestCase):
@@ -77,7 +76,7 @@ class TestCiscoDisableSNMPFlow(TestCase):
         ]
         (
             disable_actions_mock.return_value.get_current_snmp_config.return_value
-        ) = "snmp-server view {}".format(CiscoEnableSnmpFlow.DEFAULT_SNMP_VIEW)
+        ) = f"snmp-server view {CiscoEnableSnmpFlow.DEFAULT_SNMP_VIEW}"
 
         disable_flow = self._get_handler()
         self.snmp_v3_parameters = SNMPV3Parameters(

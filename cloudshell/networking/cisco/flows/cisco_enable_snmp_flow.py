@@ -1,15 +1,13 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 import re
-
-from cloudshell.snmp.snmp_parameters import SNMPV3Parameters
 
 from cloudshell.networking.cisco.command_actions.enable_disable_snmp_actions import (
     EnableDisableSnmpActions,
 )
+from cloudshell.snmp.snmp_parameters import SNMPV3Parameters
 
 
-class CiscoEnableSnmpFlow(object):
+class CiscoEnableSnmpFlow:
     DEFAULT_SNMP_VIEW = "quali_snmp_view"
     DEFAULT_SNMP_GROUP = "quali_snmp_group"
 
@@ -40,14 +38,14 @@ class CiscoEnableSnmpFlow(object):
                         snmp_parameters.validate()
                         current_snmp_config = snmp_actions.get_current_snmp_config()
                         if (
-                            "snmp-server view {}".format(self.DEFAULT_SNMP_VIEW)
+                            f"snmp-server view {self.DEFAULT_SNMP_VIEW}"
                             not in current_snmp_config
                         ):
                             snmp_actions.enable_snmp_view(
                                 snmp_view=self.DEFAULT_SNMP_VIEW
                             )
                         if (
-                            "snmp-server group {}".format(self.DEFAULT_SNMP_GROUP)
+                            f"snmp-server group {self.DEFAULT_SNMP_GROUP}"
                             not in current_snmp_config
                         ):
                             snmp_actions.enable_snmp_group(

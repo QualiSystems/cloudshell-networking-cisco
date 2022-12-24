@@ -1,13 +1,13 @@
 from unittest import TestCase
 
-from . import system_actions_output
-
 from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
+
+from . import system_actions_output
 
 try:
     from unittest.mock import MagicMock, patch
 except ImportError:
-    from mock import MagicMock, patch
+    from unittest.mock import MagicMock, patch
 
 
 class TestCiscoSystemActionsCopy(TestCase):

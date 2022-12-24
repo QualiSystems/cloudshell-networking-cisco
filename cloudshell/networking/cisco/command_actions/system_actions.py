@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 import re
 import time
@@ -12,12 +11,11 @@ from cloudshell.cli.session.session_exceptions import (
     CommandExecutionException,
     ExpectedSessionException,
 )
+from cloudshell.networking.cisco.command_templates import configuration, firmware
 from cloudshell.shell.flows.utils.networking_utils import UrlParser
 
-from cloudshell.networking.cisco.command_templates import configuration, firmware
 
-
-class SystemActions(object):
+class SystemActions:
     def __init__(self, cli_service, logger):
         """Reboot actions.
 
@@ -38,11 +36,11 @@ class SystemActions(object):
             dst_file_name = url.get(UrlParser.FILENAME)
             source_file_name = UrlParser.parse_url(source_file).get(UrlParser.FILENAME)
             action_map[
-                r"[\[\(].*{}[\)\]]".format(dst_file_name)
+                rf"[\[\(].*{dst_file_name}[\)\]]"
             ] = lambda session, logger: session.send_line("", logger)
 
             action_map[
-                r"[\[\(]{}[\)\]]".format(source_file_name)
+                rf"[\[\(]{source_file_name}[\)\]]"
             ] = lambda session, logger: session.send_line("", logger)
         else:
             destination_file_name = UrlParser.parse_url(destination_file).get(
@@ -52,10 +50,10 @@ class SystemActions(object):
 
             source_file_name = url.get(UrlParser.FILENAME)
             action_map[
-                r"(?!/)[\[\(]{}[\)\]]".format(destination_file_name)
+                rf"(?!/)[\[\(]{destination_file_name}[\)\]]"
             ] = lambda session, logger: session.send_line("", logger)
             action_map[
-                r"(?!/)[\[\(]{}[\)\]]".format(source_file_name)
+                rf"(?!/)[\[\(]{source_file_name}[\)\]]"
             ] = lambda session, logger: session.send_line("", logger)
         host = url.get(UrlParser.HOSTNAME)
         password = url.get(UrlParser.PASSWORD)
@@ -64,13 +62,15 @@ class SystemActions(object):
             action_map[r"[Uu]ser(name)?"] = lambda session, logger: session.send_line(
                 username, logger
             )
+
         if password:
             action_map[r"[Pp]assword"] = lambda session, logger: session.send_line(
                 password, logger
             )
+
         if host:
             action_map[
-                r"(?!/){}(?!/)\D*\s*$".format(host)
+                rf"(?!/){host}(?!/)\D*\s*$"
             ] = lambda session, logger: session.send_line("", logger)
 
         return action_map
@@ -302,7 +302,7 @@ class SystemActions(object):
         pass
 
 
-class FirmwareActions(object):
+class FirmwareActions:
     def __init__(self, cli_service, logger):
         """Reboot actions.
 
@@ -351,9 +351,7 @@ class FirmwareActions(object):
         """
         self._logger.debug("Start cleaning boot configuration")
 
-        self._logger.info(
-            "Removing '{}' boot config line".format(config_line_to_remove)
-        )
+        self._logger.info(f"Removing '{config_line_to_remove}' boot config line")
         CommandTemplateExecutor(
             self._cli_service,
             configuration.NO,

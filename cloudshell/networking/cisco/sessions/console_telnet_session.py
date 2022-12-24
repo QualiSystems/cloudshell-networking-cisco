@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 from collections import OrderedDict
 
@@ -25,7 +24,7 @@ class ConsoleTelnetSession(TelnetSession):
         *args,
         **kwargs
     ):
-        super(ConsoleTelnetSession, self).__init__(
+        super().__init__(
             host,
             username,
             password,

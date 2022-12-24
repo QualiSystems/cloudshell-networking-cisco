@@ -24,9 +24,7 @@ class TestCiscoConfigurationTemplates(TestCase):
             37501#
             """  # noqa: E501
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
-        self.assertRegexpMatches(
-            output, "|".join(configure_replace["error_map"].keys())
-        )
+        self.assertRegex(output, "|".join(configure_replace["error_map"].keys()))
 
     def test_configure_replace_with_vrf_validates_error_output(self):
         output = """Command: configure replace ftp://admin:password@10.3.3.22/CloudShell/configs/Base/3750-1_Catalyst37xxstack.cfg vrf MGMT
@@ -43,9 +41,7 @@ class TestCiscoConfigurationTemplates(TestCase):
             37501#
             """  # noqa: E501
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path, vrf="MGMT")
-        self.assertRegexpMatches(
-            output, "|".join(configure_replace["error_map"].keys())
-        )
+        self.assertRegex(output, "|".join(configure_replace["error_map"].keys()))
 
     def test_configure_replace_ignores_rollback_done_output(self):
         output = """configure replace ftp://admin:password@10.33.3.22/CloudShell/config
@@ -62,9 +58,7 @@ class TestCiscoConfigurationTemplates(TestCase):
             37501#
             """
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
-        self.assertNotRegexpMatches(
-            output, "|".join(configure_replace["error_map"].keys())
-        )
+        self.assertNotRegex(output, "|".join(configure_replace["error_map"].keys()))
 
     def test_configure_replace_validates_rollback_aborted_output(self):
         output = """configure replace flash:candidate_config.txt force
@@ -81,9 +75,7 @@ class TestCiscoConfigurationTemplates(TestCase):
             ********
             """
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
-        self.assertRegexpMatches(
-            output, "|".join(configure_replace["error_map"].keys())
-        )
+        self.assertRegex(output, "|".join(configure_replace["error_map"].keys()))
 
     def test_configure_replace_validates_aborting_rollback_output(self):
         output = """configure replace flash:candidate_config.txt force revert trigger error
@@ -94,6 +86,4 @@ class TestCiscoConfigurationTemplates(TestCase):
             Rollback Done
             """  # noqa: E501
         configure_replace = CONFIGURE_REPLACE.get_command(path=self.path)
-        self.assertRegexpMatches(
-            output, "|".join(configure_replace["error_map"].keys())
-        )
+        self.assertRegex(output, "|".join(configure_replace["error_map"].keys()))

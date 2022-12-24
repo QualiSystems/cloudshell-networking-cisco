@@ -5,7 +5,7 @@ from cloudshell.networking.cisco.command_actions.system_actions import SystemAct
 try:
     from unittest.mock import MagicMock
 except ImportError:
-    from mock import MagicMock
+    from unittest.mock import MagicMock
 
 
 class TestCiscoSystemActions(TestCase):

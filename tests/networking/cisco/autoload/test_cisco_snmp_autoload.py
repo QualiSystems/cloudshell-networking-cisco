@@ -12,7 +12,7 @@ from cloudshell.networking.cisco.autoload.cisco_snmp_if_port_channel import (
 try:
     from unittest.mock import MagicMock, patch
 except ImportError:
-    from mock import MagicMock, patch
+    from unittest.mock import MagicMock, patch
 
 
 class TestCiscoGenericSNMPAutoload(TestCase):

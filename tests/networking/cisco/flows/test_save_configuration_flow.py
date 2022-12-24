@@ -7,7 +7,7 @@ from cloudshell.networking.cisco.flows.cisco_configuration_flow import (
 try:
     from unittest.mock import MagicMock
 except ImportError:
-    from mock import MagicMock
+    from unittest.mock import MagicMock
 
 
 class TestCiscoSaveConfigurationFlow(TestCase):

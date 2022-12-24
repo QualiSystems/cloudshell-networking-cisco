@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from cloudshell.cli.service.cli import CLI
-
 from cloudshell.networking.cisco.cli.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.cli.cisco_command_modes import (
     ConfigCommandMode,
@@ -10,7 +9,7 @@ from cloudshell.networking.cisco.cli.cisco_command_modes import (
 )
 
 try:
-    from mock import MagicMock, Mock, patch
+    from unittest.mock import MagicMock, Mock, patch
 except ImportError:
     from unittest.mock import MagicMock, Mock, patch
 

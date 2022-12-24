@@ -1,9 +1,7 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
-from cloudshell.shell.flows.configuration.basic_flow import AbstractConfigurationFlow
-
 from cloudshell.networking.cisco.cisco_constants import DEFAULT_FILE_SYSTEM
 from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
+from cloudshell.shell.flows.configuration.basic_flow import AbstractConfigurationFlow
 
 
 class CiscoConfigurationFlow(AbstractConfigurationFlow):
@@ -11,7 +9,7 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
     STARTUP_LOCATION = "nvram:startup_config"
 
     def __init__(self, cli_handler, resource_config, logger):
-        super(CiscoConfigurationFlow, self).__init__(logger, resource_config)
+        super().__init__(logger, resource_config)
         self._cli_handler = cli_handler
 
     @property

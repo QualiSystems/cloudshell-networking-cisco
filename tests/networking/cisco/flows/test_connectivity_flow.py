@@ -1,7 +1,6 @@
 from unittest import TestCase
 
 from cloudshell.cli.session.session_exceptions import CommandExecutionException
-
 from cloudshell.networking.cisco.flows.cisco_connectivity_flow import (
     CiscoConnectivityFlow,
 )
@@ -9,7 +8,7 @@ from cloudshell.networking.cisco.flows.cisco_connectivity_flow import (
 try:
     from unittest.mock import MagicMock, patch
 except ImportError:
-    from mock import MagicMock, patch
+    from unittest.mock import MagicMock, patch
 
 
 class TestCiscoAddVlanFlow(TestCase):

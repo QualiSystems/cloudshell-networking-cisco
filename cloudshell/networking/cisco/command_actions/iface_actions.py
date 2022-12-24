@@ -1,12 +1,10 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 import re
 
 from cloudshell.cli.command_template.command_template_executor import (
     CommandTemplateExecutor,
 )
-
 from cloudshell.networking.cisco.command_templates import (
     add_remove_vlan,
     configuration,
@@ -14,7 +12,7 @@ from cloudshell.networking.cisco.command_templates import (
 )
 
 
-class IFaceActions(object):
+class IFaceActions:
     def __init__(self, cli_service, logger):
         """Add remove vlan.
 
@@ -45,7 +43,7 @@ class IFaceActions(object):
             temp_port_name = temp_port_name.replace("-", "/")
 
             self._logger.info(
-                "Interface name validation OK, portname = {0}".format(temp_port_name)
+                f"Interface name validation OK, portname = {temp_port_name}"
             )
         return temp_port_name
 

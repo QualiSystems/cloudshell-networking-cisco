@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 import re
 
@@ -7,12 +6,11 @@ from cloudshell.cli.command_template.command_template_executor import (
     CommandTemplateExecutor,
 )
 from cloudshell.cli.session.session_exceptions import SessionException
+from cloudshell.networking.cisco.command_templates import add_remove_vlan, iface
 from cloudshell.shell.flows.connectivity.helpers.vlan_handler import VLANHandler
 
-from cloudshell.networking.cisco.command_templates import add_remove_vlan, iface
 
-
-class AddRemoveVlanActions(object):
+class AddRemoveVlanActions:
     CREATE_VLAN_VALIDATION_PATTERN = re.compile(
         r"[Ii]nvalid\s*([Ii]nput|[Cc]ommand)|[Cc]ommand rejected", re.IGNORECASE
     )
@@ -75,7 +73,7 @@ class AddRemoveVlanActions(object):
                 vlans_list.extend(str_vlan_range_ls)
         for vlan in vlans_list:
             if not re.search(
-                r"switchport.*vlan.*\b{vlan}\b".format(vlan=vlan),
+                rf"switchport.*vlan.*\b{vlan}\b",
                 current_config,
                 re.IGNORECASE,
             ):
