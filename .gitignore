@@ -72,3 +72,4 @@ tests/networking/cisco/autoload/autoload_structure.py
 /tests/integration
 
 /integration_tests
+/bkp-mib
