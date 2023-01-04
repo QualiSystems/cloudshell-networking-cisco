@@ -8,7 +8,7 @@ from cloudshell.networking.cisco.command_actions.system_actions import (
     SystemActions,
 )
 from cloudshell.shell.flows.firmware.basic_flow import AbstractFirmwareFlow
-from cloudshell.shell.flows.utils.networking_utils import UrlParser
+from cloudshell.shell.flows.utils.url import BasicLocalUrl
 
 
 class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
@@ -17,8 +17,14 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
     BOOTFOLDER = ["bootflash:", "bootdisk:"]
     KICKSTART_IMAGE = "kickstart"
 
-    def __init__(self, cli_handler, logger, default_file_system=DEFAULT_FILE_SYSTEM):
-        super().__init__(logger)
+    def __init__(
+        self,
+        cli_handler,
+        logger,
+        resource_config,
+        default_file_system=DEFAULT_FILE_SYSTEM,
+    ):
+        super().__init__(logger, resource_config)
         self._cli_handler = cli_handler
         self._file_system = default_file_system
 
@@ -30,8 +36,7 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
         :param timeout:
         :return:
         """
-        full_path_dict = UrlParser().parse_url(path)
-        firmware_file_name = full_path_dict.get(UrlParser.FILENAME)
+        firmware_file_name = path.filename
         if not firmware_file_name:
             raise Exception(self.__class__.__name__, "Unable to find firmware file")
 
@@ -42,7 +47,7 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
             dst_file_system = self._file_system
 
             firmware_dst_path = f"{dst_file_system}/{firmware_file_name}"
-
+            firmware_dst_path_url = BasicLocalUrl.from_str(firmware_dst_path)
             device_file_system = system_action.get_flash_folders_list()
             self._logger.info(f"Discovered folders: {device_file_system}")
             if device_file_system:
@@ -53,11 +58,11 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
                         firmware_dst_path = f"{flash}/{firmware_file_name}"
                         self._logger.info(f"Copying {firmware_dst_path} image")
                         system_action.copy(
-                            path,
+                            path.url,
                             firmware_dst_path,
                             vrf=vrf_management_name,
                             action_map=system_action.prepare_action_map(
-                                path, firmware_dst_path
+                                path, firmware_dst_path_url
                             ),
                         )
                         break
@@ -65,23 +70,26 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
                         firmware_dst_file_path = "{}/{}".format(
                             flash, firmware_file_name
                         )
+                        firmware_dst_file_url = BasicLocalUrl.from_str(
+                            firmware_dst_file_path
+                        )
                         self._logger.info(f"Copying {firmware_dst_file_path} image")
                         system_action.copy(
-                            path,
+                            path.url,
                             firmware_dst_file_path,
                             vrf=vrf_management_name,
                             action_map=system_action.prepare_action_map(
-                                path, firmware_dst_file_path
+                                path, firmware_dst_file_url
                             ),
                         )
             else:
                 self._logger.info(f"Copying {firmware_dst_path} image")
                 system_action.copy(
-                    path,
+                    path.url,
                     firmware_dst_path,
                     vrf=vrf_management_name,
                     action_map=system_action.prepare_action_map(
-                        path, firmware_dst_path
+                        path, firmware_dst_path_url
                     ),
                 )
 
@@ -101,13 +109,14 @@ class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):
                     self.__class__.__name__,
                     f"Can't add firmware '{firmware_file_name}' for boot!",
                 )
-
+            running_config = BasicLocalUrl.from_str(self.RUNNING_CONFIG, "/")
+            startup_config = BasicLocalUrl.from_str(self.STARTUP_CONFIG, "/")
             system_action.copy(
                 self.RUNNING_CONFIG,
                 self.STARTUP_CONFIG,
                 vrf=vrf_management_name,
                 action_map=system_action.prepare_action_map(
-                    self.RUNNING_CONFIG, self.STARTUP_CONFIG
+                    running_config, startup_config
                 ),
             )
             if "CONSOLE" in enable_session.session.SESSION_TYPE:

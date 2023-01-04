@@ -7,7 +7,7 @@ from cloudshell.cli.command_template.command_template_executor import (
 )
 from cloudshell.cli.session.session_exceptions import SessionException
 from cloudshell.networking.cisco.command_templates import add_remove_vlan, iface
-from cloudshell.shell.flows.connectivity.helpers.vlan_handler import VLANHandler
+from cloudshell.shell.flows.connectivity.helpers.vlan_helper import get_vlan_list
 
 
 class AddRemoveVlanActions:
@@ -53,14 +53,14 @@ class AddRemoveVlanActions:
         :return: True or False
         """
         success = True
-        vlans_list = VLANHandler(
-            is_vlan_range_supported=True, is_multi_vlan_supported=False
-        ).get_vlan_list(vlan_range)
+        vlans_list = get_vlan_list(
+            vlan_range, is_vlan_range_supported=True, is_multi_vlan_supported=False
+        )
         vlan_range_list = [v for v in vlans_list if "-" in v]
         for vlan_range in vlan_range_list:
             str_vlan_range_ls = vlan_range.split("-")
 
-            vlan_range_ls = map(int, str_vlan_range_ls)
+            vlan_range_ls = list(map(int, str_vlan_range_ls))
             vlan_min = min(vlan_range_ls)
             vlan_max = max(vlan_range_ls)
 
@@ -179,7 +179,7 @@ class AddRemoveVlanActions:
         if qnq:
             self._get_l2_protocol_tunnel_cmd(action_map, error_map).execute_command()
 
-        if "trunk" not in port_mode:
+        if "trunk" not in port_mode.lower():
             CommandTemplateExecutor(
                 self._cli_service,
                 add_remove_vlan.SWITCHPORT_ALLOW_VLAN,
