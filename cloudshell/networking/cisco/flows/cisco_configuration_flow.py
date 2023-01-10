@@ -13,6 +13,9 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
         super().__init__(logger, resource_config)
         self._cli_handler = cli_handler
 
+    def _get_system_actions(self, enable_session):
+        return SystemActions(enable_session, self._logger)
+
     @property
     def file_system(self):
         return DEFAULT_FILE_SYSTEM

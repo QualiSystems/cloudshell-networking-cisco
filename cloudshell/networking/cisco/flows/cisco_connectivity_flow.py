@@ -56,7 +56,7 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
         :param vlan_range: VLAN or VLAN range
         :param port_mode: mode which will be configured on port.
             Possible Values are trunk and access
-        :param port_name: full port name
+        :param full_name: full port name
         :param qnq:
         :param c_tag:
         :return:
@@ -137,7 +137,6 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
     def _remove_vlan(self, action: ConnectivityActionModel):
         vlan_range = action.connection_params.vlan_id
         full_name = action.action_target.name
-
         msg = self._remove_vlan_flow(vlan_range, full_name)
         return ConnectivityActionResult.success_result(action, msg)
 
