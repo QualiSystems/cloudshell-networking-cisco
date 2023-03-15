@@ -1,11 +1,21 @@
 #!/usr/bin/python
+from __future__ import annotations
+
+from typing import ClassVar
+
+from attrs import define, field
+
 from cloudshell.cli.configurator import AbstractModeConfigurator
+from cloudshell.cli.factory.session_factory import GenericSessionFactory, \
+    ConsoleSessionFactory, SessionFactory
 from cloudshell.cli.service.cli import CLI
 from cloudshell.cli.service.cli_service_impl import CliServiceImpl
 from cloudshell.cli.service.command_mode_helper import CommandModeHelper
 from cloudshell.cli.service.session_pool_manager import SessionPoolManager
 from cloudshell.cli.session.ssh_session import SSHSession
 from cloudshell.cli.session.telnet_session import TelnetSession
+from cloudshell.cli.types import T_COMMAND_MODE_RELATIONS
+
 from cloudshell.networking.cisco.cisco_constants import DEFAULT_SESSION_POOL_TIMEOUT
 from cloudshell.networking.cisco.cli.cisco_command_modes import (
     ConfigCommandMode,
@@ -27,20 +37,22 @@ class CiscoCli:
         self.cli = CLI(session_pool=session_pool)
 
     def get_cli_handler(self, resource_config, logger):
-        return CiscoCliHandler(self.cli, resource_config, logger)
+        return CiscoCliHandler.from_config(resource_config, logger, self.cli)
 
 
+@define
 class CiscoCliHandler(AbstractModeConfigurator):
-    REGISTERED_SESSIONS = (
-        SSHSession,
-        TelnetSession,
-        ConsoleSSHSession,
-        ConsoleTelnetSession,
+    REGISTERED_SESSIONS: ClassVar[tuple[SessionFactory]] = (
+        GenericSessionFactory(SSHSession),
+        GenericSessionFactory(TelnetSession),
+        ConsoleSessionFactory(ConsoleSSHSession),  # todo
+        ConsoleSessionFactory(ConsoleTelnetSession),  # todo
     )
+    modes: T_COMMAND_MODE_RELATIONS = field(init=False)
 
-    def __init__(self, cli, resource_config, logger):
-        super().__init__(resource_config, logger, cli)
-        self.modes = CommandModeHelper.create_command_mode(resource_config)
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+        self.modes = CommandModeHelper.create_command_mode(self._auth.enable_password)
 
     @property
     def default_mode(self):
