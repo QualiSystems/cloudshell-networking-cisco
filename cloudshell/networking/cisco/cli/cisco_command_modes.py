@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 import re
 import time
@@ -105,7 +104,7 @@ class ConfigCommandMode(CommandMode):
         )
 
     def enter_action_map(self):
-        return {r"{}.*$".format(EnableCommandMode.PROMPT): self._check_config_mode}
+        return {rf"{EnableCommandMode.PROMPT}.*$": self._check_config_mode}
 
     def enter_error_map(self):
         return OrderedDict()
@@ -124,7 +123,7 @@ class ConfigCommandMode(CommandMode):
         error_message = "Failed to enter config mode, please check logs, for details"
         output = session.hardware_expect(
             "",
-            expected_string="{0}|{1}".format(
+            expected_string="{}|{}".format(
                 EnableCommandMode.PROMPT, ConfigCommandMode.PROMPT
             ),
             logger=logger,
@@ -135,7 +134,7 @@ class ConfigCommandMode(CommandMode):
         ) and retry < self.MAX_ENTER_CONFIG_MODE_RETRIES:
             output = session.hardware_expect(
                 ConfigCommandMode.ENTER_COMMAND,
-                expected_string="{0}|{1}".format(
+                expected_string="{}|{}".format(
                     EnableCommandMode.PROMPT, ConfigCommandMode.PROMPT
                 ),
                 logger=logger,

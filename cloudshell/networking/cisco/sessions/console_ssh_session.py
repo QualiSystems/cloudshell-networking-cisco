@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 from cloudshell.cli.session.ssh_session import SSHSession
 
@@ -17,7 +16,7 @@ class ConsoleSSHSession(SSHSession):
         *args,
         **kwargs
     ):
-        super(ConsoleSSHSession, self).__init__(
+        super().__init__(
             host, username, password, port, on_session_start, *args, **kwargs
         )
 
@@ -28,7 +27,7 @@ class ConsoleSSHSession(SSHSession):
         :param logger: logger
         """
         try:
-            super(ConsoleSSHSession, self).connect(prompt, logger)
+            super().connect(prompt, logger)
         except Exception:
             self.disconnect()
             raise

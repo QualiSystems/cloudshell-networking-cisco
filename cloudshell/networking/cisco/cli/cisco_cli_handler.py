@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 from typing import ClassVar
@@ -29,7 +28,7 @@ from cloudshell.networking.cisco.sessions.console_telnet_session import (
 )
 
 
-class CiscoCli(object):
+class CiscoCli:
     def __init__(self, resource_config, pool_timeout=DEFAULT_SESSION_POOL_TIMEOUT):
         session_pool_size = int(resource_config.sessions_concurrency_limit)
         session_pool = SessionPoolManager(

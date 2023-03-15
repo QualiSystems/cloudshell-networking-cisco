@@ -7,7 +7,7 @@ from cloudshell.networking.cisco.flows.cisco_load_firmware_flow import (
 try:
     from unittest.mock import MagicMock, patch
 except ImportError:
-    from mock import MagicMock, patch
+    from unittest.mock import MagicMock, patch
 
 
 class TestCiscoLoadFirmwareFlow(TestCase):

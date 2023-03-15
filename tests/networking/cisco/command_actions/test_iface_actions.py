@@ -1,13 +1,12 @@
 from unittest import TestCase
 
 from cloudshell.cli.service.cli_service_impl import CliServiceImpl
-
 from cloudshell.networking.cisco.command_actions.iface_actions import IFaceActions
 
 try:
     from unittest.mock import MagicMock, create_autospec, patch
 except ImportError:
-    from mock import MagicMock, create_autospec, patch
+    from unittest.mock import MagicMock, create_autospec, patch
 
 
 class TestAddRemoveVlanActions(TestCase):

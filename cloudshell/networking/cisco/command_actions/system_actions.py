@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 import re
 import time
 from collections import OrderedDict
@@ -12,17 +9,10 @@ from cloudshell.cli.session.session_exceptions import (
     CommandExecutionException,
     ExpectedSessionException,
 )
-from cloudshell.shell.flows.utils.networking_utils import UrlParser
-
 from cloudshell.networking.cisco.command_templates import configuration, firmware
 
 
-class SystemActions(object):
-    SUCCESS_COPY_PATTERN = (
-        r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|"
-        r"[Cc]opy complete|[\(\[]OK[\]\)]"
-    )
-
+class SystemActions:
     def __init__(self, cli_service, logger):
         """Reboot actions.
 
@@ -36,46 +26,38 @@ class SystemActions(object):
         self._logger = logger
 
     @staticmethod
-    def prepare_action_map(source_file, destination_file):
+    def prepare_action_map(source_url_obj, destination_url_obj):
+        dst_file_name = destination_url_obj.filename
+        source_file_name = source_url_obj.filename
         action_map = OrderedDict()
-        if "://" in destination_file:
-            url = UrlParser.parse_url(destination_file)
-            dst_file_name = url.get(UrlParser.FILENAME)
-            source_file_name = UrlParser.parse_url(source_file).get(UrlParser.FILENAME)
-            action_map[
-                r"[\[\(].*{}[\)\]]".format(dst_file_name)
-            ] = lambda session, logger: session.send_line("", logger)
 
-            action_map[
-                r"[\[\(]{}[\)\]]".format(source_file_name)
-            ] = lambda session, logger: session.send_line("", logger)
-        else:
-            destination_file_name = UrlParser.parse_url(destination_file).get(
-                UrlParser.FILENAME
-            )
-            url = UrlParser.parse_url(source_file)
+        action_map[
+            rf"[\[\(].*{dst_file_name}[\)\]]"
+        ] = lambda session, logger: session.send_line("", logger)
 
-            source_file_name = url.get(UrlParser.FILENAME)
-            action_map[
-                r"(?!/)[\[\(]{}[\)\]]".format(destination_file_name)
-            ] = lambda session, logger: session.send_line("", logger)
-            action_map[
-                r"(?!/)[\[\(]{}[\)\]]".format(source_file_name)
-            ] = lambda session, logger: session.send_line("", logger)
-        host = url.get(UrlParser.HOSTNAME)
-        password = url.get(UrlParser.PASSWORD)
-        username = url.get(UrlParser.USERNAME)
+        action_map[
+            rf"[\[\(]{source_file_name}[\)\]]"
+        ] = lambda session, logger: session.send_line("", logger)
+
+        if hasattr(source_url_obj, "host"):
+            host = source_url_obj.host
+        elif hasattr(destination_url_obj, "host"):
+            host = destination_url_obj.host
+        password = source_url_obj.password or destination_url_obj.password
+        username = source_url_obj.username or destination_url_obj.username
         if username:
             action_map[r"[Uu]ser(name)?"] = lambda session, logger: session.send_line(
                 username, logger
             )
+
         if password:
-            action_map[r"[Pp]assword"] = lambda session, logger: session.send_line(
-                password, logger
-            )
+            action_map[
+                r"((?:(?!:).)|^)[Pp]assword"
+            ] = lambda session, logger: session.send_line(password, logger)
+
         if host:
             action_map[
-                r"(?!/){}(?!/)\D*\s*$".format(host)
+                rf"(?!/){host}(?!/)\D*\s*$"
             ] = lambda session, logger: session.send_line("", logger)
 
         return action_map
@@ -304,7 +286,7 @@ class SystemActions(object):
         pass
 
 
-class FirmwareActions(object):
+class FirmwareActions:
     def __init__(self, cli_service, logger):
         """Reboot actions.
 
@@ -353,9 +335,7 @@ class FirmwareActions(object):
         """
         self._logger.debug("Start cleaning boot configuration")
 
-        self._logger.info(
-            "Removing '{}' boot config line".format(config_line_to_remove)
-        )
+        self._logger.info(f"Removing '{config_line_to_remove}' boot config line")
         CommandTemplateExecutor(
             self._cli_service,
             configuration.NO,

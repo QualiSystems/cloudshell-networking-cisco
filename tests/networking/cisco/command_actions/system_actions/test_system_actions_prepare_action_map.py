@@ -1,22 +1,29 @@
 from unittest import TestCase
 
 from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
+from cloudshell.shell.flows.utils.url import BasicLocalUrl, RemoteURL
 
 try:
     from unittest.mock import MagicMock
 except ImportError:
-    from mock import MagicMock
+    from unittest.mock import MagicMock
 
 
 class TestCiscoSystemActions(TestCase):
-    TEST_RUNNING_CONFIG_SHORT_PATH = "running-config"
-    TEST_RUNNING_CONFIG_FULL_PATH = "bootflash:/running-config"
-    TEST_RUNNING_CONFIG_REMOTE_TFTP_TEXT_PATH = "tftp://localhost/running-config"
-    TEST_RUNNING_CONFIG_REMOTE_TFTP_IP_PATH = "tftp://127.0.0.1/running-config"
-    TEST_RUNNING_CONFIG_REMOTE_FTP_TEXT_PATH = (
+    TEST_RUNNING_CONFIG_SHORT_PATH = BasicLocalUrl.from_str("running-config", "/")
+    TEST_RUNNING_CONFIG_FULL_PATH = BasicLocalUrl.from_str("bootflash:/running-config")
+    TEST_RUNNING_CONFIG_REMOTE_TFTP_TEXT_PATH = RemoteURL.from_str(
+        "tftp://localhost/running-config"
+    )
+    TEST_RUNNING_CONFIG_REMOTE_TFTP_IP_PATH = RemoteURL.from_str(
+        "tftp://127.0.0.1/running-config"
+    )
+    TEST_RUNNING_CONFIG_REMOTE_FTP_TEXT_PATH = RemoteURL.from_str(
         "ftp://user:pass@localhost/running-config"
     )
-    TEST_RUNNING_CONFIG_REMOTE_FTP_IP_PATH = "ftp://user:pass@127.0.0.1/running-config"
+    TEST_RUNNING_CONFIG_REMOTE_FTP_IP_PATH = RemoteURL.from_str(
+        "ftp://user:pass@127.0.0.1/running-config"
+    )
 
     TEST_RESULT_TEXT_HOST = r"(?!/)localhost(?!/)\D*\s*$"
     TEST_RESULT_IP_HOST = r"(?!/)127.0.0.1(?!/)\D*\s*$"
