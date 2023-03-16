@@ -13,6 +13,11 @@ from cloudshell.networking.cisco.command_templates import configuration, firmwar
 
 
 class SystemActions:
+    SUCCESS_COPY_PATTERN = (
+        r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|"
+        r"[Cc]opy complete|[\(\[]OK[\]\)]"
+    )
+
     def __init__(self, cli_service, logger):
         """Reboot actions.
 
