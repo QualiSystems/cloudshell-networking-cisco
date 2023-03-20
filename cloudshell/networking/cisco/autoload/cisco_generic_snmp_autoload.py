@@ -16,16 +16,16 @@ from cloudshell.snmp.autoload.generic_snmp_autoload import GenericSNMPAutoload
 class CiscoGenericSNMPAutoload(GenericSNMPAutoload):
     @property
     @lru_cache()
-    def system_info_service(self):
+    def system_info_service(self) -> CiscoSnmpSystemInfo:
         return CiscoSnmpSystemInfo(self.snmp_handler, self.logger)
 
     @property
     @lru_cache()
-    def port_snmp_table(self):
+    def port_snmp_table(self) -> CiscoSnmpPortsTable:
         return CiscoSnmpPortsTable(snmp_handler=self.snmp_handler, logger=self.logger)
 
     @property
-    def port_table_service(self):
+    def port_table_service(self) -> CiscoPortsTable:
         if not self._port_table_service:
             self._port_table_service = CiscoPortsTable(
                 resource_model=self._resource_model,

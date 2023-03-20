@@ -40,15 +40,15 @@ class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
                 resource_model=resource_model,
             )
             cisco_snmp_autoload.port_table_service.PORT_EXCLUDE_LIST.append(
-                r"stack|engine|management|dwdm|virtual|odu-group|virtual\s*interface"
-                r"mgmt|voice|vlan|foreign|cpu|group-async|GigECtrlr|"
-                r"control\s*ethernet\s*port|null|eobc|^(nu|vl|lo)\d+|vi\d+|"
+                r"stack|engine|management|dwdm|virtual|odu-group|virtual\s*interface|"
+                r"mgmt|voice|vlan|foreign|group-async|GigECtrlr|ptp\d*\S*r(s)*p\d*|"
+                r"control\s*ethernet(\s*port)*|null|eobc|^(nu|vl|lo)\d+|vi\d+|lpts|"
                 r"console\s*port|\.|loopback|cpp|bdi|optics\d|nvFabric-(Ten)*Gig"
             )
             cisco_snmp_autoload.port_table_service.PORT_VALID_TYPE_LIST.extend(
                 [
                     "ethernet|other|propPointToPointSerial"
-                    "|fastEther|opticalChannel|^otn|pos"
+                    "|fastEther|opticalChannel|^otn|pos|sonet$"
                 ]
             )
             cisco_snmp_autoload.port_table_service.PORT_CHANNEL_EXCLUDE_LIST = [r"\."]
