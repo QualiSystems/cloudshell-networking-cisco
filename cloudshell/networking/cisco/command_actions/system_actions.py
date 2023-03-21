@@ -37,6 +37,7 @@ class SystemActions:
         dst_file_name = destination_url_obj.filename
         source_file_name = source_url_obj.filename
         action_map = OrderedDict()
+        host = None
 
         action_map[
             rf"[\[\(].*{dst_file_name}[\)\]]"
@@ -59,12 +60,12 @@ class SystemActions:
             ] = lambda session, logger: session.send_line("", logger)
         if username:
             action_map[
-                r"(?!/)[Uu]ser(name)?"
+                r"(?!/)\b[Uu]ser(name)?\b"
             ] = lambda session, logger: session.send_line(username, logger)
 
         if password:
             action_map[
-                r"((?:(?!:).)|^)[Pp]assword"
+                r"((?:(?!:).)|^)\b[Pp]assword\b"
             ] = lambda session, logger: session.send_line(password, logger)
         return action_map
 
