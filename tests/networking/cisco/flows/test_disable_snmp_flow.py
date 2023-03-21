@@ -1,14 +1,15 @@
 from unittest import TestCase
 
-from cloudshell.networking.cisco.flows.cisco_disable_snmp_flow import (
-    CiscoDisableSnmpFlow,
-)
-from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
 from cloudshell.snmp.snmp_parameters import (
     SNMPReadParameters,
     SNMPV3Parameters,
     SNMPWriteParameters,
 )
+
+from cloudshell.networking.cisco.flows.cisco_disable_snmp_flow import (
+    CiscoDisableSnmpFlow,
+)
+from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
 
 try:
     from unittest.mock import MagicMock, patch

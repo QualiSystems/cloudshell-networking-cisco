@@ -1,5 +1,7 @@
 from functools import lru_cache
 
+from cloudshell.snmp.autoload.generic_snmp_autoload import GenericSNMPAutoload
+
 from cloudshell.networking.cisco.autoload.snmp_tables.cisco_snmp_port_table import (
     CiscoSnmpPortsTable,
 )
@@ -9,8 +11,6 @@ from cloudshell.networking.cisco.autoload.table_services.cisco_ports_table impor
 from cloudshell.networking.cisco.autoload.table_services.cisco_sys_info_table import (
     CiscoSnmpSystemInfo,
 )
-
-from cloudshell.snmp.autoload.generic_snmp_autoload import GenericSNMPAutoload
 
 
 class CiscoGenericSNMPAutoload(GenericSNMPAutoload):

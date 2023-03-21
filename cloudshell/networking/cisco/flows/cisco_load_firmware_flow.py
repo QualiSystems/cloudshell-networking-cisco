@@ -2,13 +2,14 @@
 
 import re
 
+from cloudshell.shell.flows.firmware.basic_flow import AbstractFirmwareFlow
+from cloudshell.shell.flows.utils.url import BasicLocalUrl
+
 from cloudshell.networking.cisco.cisco_constants import DEFAULT_FILE_SYSTEM
 from cloudshell.networking.cisco.command_actions.system_actions import (
     FirmwareActions,
     SystemActions,
 )
-from cloudshell.shell.flows.firmware.basic_flow import AbstractFirmwareFlow
-from cloudshell.shell.flows.utils.url import BasicLocalUrl
 
 
 class CiscoLoadFirmwareFlow(AbstractFirmwareFlow):

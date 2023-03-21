@@ -1,11 +1,11 @@
 from logging import Logger
 
+from cloudshell.snmp.autoload.services.port_table import PortsTable
+
 from cloudshell.networking.cisco.autoload.cisco_snmp_if_port import CiscoSnmpIfPort
 from cloudshell.networking.cisco.autoload.snmp_tables.cisco_snmp_port_table import (
     CiscoSnmpPortsTable,
 )
-
-from cloudshell.snmp.autoload.services.port_table import PortsTable
 
 
 class CiscoPortsTable(PortsTable):

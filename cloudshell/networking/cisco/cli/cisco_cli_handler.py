@@ -7,14 +7,16 @@ from attrs import define, field
 
 from cloudshell.cli.configurator import AbstractModeConfigurator
 from cloudshell.cli.factory.session_factory import (
-    GenericSessionFactory,
     ConsoleSessionFactory,
+    GenericSessionFactory,
     SessionFactory,
 )
 from cloudshell.cli.service.cli import CLI
 from cloudshell.cli.service.cli_service_impl import CliServiceImpl
 from cloudshell.cli.service.command_mode_helper import CommandModeHelper
 from cloudshell.cli.service.session_pool_manager import SessionPoolManager
+from cloudshell.cli.session.console_ssh import ConsoleSSHSession
+from cloudshell.cli.session.console_telnet import ConsoleTelnetSession
 from cloudshell.cli.session.ssh_session import SSHSession
 from cloudshell.cli.session.telnet_session import TelnetSession
 from cloudshell.cli.types import T_COMMAND_MODE_RELATIONS
@@ -25,8 +27,6 @@ from cloudshell.networking.cisco.cli.cisco_command_modes import (
     DefaultCommandMode,
     EnableCommandMode,
 )
-from cloudshell.cli.session.console_ssh import ConsoleSSHSession
-from cloudshell.cli.session.console_telnet import ConsoleTelnetSession
 
 
 class CiscoCli:
@@ -48,10 +48,10 @@ class CiscoCliHandler(AbstractModeConfigurator):
         GenericSessionFactory(TelnetSession),
         ConsoleSessionFactory(ConsoleSSHSession),
         ConsoleSessionFactory(
-            ConsoleTelnetSession, session_kwargs=dict(start_with_new_line=False)
+            ConsoleTelnetSession, session_kwargs={"start_with_new_line": False}
         ),
         ConsoleSessionFactory(
-            ConsoleTelnetSession, session_kwargs=dict(start_with_new_line=True)
+            ConsoleTelnetSession, session_kwargs={"start_with_new_line": True}
         ),
     )
     modes: T_COMMAND_MODE_RELATIONS = field(init=False)

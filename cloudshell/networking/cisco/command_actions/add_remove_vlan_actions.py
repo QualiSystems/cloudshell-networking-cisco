@@ -6,8 +6,9 @@ from cloudshell.cli.command_template.command_template_executor import (
     CommandTemplateExecutor,
 )
 from cloudshell.cli.session.session_exceptions import SessionException
-from cloudshell.networking.cisco.command_templates import add_remove_vlan, iface
 from cloudshell.shell.flows.connectivity.helpers.vlan_helper import get_vlan_list
+
+from cloudshell.networking.cisco.command_templates import add_remove_vlan, iface
 
 
 class AddRemoveVlanActions:

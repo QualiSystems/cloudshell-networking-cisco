@@ -1,14 +1,14 @@
 from functools import lru_cache
 from logging import Logger
 
-from cloudshell.networking.cisco.autoload.constants.snmp_constants import (
-    CISCO_CDP_DEVICE_ID,
-    CISCO_CDP_DEVICE_PORT,
+from cloudshell.snmp.autoload.snmp.tables.port_attrs_snmp_tables.snmp_ports_neighbors_table import (  # noqa: E501
+    PortNeighbours,
 )
 from cloudshell.snmp.core.snmp_service import SnmpService
 
-from cloudshell.snmp.autoload.snmp.tables.port_attrs_snmp_tables.snmp_ports_neighbors_table import (  # noqa: E501
-    PortNeighbours,
+from cloudshell.networking.cisco.autoload.constants.snmp_constants import (
+    CISCO_CDP_DEVICE_ID,
+    CISCO_CDP_DEVICE_PORT,
 )
 
 

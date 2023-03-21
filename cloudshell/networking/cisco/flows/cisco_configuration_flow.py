@@ -1,8 +1,9 @@
 #!/usr/bin/python
-from cloudshell.networking.cisco.cisco_constants import DEFAULT_FILE_SYSTEM
-from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
 from cloudshell.shell.flows.configuration.basic_flow import AbstractConfigurationFlow
 from cloudshell.shell.flows.utils.url import BasicLocalUrl
+
+from cloudshell.networking.cisco.cisco_constants import DEFAULT_FILE_SYSTEM
+from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
 
 
 class CiscoConfigurationFlow(AbstractConfigurationFlow):

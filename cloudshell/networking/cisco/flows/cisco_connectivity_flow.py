@@ -1,9 +1,5 @@
 #!/usr/bin/python
 from cloudshell.cli.session.session_exceptions import CommandExecutionException
-from cloudshell.networking.cisco.command_actions.add_remove_vlan_actions import (
-    AddRemoveVlanActions,
-)
-from cloudshell.networking.cisco.command_actions.iface_actions import IFaceActions
 from cloudshell.shell.flows.connectivity.basic_flow import AbstractConnectivityFlow
 from cloudshell.shell.flows.connectivity.models.connectivity_model import (
     ConnectivityActionModel,
@@ -14,6 +10,11 @@ from cloudshell.shell.flows.connectivity.models.driver_response import (
 from cloudshell.shell.flows.connectivity.parse_request_service import (
     ParseConnectivityRequestService,
 )
+
+from cloudshell.networking.cisco.command_actions.add_remove_vlan_actions import (
+    AddRemoveVlanActions,
+)
+from cloudshell.networking.cisco.command_actions.iface_actions import IFaceActions
 
 
 class CiscoConnectivityFlow(AbstractConnectivityFlow):

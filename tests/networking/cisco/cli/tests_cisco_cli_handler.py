@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from cloudshell.cli.service.cli import CLI
+
 from cloudshell.networking.cisco.cli.cisco_cli_handler import CiscoCliHandler
 from cloudshell.networking.cisco.cli.cisco_command_modes import (
     ConfigCommandMode,

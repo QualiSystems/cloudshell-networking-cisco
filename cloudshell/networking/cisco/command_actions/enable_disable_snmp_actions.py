@@ -4,6 +4,7 @@ from cloudshell.cli.command_template.command_template_executor import (
     CommandTemplateExecutor,
 )
 from cloudshell.cli.session.session_exceptions import CommandExecutionException
+
 from cloudshell.networking.cisco.command_templates import enable_disable_snmp
 
 

@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
-
 from . import system_actions_output
+
+from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
 
 try:
     from unittest.mock import MagicMock, patch

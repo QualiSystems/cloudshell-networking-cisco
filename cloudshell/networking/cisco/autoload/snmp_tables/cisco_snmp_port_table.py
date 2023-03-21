@@ -1,3 +1,5 @@
+from cloudshell.snmp.autoload.snmp.tables.snmp_ports_table import SnmpPortsTable
+
 from cloudshell.networking.cisco.autoload.snmp_tables.cisco_duplex_table import (
     CiscoSnmpStackTable,
 )
@@ -10,8 +12,6 @@ from cloudshell.networking.cisco.autoload.snmp_tables.cisco_ports_duplex import 
 from cloudshell.networking.cisco.autoload.snmp_tables.cisco_ports_neighbours import (
     CiscoPortNeighbours,
 )
-
-from cloudshell.snmp.autoload.snmp.tables.snmp_ports_table import SnmpPortsTable
 
 
 class CiscoSnmpPortsTable(SnmpPortsTable):

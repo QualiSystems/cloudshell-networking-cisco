@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from cloudshell.cli.session.session_exceptions import CommandExecutionException
+
 from cloudshell.networking.cisco.flows.cisco_connectivity_flow import (
     CiscoConnectivityFlow,
 )

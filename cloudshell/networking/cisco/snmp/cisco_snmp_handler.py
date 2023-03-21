@@ -1,11 +1,12 @@
-from cloudshell.networking.cisco.flows.cisco_disable_snmp_flow import (
-    CiscoDisableSnmpFlow,
-)
-from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
 from cloudshell.snmp.snmp_configurator import (
     EnableDisableSnmpConfigurator,
     EnableDisableSnmpFlowInterface,
 )
+
+from cloudshell.networking.cisco.flows.cisco_disable_snmp_flow import (
+    CiscoDisableSnmpFlow,
+)
+from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
 
 
 class CiscoEnableDisableSnmpFlow(EnableDisableSnmpFlowInterface):

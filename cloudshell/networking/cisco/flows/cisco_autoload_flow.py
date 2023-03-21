@@ -2,12 +2,12 @@ import os
 import re
 from collections import OrderedDict
 
+from cloudshell.shell.flows.autoload.basic_flow import AbstractAutoloadFlow
+from cloudshell.snmp.autoload.constants import entity_constants
+
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import (
     CiscoGenericSNMPAutoload,
 )
-from cloudshell.shell.flows.autoload.basic_flow import AbstractAutoloadFlow
-
-from cloudshell.snmp.autoload.constants import entity_constants
 
 entity_constants.ENTITY_VENDOR_TYPE_TO_CLASS_MAP = OrderedDict(
     [

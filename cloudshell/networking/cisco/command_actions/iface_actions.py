@@ -5,6 +5,7 @@ import re
 from cloudshell.cli.command_template.command_template_executor import (
     CommandTemplateExecutor,
 )
+
 from cloudshell.networking.cisco.command_templates import (
     add_remove_vlan,
     configuration,

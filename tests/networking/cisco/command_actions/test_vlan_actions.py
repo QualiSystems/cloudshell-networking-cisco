@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from cloudshell.cli.service.cli_service_impl import CliServiceImpl
+
 from cloudshell.networking.cisco.command_actions.add_remove_vlan_actions import (
     AddRemoveVlanActions,
 )

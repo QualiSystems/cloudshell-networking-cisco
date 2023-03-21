@@ -9,13 +9,15 @@ from cloudshell.cli.session.session_exceptions import (
     CommandExecutionException,
     ExpectedSessionException,
 )
+
 from cloudshell.networking.cisco.command_templates import configuration, firmware
+from cloudshell.networking.cisco.errors.cisco_errors import CiscoConfigurationError
 
 
 class SystemActions:
     SUCCESS_COPY_PATTERN = (
         r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|"
-        r"[Cc]opy complete|[\(\[]OK[\]\)]"
+        r"[Cc]opy complete|[\(\[]OK[\]\)]|updated\s*commit\s*database\s*\S*\s*\d+\s*sec"
     )
 
     def __init__(self, cli_service, logger):
@@ -50,21 +52,20 @@ class SystemActions:
             host = destination_url_obj.host
         password = source_url_obj.password or destination_url_obj.password
         username = source_url_obj.username or destination_url_obj.username
-        if username:
-            action_map[r"[Uu]ser(name)?"] = lambda session, logger: session.send_line(
-                username, logger
-            )
-
-        if password:
-            action_map[
-                r"((?:(?!:).)|^)[Pp]assword"
-            ] = lambda session, logger: session.send_line(password, logger)
 
         if host:
             action_map[
                 rf"(?!/){host}(?!/)\D*\s*$"
             ] = lambda session, logger: session.send_line("", logger)
+        if username:
+            action_map[
+                r"(?!/)[Uu]ser(name)?"
+            ] = lambda session, logger: session.send_line(username, logger)
 
+        if password:
+            action_map[
+                r"((?:(?!:).)|^)[Pp]assword"
+            ] = lambda session, logger: session.send_line(password, logger)
         return action_map
 
     def copy(
@@ -117,7 +118,7 @@ class SystemActions:
                 if error_match:
                     self._logger.error(message)
                     message += error_match.group()
-            raise Exception("Copy", message)
+            raise CiscoConfigurationError("Copy", message)
 
     def delete_file(self, path, action_map=None, error_map=None):
         """Delete file on the device.

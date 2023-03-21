@@ -1,12 +1,12 @@
 from logging import Logger
 
-from cloudshell.networking.cisco.autoload.snmp_tables.cisco_duplex_table import (
-    CiscoSnmpStackTable,
+from cloudshell.snmp.autoload.snmp.tables.port_attrs_snmp_tables.snmp_ports_auto_negotioation import (  # noqa: E501
+    PortAutoNegotiation,
 )
 from cloudshell.snmp.core.snmp_service import SnmpService
 
-from cloudshell.snmp.autoload.snmp.tables.port_attrs_snmp_tables.snmp_ports_auto_negotioation import (  # noqa: E501
-    PortAutoNegotiation,
+from cloudshell.networking.cisco.autoload.snmp_tables.cisco_duplex_table import (
+    CiscoSnmpStackTable,
 )
 
 
