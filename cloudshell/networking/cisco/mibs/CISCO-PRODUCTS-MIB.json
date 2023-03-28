@@ -11542,6 +11542,11 @@
     "oid": "1.3.6.1.4.1.9.1.2617",
     "class": "objectidentity"
   },
+  "cisco8804": {
+    "name": "cisco8808",
+    "oid": "1.3.6.1.4.1.9.1.2618",
+    "class": "objectidentity"
+  },
   "ciscoC11092PLteGB": {
     "name": "ciscoC11092PLteGB",
     "oid": "1.3.6.1.4.1.9.1.2619",
