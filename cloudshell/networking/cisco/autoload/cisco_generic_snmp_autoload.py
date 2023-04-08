@@ -17,15 +17,18 @@ class CiscoGenericSNMPAutoload(GenericSNMPAutoload):
     @property
     @lru_cache()
     def system_info_service(self) -> CiscoSnmpSystemInfo:
+        """Get system info service."""
         return CiscoSnmpSystemInfo(self.snmp_handler, self.logger)
 
     @property
     @lru_cache()
     def port_snmp_table(self) -> CiscoSnmpPortsTable:
+        """Get port snmp table."""
         return CiscoSnmpPortsTable(snmp_handler=self.snmp_handler, logger=self.logger)
 
     @property
     def port_table_service(self) -> CiscoPortsTable:
+        """Get port table service."""
         if not self._port_table_service:
             self._port_table_service = CiscoPortsTable(
                 resource_model=self._resource_model,

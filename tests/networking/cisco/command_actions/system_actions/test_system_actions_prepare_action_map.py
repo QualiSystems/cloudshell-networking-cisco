@@ -26,12 +26,18 @@ class TestCiscoSystemActions(TestCase):
         "ftp://user:pass@127.0.0.1/running-config"
     )
 
-    TEST_RESULT_TEXT_HOST = r"(?!/)localhost(?!/)\D*\s*$"
-    TEST_RESULT_IP_HOST = r"(?!/)127.0.0.1(?!/)\D*\s*$"
-    TEST_RESULT_PASSWORD = "[Pp]assword"
-    TEST_RESULT_SRC_FILE_NAME = "[\\[\\(].*running-config[\\)\\]]"
-    TEST_RESULT_DST_FILE_NAME = "[\\[\\(]running-config[\\)\\]]"
-    TEST_RESULT_FROM_REMOTE_DST_FILE_NAME = "(?!/)[\\[\\(]running-config[\\)\\]]"
+    TEST_RESULT_TEXT_HOST = SystemActions.HOSTNAME_PATTERN.format(host="localhost")
+    TEST_RESULT_IP_HOST = SystemActions.HOSTNAME_PATTERN.format(host="127.0.0.1")
+    TEST_RESULT_PASSWORD = SystemActions.PASSWORD_PATTERN
+    TEST_RESULT_SRC_FILE_NAME = SystemActions.SRC_FILE_NAME_PATTERN.format(
+        src_file_name="running-config"
+    )
+    TEST_RESULT_DST_FILE_NAME = SystemActions.DST_FILE_NAME_PATTERN.format(
+        dst_file_name="running-config"
+    )
+    TEST_RESULT_FROM_REMOTE_DST_FILE_NAME = SystemActions.DST_FILE_NAME_PATTERN.format(
+        dst_file_name="running-config"
+    )
 
     def setUp(self):
         self.system_action = SystemActions(cli_service=MagicMock(), logger=MagicMock())

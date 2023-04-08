@@ -25,7 +25,7 @@ class TestCiscoDisableSNMPFlow(TestCase):
     SNMP_PASSWORD = "P@ssw0rD"
     SNMP_PRIVATE_KEY = "PrivKey"
 
-    def _get_handler(self, remove_group=True):
+    def _get_handler(self):
         self.snmp_v2_write_parameters = SNMPWriteParameters(
             ip=self.IP, snmp_community=self.SNMP_WRITE_COMMUNITY
         )
@@ -52,13 +52,13 @@ class TestCiscoDisableSNMPFlow(TestCase):
             "",
         ]
 
-        disable_flow = self._get_handler(remove_group=False)
+        disable_flow = self._get_handler()
         self.snmp_v3_parameters = SNMPV3Parameters(
             ip=self.IP,
             snmp_user=self.SNMP_USER,
             snmp_password=self.SNMP_PASSWORD,
             snmp_private_key=self.SNMP_PRIVATE_KEY,
-            private_key_protocol="DES",
+            snmp_private_key_protocol="DES",
         )
         disable_flow.disable_flow(self.snmp_v3_parameters)
         disable_actions_mock.return_value.get_current_snmp_user.assert_called()
@@ -85,7 +85,7 @@ class TestCiscoDisableSNMPFlow(TestCase):
             snmp_user=self.SNMP_USER,
             snmp_password=self.SNMP_PASSWORD,
             snmp_private_key=self.SNMP_PRIVATE_KEY,
-            private_key_protocol="DES",
+            snmp_private_key_protocol="DES",
         )
         disable_flow.disable_flow(self.snmp_v3_parameters)
         disable_actions_mock.return_value.get_current_snmp_user.assert_called()

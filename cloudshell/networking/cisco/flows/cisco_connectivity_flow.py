@@ -163,24 +163,46 @@ class CiscoConnectivityFlow(AbstractConnectivityFlow):
             current_config = iface_action.get_current_interface_config(port_name)
             if "switchport" not in current_config:
                 if not self.is_switch:
-                    sub_interface_name = f"{port_name}.{vlan_range}"
-                    self._remove_sub_interface(sub_interface_name, iface_action)
-                    sub_interfaces_list = iface_action.get_current_interface_config(
-                        sub_interface_name
-                    )
-                    if sub_interface_name in sub_interfaces_list:
-                        is_failed = True
-                        self._logger.error(
-                            "Failed to remove sub interface: {}".format(
-                                sub_interface_name
-                            )
+                    if vlan_range != "ALL":
+                        sub_interface_name = f"{port_name}.{vlan_range}"
+                        self._remove_sub_interface(sub_interface_name, iface_action)
+                        sub_interfaces_list = iface_action.get_current_interface_config(
+                            sub_interface_name
                         )
+                        if sub_interface_name in sub_interfaces_list:
+                            is_failed = True
+                            self._logger.error(
+                                "Failed to remove sub interface: {}".format(
+                                    sub_interface_name
+                                )
+                            )
+                    else:
+                        self._remove_vlan_from_sub_interface(port_name, iface_action)
+                        sub_interfaces_list = iface_action.get_sub_interfaces_config(
+                            port_name
+                        )
+                        for interface in sub_interfaces_list:
+                            if iface_action.check_sub_interface_has_vlan(interface):
+                                self._logger.error(
+                                    "[FAIL] Unable to clean sub interface: {}".format(
+                                        interface
+                                    )
+                                )
+
             else:
                 iface_action.enter_iface_config_mode(port_name)
                 iface_action.clean_interface_switchport_config(current_config)
                 current_config = iface_action.get_current_interface_config(port_name)
-                if vlan_actions.verify_interface_has_vlan_assigned(
-                    vlan_range, current_config
+                if (
+                    vlan_range == "ALL"
+                    and not vlan_actions.verify_interface_has_no_vlan_assigned(
+                        current_config
+                    )
+                ) or (
+                    vlan_range != "ALL"
+                    and vlan_actions.verify_interface_has_vlan_assigned(
+                        vlan_range, current_config
+                    )
                 ):
                     is_failed = True
 

@@ -81,6 +81,23 @@ class AddRemoveVlanActions:
                 success = False
         return success
 
+    @staticmethod
+    def verify_interface_has_no_vlan_assigned(current_config):
+        """Verify interface configuration.
+
+        :param vlan_range:
+        :param current_config:
+        :return: True or False
+        """
+        success = True
+        if re.search(
+            r"switchport.*vlan",
+            current_config,
+            re.IGNORECASE,
+        ):
+            success = False
+        return success
+
     def create_vlan(self, vlan_range, action_map=None, error_map=None):
         """Create vlan entity on the device.
 

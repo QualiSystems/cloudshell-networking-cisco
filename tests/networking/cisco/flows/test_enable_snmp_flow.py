@@ -98,7 +98,7 @@ class TestCiscoEnableSNMPFlow(TestCase):
             snmp_user=self.SNMP_USER,
             snmp_password=self.SNMP_PASSWORD,
             snmp_private_key=self.SNMP_PRIVATE_KEY,
-            private_key_protocol="DES",
+            snmp_private_key_protocol="DES",
         )
 
         with self.assertRaisesRegex(Exception, "DES"):
@@ -173,7 +173,7 @@ class TestCiscoEnableSNMPFlow(TestCase):
             snmp_user=self.SNMP_USER,
             snmp_password="",
             snmp_private_key=self.SNMP_PRIVATE_KEY,
-            auth_protocol=SNMPV3Parameters.AUTH_MD5,
+            snmp_auth_protocol=SNMPV3Parameters.AUTH_MD5,
         )
 
         with self.assertRaisesRegex(Exception, "SNMPv3 Password has to be specified"):
@@ -186,8 +186,8 @@ class TestCiscoEnableSNMPFlow(TestCase):
             snmp_user=self.SNMP_USER,
             snmp_password=self.SNMP_PASSWORD,
             snmp_private_key="",
-            auth_protocol=SNMPV3Parameters.AUTH_MD5,
-            private_key_protocol=SNMPV3Parameters.PRIV_DES,
+            snmp_auth_protocol=SNMPV3Parameters.AUTH_MD5,
+            snmp_private_key_protocol=SNMPV3Parameters.PRIV_DES,
         )
 
         with self.assertRaisesRegex(

@@ -15,6 +15,12 @@ from cloudshell.networking.cisco.errors.cisco_errors import CiscoConfigurationEr
 
 
 class SystemActions:
+    USERNAME_PATTERN = r"(?!/)\b[Uu]ser(name)?\b"
+    PASSWORD_PATTERN = r"((?:(?!:).)|^)\b[Pp]assword\b"
+    HOSTNAME_PATTERN = r"(?!/){host}(?!/)\D*\s*$"
+    DST_FILE_NAME_PATTERN = r"[\[\(].*{dst_file_name}[\)\]]"
+    SRC_FILE_NAME_PATTERN = r"[\[\(]{src_file_name}[\)\]]"
+
     SUCCESS_COPY_PATTERN = (
         r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|"
         r"[Cc]opy complete|[\(\[]OK[\]\)]|updated\s*commit\s*database\s*\S*\s*\d+\s*sec"
@@ -40,11 +46,11 @@ class SystemActions:
         host = None
 
         action_map[
-            rf"[\[\(].*{dst_file_name}[\)\]]"
+            SystemActions.DST_FILE_NAME_PATTERN.format(dst_file_name=dst_file_name)
         ] = lambda session, logger: session.send_line("", logger)
 
         action_map[
-            rf"[\[\(]{source_file_name}[\)\]]"
+            SystemActions.SRC_FILE_NAME_PATTERN.format(src_file_name=source_file_name)
         ] = lambda session, logger: session.send_line("", logger)
 
         if hasattr(source_url_obj, "host"):
@@ -56,16 +62,16 @@ class SystemActions:
 
         if host:
             action_map[
-                rf"(?!/){host}(?!/)\D*\s*$"
+                SystemActions.HOSTNAME_PATTERN.format(host=host)
             ] = lambda session, logger: session.send_line("", logger)
         if username:
             action_map[
-                r"(?!/)\b[Uu]ser(name)?\b"
+                SystemActions.USERNAME_PATTERN
             ] = lambda session, logger: session.send_line(username, logger)
 
         if password:
             action_map[
-                r"((?:(?!:).)|^)\b[Pp]assword\b"
+                SystemActions.PASSWORD_PATTERN
             ] = lambda session, logger: session.send_line(password, logger)
         return action_map
 

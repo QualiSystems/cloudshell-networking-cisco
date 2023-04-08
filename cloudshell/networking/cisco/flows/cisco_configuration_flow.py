@@ -1,5 +1,8 @@
 #!/usr/bin/python
-from cloudshell.shell.flows.configuration.basic_flow import AbstractConfigurationFlow
+from cloudshell.shell.flows.configuration.basic_flow import (
+    AbstractConfigurationFlow,
+    RestoreMethod,
+)
 from cloudshell.shell.flows.utils.url import BasicLocalUrl
 
 from cloudshell.networking.cisco.cisco_constants import DEFAULT_FILE_SYSTEM
@@ -69,7 +72,7 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
             copy_action_map = restore_action.prepare_action_map(path, dst_file)
 
             if "startup" in config_type:
-                if restore_method == "override":
+                if restore_method == RestoreMethod.OVERRIDE:
                     del_action_map = {
                         "[Dd]elete [Ff]ilename ": lambda s, l: s.send_line(
                             self.STARTUP_CONFIG_NAME, l
@@ -93,7 +96,7 @@ class CiscoConfigurationFlow(AbstractConfigurationFlow):
                     )
 
             elif "running" in config_type:
-                if restore_method == "override":
+                if restore_method == RestoreMethod.OVERRIDE:
                     restore_action.override_running(path)
                 else:
                     restore_action.copy(

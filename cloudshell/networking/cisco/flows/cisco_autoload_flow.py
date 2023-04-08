@@ -43,13 +43,10 @@ class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
                 r"stack|engine|management|dwdm|virtual|odu-group|virtual\s*interface|"
                 r"mgmt|voice|vlan|foreign|group-async|GigECtrlr|ptp\d*\S*r(s)*p\d*|"
                 r"control\s*ethernet(\s*port)*|null|eobc|^(nu|vl|lo)\d+|vi\d+|lpts|"
-                r"console\s*port|\.|loopback|cpp|bdi|optics\d|nvFabric-(Ten)*Gig"
+                r"console\s*port|\.|loopback|cpp|pos|bdi|optics\d|nvFabric-(Ten)*Gig"
             )
             cisco_snmp_autoload.port_table_service.PORT_VALID_TYPE_LIST.extend(
-                [
-                    "ethernet|other|propPointToPointSerial"
-                    "|fastEther|opticalChannel|^otn|pos|sonet$"
-                ]
+                ["sonet$"]
             )
             cisco_snmp_autoload.port_table_service.PORT_CHANNEL_EXCLUDE_LIST = [r"\."]
             cisco_snmp_autoload.physical_table_service.MODULE_EXCLUDE_LIST = [
@@ -58,11 +55,6 @@ class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
                 r"cevModulePseAsicPlim|cevModule\S+Storage$|"
                 r"cevModuleFabricTypeAsic|cevModuleCommonCardsPSEASIC|"
                 r"cevFan|cevSensor"
-            ]
-            cisco_snmp_autoload.physical_table_service.CONTAINER_EXCLUDE_LIST = [
-                r"powershelf|cevsfp|cevxfr|"
-                r"cevxfp|cevContainer10GigBasePort|"
-                r"cevFan|cevSensor|cevCpu|cevContainerDaughterCard"
             ]
 
             cisco_snmp_autoload.system_info_service.set_model_name_map_file_path(

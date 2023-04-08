@@ -1,11 +1,13 @@
 import re
 
-from cloudshell.snmp.autoload.snmp.helper.snmp_if_entity import SnmpIfEntity
+from cloudshell.snmp.autoload.snmp.entities.snmp_if_entity import SnmpIfEntity
 
 
 class CiscoSnmpIfPort(SnmpIfEntity):
+    """Cisco SNMP If Port."""
+
     PORT_NAME_MATCH = re.compile(
-        r"\S*(Ethernet|GigE|Serial|Sonet|POS|Port-channel|Bundle-Ether)",
+        r"^\S*(Ethernet|GigE|Serial|Sonet|Port-channel|Bundle-Ether)",
         re.IGNORECASE,
     )
 
