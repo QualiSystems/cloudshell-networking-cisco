@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import MagicMock, patch
 
 from cloudshell.snmp.snmp_parameters import (
     SNMPReadParameters,
@@ -7,11 +8,6 @@ from cloudshell.snmp.snmp_parameters import (
 )
 
 from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
-
-try:
-    from unittest.mock import MagicMock, patch
-except ImportError:
-    from unittest.mock import MagicMock, patch
 
 
 class TestCiscoEnableSNMPFlow(TestCase):
