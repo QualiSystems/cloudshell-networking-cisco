@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import MagicMock, patch
 
 from cloudshell.shell.flows.configuration.basic_flow import (
     ConfigurationType,
@@ -9,11 +10,6 @@ from cloudshell.shell.flows.utils.url import RemoteURL
 from cloudshell.networking.cisco.flows.cisco_configuration_flow import (
     CiscoConfigurationFlow,
 )
-
-try:
-    from unittest.mock import MagicMock, patch
-except ImportError:
-    from unittest.mock import MagicMock, patch
 
 
 class TestCiscoSaveConfigurationFlow(TestCase):

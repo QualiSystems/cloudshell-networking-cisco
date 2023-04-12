@@ -1,14 +1,10 @@
 from unittest import TestCase
+from unittest.mock import MagicMock, patch
 
 from cloudshell.networking.cisco.cisco_constants import DEFAULT_FILE_SYSTEM
 from cloudshell.networking.cisco.flows.cisco_load_firmware_flow import (
     CiscoLoadFirmwareFlow,
 )
-
-try:
-    from unittest.mock import MagicMock, patch
-except ImportError:
-    from unittest.mock import MagicMock, patch
 
 
 class TestCiscoLoadFirmwareFlow(TestCase):
