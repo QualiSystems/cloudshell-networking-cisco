@@ -13,9 +13,7 @@ from cloudshell.networking.cisco.autoload.snmp_tables.cisco_snmp_port_table impo
     CiscoSnmpPortsTable,
 )
 
-try:
-    from unittest.mock import MagicMock, patch
-except ImportError:
+from unittest.mock import MagicMock, patch
     from unittest.mock import MagicMock, patch
 
 
