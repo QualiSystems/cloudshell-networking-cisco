@@ -22,7 +22,5 @@ setup(
     version=version_from_file,
     description="QualiSystems networking cisco specific package",
     include_package_data=True,
-    python_requires=(
-        ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*, <4"
-    ),
+    python_requires="~=3.7",
 )

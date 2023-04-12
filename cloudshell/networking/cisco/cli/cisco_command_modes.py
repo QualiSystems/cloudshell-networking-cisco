@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 import re
 import time
@@ -13,14 +12,12 @@ class DefaultCommandMode(CommandMode):
     ENTER_COMMAND = ""
     EXIT_COMMAND = ""
 
-    def __init__(self, resource_config):
+    def __init__(self, enable_password: str):
         """Initialize Default command mode.
 
         Only for cases when session started not in enable mode
-
-        :param resource_config:
         """
-        self.resource_config = resource_config
+        self.enable_password = enable_password
 
         CommandMode.__init__(
             self,
@@ -51,12 +48,9 @@ class EnableCommandMode(CommandMode):
     ENTER_COMMAND = "enable"
     EXIT_COMMAND = ""
 
-    def __init__(self, resource_config):
-        """Initialize Enable command mode - default command mode for Cisco Shells.
-
-        :param resource_config:
-        """
-        self.resource_config = resource_config
+    def __init__(self, enable_password: str):
+        """Initialize Enable command mode - default command mode for Cisco Shells."""
+        self.enable_password = enable_password
 
         CommandMode.__init__(
             self,
@@ -72,7 +66,7 @@ class EnableCommandMode(CommandMode):
     def enter_action_map(self):
         return {
             "[Pp]assword": lambda session, logger: session.send_line(
-                self.resource_config.enable_password, logger
+                self.enable_password, logger
             )
         }
 
@@ -94,12 +88,9 @@ class ConfigCommandMode(CommandMode):
     EXIT_COMMAND = "exit"
     ENTER_ACTION_COMMANDS = []
 
-    def __init__(self, resource_config):
-        """Initialize Config command mode.
-
-        :param resource_config:
-        """
-        self.resource_config = resource_config
+    def __init__(self, enable_password: str):
+        """Initialize Config command mode."""
+        self.enable_password = enable_password
 
         CommandMode.__init__(
             self,
@@ -113,7 +104,7 @@ class ConfigCommandMode(CommandMode):
         )
 
     def enter_action_map(self):
-        return {r"{}.*$".format(EnableCommandMode.PROMPT): self._check_config_mode}
+        return {rf"{EnableCommandMode.PROMPT}.*$": self._check_config_mode}
 
     def enter_error_map(self):
         return OrderedDict()
@@ -132,7 +123,7 @@ class ConfigCommandMode(CommandMode):
         error_message = "Failed to enter config mode, please check logs, for details"
         output = session.hardware_expect(
             "",
-            expected_string="{0}|{1}".format(
+            expected_string="{}|{}".format(
                 EnableCommandMode.PROMPT, ConfigCommandMode.PROMPT
             ),
             logger=logger,
@@ -143,7 +134,7 @@ class ConfigCommandMode(CommandMode):
         ) and retry < self.MAX_ENTER_CONFIG_MODE_RETRIES:
             output = session.hardware_expect(
                 ConfigCommandMode.ENTER_COMMAND,
-                expected_string="{0}|{1}".format(
+                expected_string="{}|{}".format(
                     EnableCommandMode.PROMPT, ConfigCommandMode.PROMPT
                 ),
                 logger=logger,

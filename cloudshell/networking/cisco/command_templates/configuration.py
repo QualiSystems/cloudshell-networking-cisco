@@ -1,5 +1,4 @@
 # !/usr/bin/python
-# -*- coding: utf-8 -*-
 
 from collections import OrderedDict
 
@@ -20,9 +19,11 @@ COPY = CommandTemplate(
             ),
         }
     ),
-    error_map=OrderedDict(
-        [(r"permission\s*denied", "Failed to save configuration: Permission Denied")]
-    ),
+    error_map={
+        r"permission\s*denied": "Failed to save configuration: Permission " "Denied",
+        r"invalid\s*input": "Failed to save configuration: Invalid input",
+        r"\S+isk\d+://scp://": "SCP is no longer supported by IOS-XR",
+    },
 )
 
 DEL = CommandTemplate(

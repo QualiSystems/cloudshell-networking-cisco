@@ -1,29 +1,43 @@
 from unittest import TestCase
 
+from cloudshell.shell.flows.utils.url import BasicLocalUrl, RemoteURL
+
 from cloudshell.networking.cisco.command_actions.system_actions import SystemActions
 
 try:
     from unittest.mock import MagicMock
 except ImportError:
-    from mock import MagicMock
+    from unittest.mock import MagicMock
 
 
 class TestCiscoSystemActions(TestCase):
-    TEST_RUNNING_CONFIG_SHORT_PATH = "running-config"
-    TEST_RUNNING_CONFIG_FULL_PATH = "bootflash:/running-config"
-    TEST_RUNNING_CONFIG_REMOTE_TFTP_TEXT_PATH = "tftp://localhost/running-config"
-    TEST_RUNNING_CONFIG_REMOTE_TFTP_IP_PATH = "tftp://127.0.0.1/running-config"
-    TEST_RUNNING_CONFIG_REMOTE_FTP_TEXT_PATH = (
+    TEST_RUNNING_CONFIG_SHORT_PATH = BasicLocalUrl.from_str("running-config", "/")
+    TEST_RUNNING_CONFIG_FULL_PATH = BasicLocalUrl.from_str("bootflash:/running-config")
+    TEST_RUNNING_CONFIG_REMOTE_TFTP_TEXT_PATH = RemoteURL.from_str(
+        "tftp://localhost/running-config"
+    )
+    TEST_RUNNING_CONFIG_REMOTE_TFTP_IP_PATH = RemoteURL.from_str(
+        "tftp://127.0.0.1/running-config"
+    )
+    TEST_RUNNING_CONFIG_REMOTE_FTP_TEXT_PATH = RemoteURL.from_str(
         "ftp://user:pass@localhost/running-config"
     )
-    TEST_RUNNING_CONFIG_REMOTE_FTP_IP_PATH = "ftp://user:pass@127.0.0.1/running-config"
+    TEST_RUNNING_CONFIG_REMOTE_FTP_IP_PATH = RemoteURL.from_str(
+        "ftp://user:pass@127.0.0.1/running-config"
+    )
 
-    TEST_RESULT_TEXT_HOST = r"(?!/)localhost(?!/)\D*\s*$"
-    TEST_RESULT_IP_HOST = r"(?!/)127.0.0.1(?!/)\D*\s*$"
-    TEST_RESULT_PASSWORD = "[Pp]assword"
-    TEST_RESULT_SRC_FILE_NAME = "[\\[\\(].*running-config[\\)\\]]"
-    TEST_RESULT_DST_FILE_NAME = "[\\[\\(]running-config[\\)\\]]"
-    TEST_RESULT_FROM_REMOTE_DST_FILE_NAME = "(?!/)[\\[\\(]running-config[\\)\\]]"
+    TEST_RESULT_TEXT_HOST = SystemActions.HOSTNAME_PATTERN.format(host="localhost")
+    TEST_RESULT_IP_HOST = SystemActions.HOSTNAME_PATTERN.format(host="127.0.0.1")
+    TEST_RESULT_PASSWORD = SystemActions.PASSWORD_PATTERN
+    TEST_RESULT_SRC_FILE_NAME = SystemActions.SRC_FILE_NAME_PATTERN.format(
+        src_file_name="running-config"
+    )
+    TEST_RESULT_DST_FILE_NAME = SystemActions.DST_FILE_NAME_PATTERN.format(
+        dst_file_name="running-config"
+    )
+    TEST_RESULT_FROM_REMOTE_DST_FILE_NAME = SystemActions.DST_FILE_NAME_PATTERN.format(
+        dst_file_name="running-config"
+    )
 
     def setUp(self):
         self.system_action = SystemActions(cli_service=MagicMock(), logger=MagicMock())

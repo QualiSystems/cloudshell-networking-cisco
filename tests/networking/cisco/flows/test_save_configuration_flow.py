@@ -1,5 +1,8 @@
 from unittest import TestCase
 
+from cloudshell.shell.flows.configuration.basic_flow import ConfigurationType
+from cloudshell.shell.flows.utils.url import RemoteURL
+
 from cloudshell.networking.cisco.flows.cisco_configuration_flow import (
     CiscoConfigurationFlow,
 )
@@ -7,7 +10,7 @@ from cloudshell.networking.cisco.flows.cisco_configuration_flow import (
 try:
     from unittest.mock import MagicMock
 except ImportError:
-    from mock import MagicMock
+    from unittest.mock import MagicMock
 
 
 class TestCiscoSaveConfigurationFlow(TestCase):
@@ -39,7 +42,8 @@ class TestCiscoSaveConfigurationFlow(TestCase):
          N5K-L3-Sw1#"""
         )
 
-        save_flow._save_flow("tftp://127.0.0.1", "startup")
+        url = RemoteURL.from_str("tftp://127.0.0.1")
+        save_flow._save_flow(url, ConfigurationType.STARTUP)
         self.session.send_command.assert_called_once()
 
     def test_save_configuration_with_vrf(self):
@@ -59,8 +63,8 @@ class TestCiscoSaveConfigurationFlow(TestCase):
          Copy complete, now saving to disk (please wait)...
          N5K-L3-Sw1#"""
         )
-
+        url = RemoteURL.from_str("tftp://127.0.0.1")
         save_flow._save_flow(
-            "tftp://127.0.0.1", "running", vrf_management_name="management"
+            url, ConfigurationType.RUNNING, vrf_management_name="management"
         )
         self.session.send_command.assert_called_once()
