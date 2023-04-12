@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import MagicMock, patch
 
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import (
     CiscoGenericSNMPAutoload,
@@ -12,8 +13,6 @@ from cloudshell.networking.cisco.autoload.snmp_tables.cisco_ports_neighbours imp
 from cloudshell.networking.cisco.autoload.snmp_tables.cisco_snmp_port_table import (
     CiscoSnmpPortsTable,
 )
-
-from unittest.mock import MagicMock, patch
 
 
 class TestCiscoGenericSNMPAutoload(TestCase):
