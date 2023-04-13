@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 from collections import OrderedDict
 
 from cloudshell.cli.command_template.command_template import CommandTemplate

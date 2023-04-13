@@ -9,7 +9,7 @@ from cloudshell.networking.cisco.command_actions.enable_disable_snmp_actions imp
 try:
     from unittest.mock import MagicMock, create_autospec
 except ImportError:
-    from mock import MagicMock, create_autospec
+    from unittest.mock import MagicMock, create_autospec
 
 
 def return_cmd(cmd, **kwargs):

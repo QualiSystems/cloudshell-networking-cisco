@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 import re
 import time
 from collections import OrderedDict
@@ -12,12 +9,23 @@ from cloudshell.cli.session.session_exceptions import (
     CommandExecutionException,
     ExpectedSessionException,
 )
-from cloudshell.shell.flows.utils.networking_utils import UrlParser
 
 from cloudshell.networking.cisco.command_templates import configuration, firmware
+from cloudshell.networking.cisco.errors.cisco_errors import CiscoConfigurationError
 
 
-class SystemActions(object):
+class SystemActions:
+    USERNAME_PATTERN = r"(?!/)\b[Uu]ser(name)?\b"
+    PASSWORD_PATTERN = r"((?:(?!:).)|^)\b[Pp]assword\b"
+    HOSTNAME_PATTERN = r"(?!/){host}(?!/)\D*\s*$"
+    DST_FILE_NAME_PATTERN = r"[\[\(].*{dst_file_name}[\)\]]"
+    SRC_FILE_NAME_PATTERN = r"[\[\(]{src_file_name}[\)\]]"
+
+    SUCCESS_COPY_PATTERN = (
+        r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|"
+        r"[Cc]opy complete|[\(\[]OK[\]\)]|updated\s*commit\s*database\s*\S*\s*\d+\s*sec"
+    )
+
     def __init__(self, cli_service, logger):
         """Reboot actions.
 
@@ -31,48 +39,40 @@ class SystemActions(object):
         self._logger = logger
 
     @staticmethod
-    def prepare_action_map(source_file, destination_file):
+    def prepare_action_map(source_url_obj, destination_url_obj):
+        dst_file_name = destination_url_obj.filename
+        source_file_name = source_url_obj.filename
         action_map = OrderedDict()
-        if "://" in destination_file:
-            url = UrlParser.parse_url(destination_file)
-            dst_file_name = url.get(UrlParser.FILENAME)
-            source_file_name = UrlParser.parse_url(source_file).get(UrlParser.FILENAME)
-            action_map[
-                r"[\[\(].*{}[\)\]]".format(dst_file_name)
-            ] = lambda session, logger: session.send_line("", logger)
+        host = None
 
-            action_map[
-                r"[\[\(]{}[\)\]]".format(source_file_name)
-            ] = lambda session, logger: session.send_line("", logger)
-        else:
-            destination_file_name = UrlParser.parse_url(destination_file).get(
-                UrlParser.FILENAME
-            )
-            url = UrlParser.parse_url(source_file)
+        action_map[
+            SystemActions.DST_FILE_NAME_PATTERN.format(dst_file_name=dst_file_name)
+        ] = lambda session, logger: session.send_line("", logger)
 
-            source_file_name = url.get(UrlParser.FILENAME)
-            action_map[
-                r"(?!/)[\[\(]{}[\)\]]".format(destination_file_name)
-            ] = lambda session, logger: session.send_line("", logger)
-            action_map[
-                r"(?!/)[\[\(]{}[\)\]]".format(source_file_name)
-            ] = lambda session, logger: session.send_line("", logger)
-        host = url.get(UrlParser.HOSTNAME)
-        password = url.get(UrlParser.PASSWORD)
-        username = url.get(UrlParser.USERNAME)
-        if username:
-            action_map[r"[Uu]ser(name)?"] = lambda session, logger: session.send_line(
-                username, logger
-            )
-        if password:
-            action_map[r"[Pp]assword"] = lambda session, logger: session.send_line(
-                password, logger
-            )
+        action_map[
+            SystemActions.SRC_FILE_NAME_PATTERN.format(src_file_name=source_file_name)
+        ] = lambda session, logger: session.send_line("", logger)
+
+        if hasattr(source_url_obj, "host"):
+            host = source_url_obj.host
+        elif hasattr(destination_url_obj, "host"):
+            host = destination_url_obj.host
+        password = source_url_obj.password or destination_url_obj.password
+        username = source_url_obj.username or destination_url_obj.username
+
         if host:
             action_map[
-                r"(?!/){}(?!/)\D*\s*$".format(host)
+                SystemActions.HOSTNAME_PATTERN.format(host=host)
             ] = lambda session, logger: session.send_line("", logger)
+        if username:
+            action_map[
+                SystemActions.USERNAME_PATTERN
+            ] = lambda session, logger: session.send_line(username, logger)
 
+        if password:
+            action_map[
+                SystemActions.PASSWORD_PATTERN
+            ] = lambda session, logger: session.send_line(password, logger)
         return action_map
 
     def copy(
@@ -108,11 +108,8 @@ class SystemActions(object):
             timeout=timeout,
         ).execute_command(src=source, dst=destination, vrf=vrf)
 
-        copy_ok_pattern = (
-            r"\d+ bytes copied|copied.*[\[\(].*[1-9][0-9]* bytes.*[\)\]]|"
-            r"[Cc]opy complete|[\(\[]OK[\]\)]"
-        )
-        status_match = re.search(copy_ok_pattern, output, re.IGNORECASE)
+        status_match = re.search(self.SUCCESS_COPY_PATTERN, output, re.IGNORECASE)
+
         if not status_match:
             match_error = re.search(
                 r"%.*|TFTP put operation failed.*|sysmgr.*not supported.*\n",
@@ -128,7 +125,7 @@ class SystemActions(object):
                 if error_match:
                     self._logger.error(message)
                     message += error_match.group()
-            raise Exception("Copy", message)
+            raise CiscoConfigurationError("Copy", message)
 
     def delete_file(self, path, action_map=None, error_map=None):
         """Delete file on the device.
@@ -302,7 +299,7 @@ class SystemActions(object):
         pass
 
 
-class FirmwareActions(object):
+class FirmwareActions:
     def __init__(self, cli_service, logger):
         """Reboot actions.
 
@@ -351,9 +348,7 @@ class FirmwareActions(object):
         """
         self._logger.debug("Start cleaning boot configuration")
 
-        self._logger.info(
-            "Removing '{}' boot config line".format(config_line_to_remove)
-        )
+        self._logger.info(f"Removing '{config_line_to_remove}' boot config line")
         CommandTemplateExecutor(
             self._cli_service,
             configuration.NO,

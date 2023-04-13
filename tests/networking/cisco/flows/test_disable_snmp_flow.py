@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import MagicMock, patch
 
 from cloudshell.snmp.snmp_parameters import (
     SNMPReadParameters,
@@ -11,11 +12,6 @@ from cloudshell.networking.cisco.flows.cisco_disable_snmp_flow import (
 )
 from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
 
-try:
-    from unittest.mock import MagicMock, patch
-except ImportError:
-    from mock import MagicMock, patch
-
 
 class TestCiscoDisableSNMPFlow(TestCase):
     IP = "localhost"
@@ -25,7 +21,7 @@ class TestCiscoDisableSNMPFlow(TestCase):
     SNMP_PASSWORD = "P@ssw0rD"
     SNMP_PRIVATE_KEY = "PrivKey"
 
-    def _get_handler(self, remove_group=True):
+    def _get_handler(self):
         self.snmp_v2_write_parameters = SNMPWriteParameters(
             ip=self.IP, snmp_community=self.SNMP_WRITE_COMMUNITY
         )
@@ -52,13 +48,13 @@ class TestCiscoDisableSNMPFlow(TestCase):
             "",
         ]
 
-        disable_flow = self._get_handler(remove_group=False)
+        disable_flow = self._get_handler()
         self.snmp_v3_parameters = SNMPV3Parameters(
             ip=self.IP,
             snmp_user=self.SNMP_USER,
             snmp_password=self.SNMP_PASSWORD,
             snmp_private_key=self.SNMP_PRIVATE_KEY,
-            private_key_protocol="DES",
+            snmp_private_key_protocol="DES",
         )
         disable_flow.disable_flow(self.snmp_v3_parameters)
         disable_actions_mock.return_value.get_current_snmp_user.assert_called()
@@ -77,7 +73,7 @@ class TestCiscoDisableSNMPFlow(TestCase):
         ]
         (
             disable_actions_mock.return_value.get_current_snmp_config.return_value
-        ) = "snmp-server view {}".format(CiscoEnableSnmpFlow.DEFAULT_SNMP_VIEW)
+        ) = f"snmp-server view {CiscoEnableSnmpFlow.DEFAULT_SNMP_VIEW}"
 
         disable_flow = self._get_handler()
         self.snmp_v3_parameters = SNMPV3Parameters(
@@ -85,7 +81,7 @@ class TestCiscoDisableSNMPFlow(TestCase):
             snmp_user=self.SNMP_USER,
             snmp_password=self.SNMP_PASSWORD,
             snmp_private_key=self.SNMP_PRIVATE_KEY,
-            private_key_protocol="DES",
+            snmp_private_key_protocol="DES",
         )
         disable_flow.disable_flow(self.snmp_v3_parameters)
         disable_actions_mock.return_value.get_current_snmp_user.assert_called()

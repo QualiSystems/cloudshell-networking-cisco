@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 
 from cloudshell.cli.command_template.command_template_executor import (
     CommandTemplateExecutor,
@@ -9,7 +8,7 @@ from cloudshell.cli.session.session_exceptions import CommandExecutionException
 from cloudshell.networking.cisco.command_templates import enable_disable_snmp
 
 
-class EnableDisableSnmpActions(object):
+class EnableDisableSnmpActions:
     READ_ONLY = "ro"
     READ_WRITE = "rw"
 

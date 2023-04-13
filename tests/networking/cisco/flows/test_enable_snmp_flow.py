@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import MagicMock, patch
 
 from cloudshell.snmp.snmp_parameters import (
     SNMPReadParameters,
@@ -7,11 +8,6 @@ from cloudshell.snmp.snmp_parameters import (
 )
 
 from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
-
-try:
-    from unittest.mock import MagicMock, patch
-except ImportError:
-    from mock import MagicMock, patch
 
 
 class TestCiscoEnableSNMPFlow(TestCase):
@@ -98,10 +94,10 @@ class TestCiscoEnableSNMPFlow(TestCase):
             snmp_user=self.SNMP_USER,
             snmp_password=self.SNMP_PASSWORD,
             snmp_private_key=self.SNMP_PRIVATE_KEY,
-            private_key_protocol="DES",
+            snmp_private_key_protocol="DES",
         )
 
-        with self.assertRaisesRegexp(Exception, "DES"):
+        with self.assertRaisesRegex(Exception, "DES"):
             enable_flow.enable_flow(self.snmp_v3_parameters)
 
         enable_snmp_view_mock.assert_not_called()
@@ -163,7 +159,7 @@ class TestCiscoEnableSNMPFlow(TestCase):
             snmp_private_key=self.SNMP_PRIVATE_KEY,
         )
 
-        with self.assertRaisesRegexp(Exception, "SNMPv3 user is not defined"):
+        with self.assertRaisesRegex(Exception, "SNMPv3 user is not defined"):
             enable_flow.enable_flow(snmp_v3_parameters)
 
     def test_validate_snmp_v3_params_validates_password_and_raise(self):
@@ -173,10 +169,10 @@ class TestCiscoEnableSNMPFlow(TestCase):
             snmp_user=self.SNMP_USER,
             snmp_password="",
             snmp_private_key=self.SNMP_PRIVATE_KEY,
-            auth_protocol=SNMPV3Parameters.AUTH_MD5,
+            snmp_auth_protocol=SNMPV3Parameters.AUTH_MD5,
         )
 
-        with self.assertRaisesRegexp(Exception, "SNMPv3 Password has to be specified"):
+        with self.assertRaisesRegex(Exception, "SNMPv3 Password has to be specified"):
             enable_flow.enable_flow(snmp_v3_parameters)
 
     def test_validate_snmp_v3_params_validates_private_key_and_raise(self):
@@ -186,11 +182,11 @@ class TestCiscoEnableSNMPFlow(TestCase):
             snmp_user=self.SNMP_USER,
             snmp_password=self.SNMP_PASSWORD,
             snmp_private_key="",
-            auth_protocol=SNMPV3Parameters.AUTH_MD5,
-            private_key_protocol=SNMPV3Parameters.PRIV_DES,
+            snmp_auth_protocol=SNMPV3Parameters.AUTH_MD5,
+            snmp_private_key_protocol=SNMPV3Parameters.PRIV_DES,
         )
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
             Exception, "SNMPv3 Private key has to be specified"
         ):
             enable_flow.enable_flow(snmp_v3_parameters)

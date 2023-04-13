@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 from cloudshell.snmp.snmp_configurator import (
     EnableDisableSnmpConfigurator,
     EnableDisableSnmpFlowInterface,
@@ -38,9 +35,4 @@ class CiscoEnableDisableSnmpFlow(EnableDisableSnmpFlowInterface):
 
 
 class CiscoSnmpHandler(EnableDisableSnmpConfigurator):
-    def __init__(self, resource_config, logger, cli_handler):
-        self.cli_handler = cli_handler
-        enable_disable_snmp_flow = CiscoEnableDisableSnmpFlow(self.cli_handler, logger)
-        super(CiscoSnmpHandler, self).__init__(
-            enable_disable_snmp_flow, resource_config, logger
-        )
+    pass

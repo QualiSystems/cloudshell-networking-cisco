@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
 import os
 import re
 from collections import OrderedDict
@@ -9,13 +7,6 @@ from cloudshell.snmp.autoload.constants import entity_constants
 
 from cloudshell.networking.cisco.autoload.cisco_generic_snmp_autoload import (
     CiscoGenericSNMPAutoload,
-)
-from cloudshell.networking.cisco.autoload.cisco_port_attrs_service import (
-    CiscoSnmpPortAttrTables,
-)
-from cloudshell.networking.cisco.autoload.cisco_snmp_if_port import CiscoSnmpIfPort
-from cloudshell.networking.cisco.autoload.cisco_snmp_if_port_channel import (
-    CiscoIfPortChannel,
 )
 
 entity_constants.ENTITY_VENDOR_TYPE_TO_CLASS_MAP = OrderedDict(
@@ -30,12 +21,11 @@ entity_constants.ENTITY_VENDOR_TYPE_TO_CLASS_MAP = OrderedDict(
 
 
 class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
-
     CISCO_MIBS_FOLDER = os.path.join(os.path.dirname(__file__), os.pardir, "mibs")
     DEVICE_NAMES_MAP_FILE = os.path.join(CISCO_MIBS_FOLDER, "device_names_map.csv")
 
     def __init__(self, logger, snmp_handler):
-        super(CiscoSnmpAutoloadFlow, self).__init__(logger)
+        super().__init__(logger)
         self._snmp_handler = snmp_handler
 
     def _autoload_flow(self, supported_os, resource_model):
@@ -44,29 +34,30 @@ class CiscoSnmpAutoloadFlow(AbstractAutoloadFlow):
             snmp_service.load_mib_tables(
                 ["CISCO-PRODUCTS-MIB", "CISCO-ENTITY-VENDORTYPE-OID-MIB"]
             )
-            cisco_snmp_autoload = CiscoGenericSNMPAutoload(snmp_service, self._logger)
-            cisco_snmp_autoload.entity_table_service.set_port_exclude_pattern(
-                r"stack|engine|management|"
-                r"mgmt|voice|foreign|cpu|"
-                r"control\s*ethernet\s*port|"
-                r"usb\s*port"
+            cisco_snmp_autoload = CiscoGenericSNMPAutoload(
+                snmp_handler=snmp_service,
+                logger=self._logger,
+                resource_model=resource_model,
             )
-            cisco_snmp_autoload.entity_table_service.set_module_exclude_pattern(
-                r"powershelf|cevsfp|cevxfr|"
-                r"cevxfp|cevContainer10GigBasePort|"
-                r"cevModulePseAsicPlim|cevModuleCommonCardsPSEASIC"
+            cisco_snmp_autoload.port_table_service.PORT_EXCLUDE_LIST.append(
+                r"stack|engine|management|dwdm|virtual|odu-group|virtual\s*interface|"
+                r"mgmt|voice|vlan|foreign|group-async|GigECtrlr|ptp\d*\S*r(s)*p\d*|"
+                r"control\s*ethernet(\s*port)*|null|eobc|^(nu|vl|lo)\d+|vi\d+|lpts|"
+                r"console\s*port|\.|loopback|cpp|pos|bdi|optics\d|nvFabric-(Ten)*Gig"
             )
-            (
-                cisco_snmp_autoload.if_table_service.port_attributes_service
-            ) = CiscoSnmpPortAttrTables(snmp_service, self._logger)
-            cisco_snmp_autoload.if_table_service.if_port_type = CiscoSnmpIfPort
-            cisco_snmp_autoload.if_table_service.if_port_channel_type = (
-                CiscoIfPortChannel
+            cisco_snmp_autoload.port_table_service.PORT_VALID_TYPE_LIST.extend(
+                ["sonet$"]
             )
+            cisco_snmp_autoload.port_table_service.PORT_CHANNEL_EXCLUDE_LIST = [r"\."]
+            cisco_snmp_autoload.physical_table_service.MODULE_EXCLUDE_LIST = [
+                r"powershelf|cevsfp|cevxfr|cevSensor|cevCpuTypeCPU|"
+                r"cevxfp|cevContainer10GigBasePort|cevModuleDIMM|"
+                r"cevModulePseAsicPlim|cevModule\S+Storage$|"
+                r"cevModuleFabricTypeAsic|cevModuleCommonCardsPSEASIC|"
+                r"cevFan|cevSensor"
+            ]
 
             cisco_snmp_autoload.system_info_service.set_model_name_map_file_path(
                 self.DEVICE_NAMES_MAP_FILE
             )
-            return cisco_snmp_autoload.discover(
-                supported_os, resource_model, validate_module_id_by_port_name=True
-            )
+            return cisco_snmp_autoload.discover(supported_os)

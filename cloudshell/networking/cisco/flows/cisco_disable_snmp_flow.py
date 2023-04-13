@@ -1,5 +1,4 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 import re
 
 from cloudshell.snmp.snmp_parameters import SNMPV3Parameters
@@ -10,7 +9,7 @@ from cloudshell.networking.cisco.command_actions.enable_disable_snmp_actions imp
 from cloudshell.networking.cisco.flows.cisco_enable_snmp_flow import CiscoEnableSnmpFlow
 
 
-class CiscoDisableSnmpFlow(object):
+class CiscoDisableSnmpFlow:
     def __init__(self, cli_handler, logger):
         """Enable snmp flow.
 
