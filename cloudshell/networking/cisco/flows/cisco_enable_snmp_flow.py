@@ -69,7 +69,7 @@ class CiscoEnableSnmpFlow:
                     current_snmp_communities = snmp_actions.get_current_snmp_config()
                     snmp_community = snmp_parameters.snmp_community
                     if not re.search(
-                        "snmp-server community {}".format(
+                        "snmp-server community \b{}\b".format(
                             re.escape(snmp_parameters.snmp_community)
                         ),
                         current_snmp_communities,
@@ -110,3 +110,4 @@ class CiscoEnableSnmpFlow:
                             "Failed to create SNMP community."
                             + " Please check Logs for details"
                         )
+        self._logger.info("SNMP config applied/verified successfully")

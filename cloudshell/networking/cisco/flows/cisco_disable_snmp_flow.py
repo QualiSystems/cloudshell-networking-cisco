@@ -22,6 +22,7 @@ class CiscoDisableSnmpFlow:
         self._logger = logger
 
     def disable_flow(self, snmp_parameters):
+        self._logger.debug("Start Disable SNMP")
         with self._cli_handler.get_cli_service(
             self._cli_handler.enable_mode
         ) as session:
@@ -52,7 +53,6 @@ class CiscoDisableSnmpFlow:
                                     CiscoEnableSnmpFlow.DEFAULT_SNMP_VIEW
                                 )
                 else:
-                    self._logger.debug("Start Disable SNMP")
                     snmp_actions.disable_snmp(snmp_parameters.snmp_community)
             with session.enter_mode(self._cli_handler.config_mode) as config_session:
                 # Reentering config mode to perform commit for IOS-XR
@@ -72,7 +72,7 @@ class CiscoDisableSnmpFlow:
                         updated_snmp_actions.get_current_snmp_config()
                     )
                     if re.search(
-                        "snmp-server community {}".format(
+                        "snmp-server community \b{}\b".format(
                             re.escape(snmp_parameters.snmp_community)
                         ),
                         updated_snmp_communities,
@@ -82,3 +82,4 @@ class CiscoDisableSnmpFlow:
                             "Failed to remove SNMP community."
                             + " Please check Logs for details",
                         )
+        self._logger.info("SNMP config was successfully removed")
