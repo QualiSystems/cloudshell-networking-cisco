@@ -30,7 +30,7 @@ DEL = CommandTemplate(
     "del {target}",
     action_map=OrderedDict(
         {
-            "[confirm]": lambda session, logger: session.send_line("", logger),
+            r"\[confirm\]": lambda session, logger: session.send_line("", logger),
             r"\?": lambda session, logger: session.send_line("", logger),
         }
     ),
