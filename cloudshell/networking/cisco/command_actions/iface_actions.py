@@ -114,6 +114,13 @@ class IFaceActions:
 
         for line in current_config.splitlines():
             if line.strip(" ").startswith("switchport "):
+                # Skip removing "switchport trunk allowed vlan 1" as it's the default state
+                if re.match(
+                    r"^\s*switchport\s+trunk\s+allowed\s+vlan\s+1\s*$",
+                    line,
+                    re.IGNORECASE,
+                ):
+                    continue
                 line_to_remove = re.sub(r"\s+\d+[-\d+,]+", "", line).strip(" ")
                 CommandTemplateExecutor(
                     self._cli_service,

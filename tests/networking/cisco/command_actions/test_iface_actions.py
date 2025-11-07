@@ -58,3 +58,71 @@ class TestAddRemoveVlanActions(TestCase):
             error_map=None,
         )
         self.assertEqual(result, cte_mock.return_value)
+
+    @patch(
+        "cloudshell.networking.cisco.command_actions.iface_actions"
+        ".CommandTemplateExecutor"
+    )
+    def test_clean_interface_switchport_config_preserves_vlan_1(self, cte_mock):
+        """Test that switchport trunk allowed vlan 1 is not removed (default state)."""
+        current_config = """Building configuration...
+
+Current configuration : 144 bytes
+!
+interface GigabitEthernet110/1/0/6
+ description KG-255X-06-PT
+ switchport
+ switchport trunk allowed vlan 1
+ switchport mode dynamic auto
+end
+"""
+        executor_mock = MagicMock()
+        cte_mock.return_value = executor_mock
+
+        self._handler.clean_interface_switchport_config(current_config)
+
+        # Verify that execute_command was called for other switchport lines but not for vlan 1
+        calls = executor_mock.execute_command.call_args_list
+        # Should be called twice: once for "switchport" and once for "switchport mode dynamic auto"
+        # but NOT for "switchport trunk allowed vlan 1"
+        self.assertEqual(len(calls), 2)
+
+        # Verify the commands that were issued
+        called_commands = [call[1]["command"] for call in calls]
+        self.assertIn("switchport", called_commands)
+        self.assertIn("switchport mode dynamic auto", called_commands)
+        # Ensure vlan 1 command was NOT called
+        self.assertNotIn("switchport trunk allowed vlan", called_commands)
+
+    @patch(
+        "cloudshell.networking.cisco.command_actions.iface_actions"
+        ".CommandTemplateExecutor"
+    )
+    def test_clean_interface_switchport_config_removes_other_vlans(self, cte_mock):
+        """Test that switchport trunk allowed vlan with other VLANs are removed."""
+        current_config = """Building configuration...
+
+Current configuration : 144 bytes
+!
+interface GigabitEthernet110/1/0/6
+ description KG-255X-06-PT
+ switchport
+ switchport trunk allowed vlan 100
+ switchport mode trunk
+end
+"""
+        executor_mock = MagicMock()
+        cte_mock.return_value = executor_mock
+
+        self._handler.clean_interface_switchport_config(current_config)
+
+        # Verify that execute_command was called for all switchport lines including vlan 100
+        calls = executor_mock.execute_command.call_args_list
+        # Should be called three times: "switchport", "switchport trunk allowed vlan", "switchport mode trunk"
+        self.assertEqual(len(calls), 3)
+
+        # Verify the commands that were issued
+        called_commands = [call[1]["command"] for call in calls]
+        self.assertIn("switchport", called_commands)
+        self.assertIn("switchport trunk allowed vlan", called_commands)
+        self.assertIn("switchport mode trunk", called_commands)
