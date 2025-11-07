@@ -12,6 +12,9 @@ from cloudshell.networking.cisco.command_templates import (
     iface,
 )
 
+# Pattern to match VLAN 1 configuration (default state that should be preserved)
+VLAN_1_PATTERN = r"^\s*switchport\s+trunk\s+allowed\s+vlan\s+1\s*$"
+
 
 class IFaceActions:
     def __init__(self, cli_service, logger):
@@ -114,6 +117,9 @@ class IFaceActions:
 
         for line in current_config.splitlines():
             if line.strip(" ").startswith("switchport "):
+                # Skip removing "switchport trunk allowed vlan 1" as it's the default state
+                if re.match(VLAN_1_PATTERN, line, re.IGNORECASE):
+                    continue
                 line_to_remove = re.sub(r"\s+\d+[-\d+,]+", "", line).strip(" ")
                 CommandTemplateExecutor(
                     self._cli_service,
