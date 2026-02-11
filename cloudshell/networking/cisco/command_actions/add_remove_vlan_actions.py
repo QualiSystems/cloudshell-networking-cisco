@@ -90,12 +90,36 @@ class AddRemoveVlanActions:
         :return: True or False
         """
         success = True
-        if re.search(
+        vlan_match = re.search(
             r"switchport.*vlan",
             current_config,
             re.IGNORECASE,
-        ):
-            success = False
+        )
+        if vlan_match:
+            # Check if the only VLAN configured is VLAN 1 (default state)
+            # VLAN 1 is the default VLAN on Cisco switches and should be treated
+            # as "no VLANs assigned" for cleanup purposes
+            # Matches patterns like:
+            # - "switchport trunk allowed vlan 1"
+            # - "switchport access vlan 1"
+            # - "switchport mode access" + "switchport access vlan 1"
+            vlan_only_1 = re.search(
+                r"switchport\s+.*?vlan\s+1\s*$",
+                current_config,
+                re.MULTILINE | re.IGNORECASE,
+            )
+            # Also check for other VLAN configurations that would indicate
+            # non-default VLANs are present (VLANs other than 1, or VLAN ranges/lists)
+            other_vlans = re.search(
+                r"switchport.*vlan\s+(?!1\s*$)\d+|switchport.*vlan\s+1[,-]",
+                current_config,
+                re.IGNORECASE | re.MULTILINE,
+            )
+            # If only VLAN 1 is found and no other VLANs, consider it as "no VLANs"
+            if vlan_only_1 and not other_vlans:
+                success = True
+            else:
+                success = False
         return success
 
     def create_vlan(self, vlan_range, action_map=None, error_map=None):
