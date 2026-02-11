@@ -67,6 +67,104 @@ class TestAddRemoveVlanActions(TestCase):
         """
         self.assertFalse(self._handler.verify_interface_configured(current_config))
 
+    def test_verify_interface_has_no_vlan_assigned_with_default_vlan_1_trunk(self):
+        """Test that VLAN 1 on trunk is considered as no VLANs assigned (default state)."""
+        current_config = """Building configuration...
+
+        Current configuration : 144 bytes
+        !
+        interface GigabitEthernet110/1/0/6
+         description KG-255X-06-PT
+         switchport
+         switchport trunk allowed vlan 1
+         switchport mode dynamic auto
+        end
+        """
+        # VLAN 1 is the default state, should be considered as "no VLANs assigned"
+        self.assertTrue(
+            self._handler.verify_interface_has_no_vlan_assigned(current_config)
+        )
+
+    def test_verify_interface_has_no_vlan_assigned_with_default_vlan_1_access(self):
+        """Test that VLAN 1 on access port is considered as no VLANs assigned (default state)."""
+        current_config = """Building configuration...
+
+        Current configuration : 100 bytes
+        !
+        interface GigabitEthernet1/0/4
+         switchport
+         switchport access vlan 1
+        end
+        """
+        # VLAN 1 is the default state, should be considered as "no VLANs assigned"
+        self.assertTrue(
+            self._handler.verify_interface_has_no_vlan_assigned(current_config)
+        )
+
+    def test_verify_interface_has_no_vlan_assigned_without_explicit_vlan(self):
+        """Test that interface without explicit VLAN config is considered as no VLANs assigned."""
+        current_config = """Building configuration...
+
+        Current configuration : 85 bytes
+        !
+        interface TenGigabitEthernet1/5/10
+         description SPIRENT Port 2/10
+         switchport
+        end
+        """
+        # No explicit VLAN, should be considered as "no VLANs assigned"
+        self.assertTrue(
+            self._handler.verify_interface_has_no_vlan_assigned(current_config)
+        )
+
+    def test_verify_interface_has_no_vlan_assigned_with_non_default_vlan(self):
+        """Test that non-default VLAN is detected as VLANs assigned."""
+        current_config = """Building configuration...
+
+        Current configuration : 100 bytes
+        !
+        interface GigabitEthernet1/0/1
+         switchport
+         switchport trunk allowed vlan 10
+        end
+        """
+        # VLAN 10 is not the default, should be considered as "VLANs assigned"
+        self.assertFalse(
+            self._handler.verify_interface_has_no_vlan_assigned(current_config)
+        )
+
+    def test_verify_interface_has_no_vlan_assigned_with_multiple_vlans(self):
+        """Test that multiple VLANs including VLAN 1 is detected as VLANs assigned."""
+        current_config = """Building configuration...
+
+        Current configuration : 110 bytes
+        !
+        interface GigabitEthernet1/0/2
+         switchport
+         switchport trunk allowed vlan 1,10,20
+        end
+        """
+        # Multiple VLANs, should be considered as "VLANs assigned"
+        self.assertFalse(
+            self._handler.verify_interface_has_no_vlan_assigned(current_config)
+        )
+
+    def test_verify_interface_has_no_vlan_assigned_with_vlan_range(self):
+        """Test that VLAN range is detected as VLANs assigned."""
+        current_config = """Building configuration...
+
+        Current configuration : 105 bytes
+        !
+        interface GigabitEthernet1/0/3
+         switchport
+         switchport trunk allowed vlan 10-20
+        end
+        """
+        # VLAN range, should be considered as "VLANs assigned"
+        self.assertFalse(
+            self._handler.verify_interface_has_no_vlan_assigned(current_config)
+        )
+
     @patch(
         "cloudshell.networking.cisco.command_actions.add_remove_vlan_actions"
         ".CommandTemplateExecutor"
