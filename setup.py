@@ -23,5 +23,12 @@ setup(
     description="QualiSystems networking cisco specific package",
     long_description="QualiSystems networking cisco specific package",
     include_package_data=True,
-    python_requires="~=3.7",
+    python_requires=">=3.9",
+    classifiers=[
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+    ],
 )
